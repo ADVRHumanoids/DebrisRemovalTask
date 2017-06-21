@@ -1,6 +1,14 @@
 #include <XBotInterface/StateMachine.h>
 #include<iostream>
 
+#include <ros/ros.h>
+
+#include <ADVR_ROS/advr_segment_control.h>
+#include<eigen_conversions/eigen_msg.h>
+
+#include <trajectory_utils/segment.h>
+#include <trajectory_utils/Cartesian.h>
+
 
 namespace myfsm{
 
@@ -30,6 +38,9 @@ namespace myfsm{
     struct SharedData {
       
       XBot::RobotInterface::Ptr _robot;
+      std::shared_ptr<ros::NodeHandle> _nh;
+      geometry_msgs::PoseStamped::ConstPtr _debris_pose;
+      ros::ServiceClient _client;
      
     };
     

@@ -19,6 +19,8 @@
 
 #include <DebrisRemovalTask_rt_plugin.h>
 
+#include <ros/ros.h>
+
 /* Specify that the class XBotPlugin::DebrisRemovalTask is a XBot RT plugin with name "DebrisRemovalTask" */
 REGISTER_XBOT_PLUGIN(DebrisRemovalTask, XBotPlugin::DebrisRemovalTask)
 
@@ -41,6 +43,17 @@ bool DebrisRemovalTask::init_control_plugin(std::string path_to_config_file,
      * so that logs do not overwrite each other. */
     
     _logger = XBot::MatLogger::getLogger("/tmp/DebrisRemovalTask_log");
+    
+    // ROS initialization
+    int argc = 1;
+    const char *arg = "dummy_arg";
+    char* argg = const_cast<char*>(arg);
+    char** argv = &argg;
+    
+    ros::init(argc, argv, "DebrisRemovalTask");
+    fsm.shared_data()._nh =  std::make_shared<ros::NodeHandle>();
+    
+    fsm.shared_data()._client = fsm.shared_data()._nh->serviceClient<ADVR_ROS::advr_segment_control>("segment_control");    
 
 
     /*Saves robot as shared variable between states*/
@@ -95,7 +108,7 @@ void DebrisRemovalTask::control_loop(double time, double period)
 
 
      fsm.run(time, 0.01);
-
+     
 }
 
 bool DebrisRemovalTask::close()
