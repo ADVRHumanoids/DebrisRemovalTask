@@ -129,63 +129,63 @@ void myfsm::Homing::run(double time, double period){
     // LEFT HAND
     
     Eigen::Affine3d poseLeftHand;
-    geometry_msgs::Pose start_frame_pose;
+    geometry_msgs::Pose start_frame_pose2;
 
     shared_data()._robot->model().getPose("LSoftHand", "Waist", poseLeftHand);
-    tf::poseEigenToMsg (poseLeftHand, start_frame_pose);
+    tf::poseEigenToMsg (poseLeftHand, start_frame_pose2);
 
     // define the start frame 
-    geometry_msgs::PoseStamped start_frame;
+    geometry_msgs::PoseStamped start_frame2;
     
-    start_frame.pose.position.x = start_frame_pose.position.x;
-    start_frame.pose.position.y = start_frame_pose.position.y;
-    start_frame.pose.position.z = start_frame_pose.position.z;
+    start_frame2.pose.position.x = start_frame_pose2.position.x;
+    start_frame2.pose.position.y = start_frame_pose2.position.y;
+    start_frame2.pose.position.z = start_frame_pose2.position.z;
       
-    start_frame.pose.orientation.x = start_frame_pose.orientation.x;
-    start_frame.pose.orientation.y = start_frame_pose.orientation.y;
-    start_frame.pose.orientation.z = start_frame_pose.orientation.z;
-    start_frame.pose.orientation.w = start_frame_pose.orientation.w;    
+    start_frame2.pose.orientation.x = start_frame_pose2.orientation.x;
+    start_frame2.pose.orientation.y = start_frame_pose2.orientation.y;
+    start_frame2.pose.orientation.z = start_frame_pose2.orientation.z;
+    start_frame2.pose.orientation.w = start_frame_pose2.orientation.w;    
     
     
-    trajectory_utils::Cartesian start;
-    start.distal_frame = "LSoftHand";
-    start.frame = start_frame;
+    trajectory_utils::Cartesian start2;
+    start2.distal_frame = "LSoftHand";
+    start2.frame = start_frame2;
     
     // define the end frame - RIGHT HAND
-    geometry_msgs::PoseStamped end_frame;
-    end_frame.pose.position.x = 0.564943;
-    end_frame.pose.position.y = 0.457868;
-    end_frame.pose.position.z = -0.00638944;
+    geometry_msgs::PoseStamped end_frame2;
+    end_frame2.pose.position.x = 0.564943;
+    end_frame2.pose.position.y = 0.457868;
+    end_frame2.pose.position.z = -0.00638944;
     
-    end_frame.pose.orientation.x = 0.1089976629095435;
-    end_frame.pose.orientation.y = 0.7377777431777746;
-    end_frame.pose.orientation.z = 0.09232939109468996;
-    end_frame.pose.orientation.w = 0.6597566177704103;
+    end_frame2.pose.orientation.x = 0.1089976629095435;
+    end_frame2.pose.orientation.y = 0.7377777431777746;
+    end_frame2.pose.orientation.z = 0.09232939109468996;
+    end_frame2.pose.orientation.w = 0.6597566177704103;
     
-    trajectory_utils::Cartesian end;
-    end.distal_frame = "LSoftHand";
-    end.frame = end_frame;
+    trajectory_utils::Cartesian end2;
+    end2.distal_frame = "LSoftHand";
+    end2.frame = end_frame2;
 
 
     // define the first segment
-    trajectory_utils::segment s1;
-    s1.type.data = 0;        // min jerk traj
-    s1.T.data = 5.0;         // traj duration 5 second      
-    s1.start = start;        // start pose
-    s1.end = end;            // end pose 
+    trajectory_utils::segment s2;
+    s2.type.data = 0;        // min jerk traj
+    s2.T.data = 5.0;         // traj duration 5 second      
+    s2.start = start;        // start pose
+    s2.end = end2;            // end pose 
     
     // only one segment in this example
-    std::vector<trajectory_utils::segment> segments;
-    segments.push_back(s1);
+    std::vector<trajectory_utils::segment> segments2;
+    segments2.push_back(s2);
     
     // prapere the advr_segment_control
-    ADVR_ROS::advr_segment_control srv;
-    srv.request.segment_trj.header.frame_id = "Waist";
-    srv.request.segment_trj.header.stamp = ros::Time::now();
-    srv.request.segment_trj.segments = segments;
+    ADVR_ROS::advr_segment_control srv2;
+    srv2.request.segment_trj.header.frame_id = "Waist";
+    srv2.request.segment_trj.header.stamp = ros::Time::now();
+    srv2.request.segment_trj.segments = segments2;
     
     // call the service
-    shared_data()._client.call(srv);
+    shared_data()._client.call(srv2);
     
     
     /******************************************************************/    
@@ -244,6 +244,14 @@ void myfsm::Reached::run(double time, double period){
   //   0.277916   0.51709 -0.809556 -0.136363
   //   0.786329 -0.606537 -0.117473  0.126653
   // 	  0         0         0         1
+//   x: 0.739059
+//   y: -0.136363
+//   z: 0.126653
+//   
+//   qx: -0.11024191567871373
+//   qy: 0.7393126600214996
+//   qz: -0.4788545398472354
+//   qw: 0.46039313681582444  
 
   
   //CALL SERVICE TO MOVE
@@ -329,6 +337,14 @@ void myfsm::Picked::run(double time, double period){
   //   0.0906155   0.313097  -0.945388  -0.256443
   //     0.85525  -0.510827 -0.0872019   0.051406
   // 	  0          0          0          1
+//   x: 0.58673
+//   y: -0.256443
+//   z: 0.051406
+//   
+//   qx: -0.25684250668537656
+//   qy: 0.6911097495172615
+//   qz: -0.5267668708699131
+//   qw: 0.4229845205627277    
 
   
   //CALL SERVICE TO MOVE
@@ -375,6 +391,14 @@ void myfsm::MovedAway::run(double time, double period){
   //     -0.10957    0.329334    0.937834   -0.752365
   //     0.990422  -0.0435789    0.131017 -0.00966471
   // 	    0           0           0           1
+//   x: 0.358676
+//   y: -0.752365
+//   z: -0.00966471
+//   
+//   qx: 0.39486276555151395
+//   qy: 0.5278019446709391
+//   qz: 0.4235754774866177
+//   qw: 0.6213632741436921     
 
   
   //CALL SERVICE TO MOVE
@@ -462,11 +486,6 @@ void myfsm::Ungrasped::react(const XBot::FSM::Event& e) {
 
 void myfsm::Ungrasped::entry(const XBot::FSM::Message& msg){
 
-  //CALL SERVICE TO UNGRASP
-  
-  //WAIT FOR UNGRASPING TO END
-
-      
   std::cout << "Ungrasped_entry" << std::endl;
   sleep(1);   
 
@@ -475,6 +494,12 @@ void myfsm::Ungrasped::entry(const XBot::FSM::Message& msg){
 
 void myfsm::Ungrasped::run(double time, double period){
 
+
+  //CALL SERVICE TO UNGRASP
+  
+  //WAIT FOR UNGRASPING TO END
+
+        
   std::cout << "Ungrasped" << std::endl;
   sleep(1);
   transit("Homing");   
