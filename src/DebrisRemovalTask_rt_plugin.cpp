@@ -52,6 +52,8 @@ bool DebrisRemovalTask::init_control_plugin(std::string path_to_config_file,
     
     ros::init(argc, argv, "DebrisRemovalTask");
     fsm.shared_data()._nh =  std::make_shared<ros::NodeHandle>();
+    fsm.shared_data().command = command;
+    fsm.shared_data().current_command = current_command;
     
     fsm.shared_data()._client = fsm.shared_data()._nh->serviceClient<ADVR_ROS::advr_segment_control>("segment_control");    
 
@@ -67,9 +69,7 @@ bool DebrisRemovalTask::init_control_plugin(std::string path_to_config_file,
     fsm.register_state(std::make_shared<myfsm::MovedAway>());
     fsm.register_state(std::make_shared<myfsm::PlacedDown>());
     fsm.register_state(std::make_shared<myfsm::Ungrasped>());
-    
-    // Initialize the FSM with the initial state
-    fsm.init("Homing");
+
 
     return true;
 
@@ -88,6 +88,10 @@ void DebrisRemovalTask::on_start(double time)
 
     /* Save the robot starting config to a class member */
     _start_time = time;
+    
+        
+    // Initialize the FSM with the initial state
+    fsm.init("Homing");
 }
 
 void DebrisRemovalTask::on_stop(double time)

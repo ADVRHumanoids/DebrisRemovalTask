@@ -9,6 +9,8 @@
 #include <trajectory_utils/segment.h>
 #include <trajectory_utils/Cartesian.h>
 
+#include <XBotCore-interfaces/XDomainCommunication.h>
+
 
 namespace myfsm{
 
@@ -41,6 +43,8 @@ namespace myfsm{
       std::shared_ptr<ros::NodeHandle> _nh;
       geometry_msgs::PoseStamped::ConstPtr _debris_pose;
       ros::ServiceClient _client;
+      XBot::SubscriberRT<XBot::Command> command;
+      XBot::Command current_command;
      
     };
     
