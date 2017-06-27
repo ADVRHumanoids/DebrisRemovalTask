@@ -19,7 +19,6 @@
 
 #include <DebrisRemovalTask_rt_plugin.h>
 
-#include <ros/ros.h>
 
 /* Specify that the class XBotPlugin::DebrisRemovalTask is a XBot RT plugin with name "DebrisRemovalTask" */
 REGISTER_XBOT_PLUGIN(DebrisRemovalTask, XBotPlugin::DebrisRemovalTask)
@@ -56,8 +55,10 @@ bool DebrisRemovalTask::init_control_plugin(std::string path_to_config_file,
     fsm.shared_data().current_command = current_command;
     
     fsm.shared_data()._client = fsm.shared_data()._nh->serviceClient<ADVR_ROS::advr_segment_control>("segment_control");    
+//     fsm.shared_data()._grasp_mag_pub = fsm.shared_data()._nh->advertise<std_msgs::Bool>("/grasp/RWrMot3",1);
+    fsm.shared_data()._grasp_mag_pub = fsm.shared_data()._nh->advertise<std_msgs::String>("/grasp/RWrMot3/goalGrasp",1);
 
-
+    
     /*Saves robot as shared variable between states*/
     fsm.shared_data()._robot= robot;
     

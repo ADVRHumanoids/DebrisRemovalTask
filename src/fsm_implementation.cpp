@@ -47,14 +47,14 @@ void myfsm::Homing::entry(const XBot::FSM::Message& msg){
     
     end_frame.pose = start_frame_pose;    
 
-    end_frame.pose.position.x = 0.679;
-    end_frame.pose.position.y = -0.504;
-    end_frame.pose.position.z = -0.049;    
+    end_frame.pose.position.x = 0.306;
+    end_frame.pose.position.y = -0.393;
+    end_frame.pose.position.z = -0.069;    
     
-    end_frame.pose.orientation.x = -0.017;
-    end_frame.pose.orientation.y = -0.698;
-    end_frame.pose.orientation.z = -0.012;
-    end_frame.pose.orientation.w = 0.715;    
+    end_frame.pose.orientation.x = -0.068;
+    end_frame.pose.orientation.y = -0.534;
+    end_frame.pose.orientation.z = 0.067;
+    end_frame.pose.orientation.w = 0.840;    
     trajectory_utils::Cartesian end;
     end.distal_frame = "RSoftHand";
     end.frame = end_frame;
@@ -226,14 +226,24 @@ void myfsm::Reached::entry(const XBot::FSM::Message& msg){
     
     end_frame.pose = start_frame_pose;    
 
-    end_frame.pose.position.x = 0.841;
-    end_frame.pose.position.y = 0.051;
-    end_frame.pose.position.z = 0.134;    
+    end_frame.pose.position.x+= 0.3;
+    end_frame.pose.position.y+= 0.2;
+//     end_frame.pose.position.z = 0.134;    
     
-    end_frame.pose.orientation.x = -0.110;
-    end_frame.pose.orientation.y = 0.739;
-    end_frame.pose.orientation.z = -0.481;
-    end_frame.pose.orientation.w = -0.459;    
+    end_frame.pose.orientation.x = 0.0;
+    end_frame.pose.orientation.y = -0.7071070192004544;
+    end_frame.pose.orientation.z = 0.0;
+    end_frame.pose.orientation.w = 0.7071070192004544;      
+    
+//     end_frame.pose.position.x = 0.841;
+//     end_frame.pose.position.y = 0.051;
+//     end_frame.pose.position.z = 0.134;        
+//     
+//     end_frame.pose.orientation.x = -0.110;
+//     end_frame.pose.orientation.y = 0.739;
+//     end_frame.pose.orientation.z = -0.481;
+//     end_frame.pose.orientation.w = -0.459;  
+    
     trajectory_utils::Cartesian end;
     end.distal_frame = "RSoftHand";
     end.frame = end_frame;
@@ -308,6 +318,10 @@ void myfsm::Grasped::entry(const XBot::FSM::Message& msg){
   std::cout << "Grasped_entry" << std::endl;
   
   //CALL SERVICE TO GRASP
+  std_msgs::String message;
+  message.data = "wood_debris_1::body";
+//   for (int i=0; i<10; i++)
+    shared_data()._grasp_mag_pub.publish (message);
   
 
 }
@@ -316,7 +330,7 @@ void myfsm::Grasped::entry(const XBot::FSM::Message& msg){
 void myfsm::Grasped::run(double time, double period){
 
    
-  std::cout << "Grasped run" << std::endl;
+//   std::cout << "Grasped run" << std::endl;
   
   //TBD: Check if the RH has reached the grasped_pose
   
@@ -386,7 +400,7 @@ void myfsm::Picked::entry(const XBot::FSM::Message& msg){
     
     end_frame.pose = start_frame_pose;    
 
-    end_frame.pose.position.x = 0.627;
+    end_frame.pose.position.x = 0.427;
     end_frame.pose.position.y = -0.049;
     end_frame.pose.position.z = 0.054;    
     
@@ -496,7 +510,8 @@ void myfsm::MovedAway::entry(const XBot::FSM::Message& msg){
 
     end_frame.pose.position.x = 0.451;
     end_frame.pose.position.y = -0.940;
-    end_frame.pose.position.z = -0.040;    
+//     end_frame.pose.position.z = -0.040;
+    end_frame.pose.position.z = 0.060;    
     
     end_frame.pose.orientation.x = -0.396;
     end_frame.pose.orientation.y = -0.525;
@@ -571,36 +586,105 @@ void myfsm::PlacedDown::react(const XBot::FSM::Event& e) {
 
 }
 
+// TEMPORARILY FAKE FUNCTION
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::PlacedDown::entry(const XBot::FSM::Message& msg){
 
-  std::cout << "PlacedDown_entry" << std::endl;
-
-  //READ RIGHT ARM FT ("/xbotcore/bigman/ft/r_arm_ft")
-  //ASSIGN THE NORM  OF IT TO FT_i (AND FT_f)
-  
-  //until the debris is not touching the ground, lower it a bit
-  while( /*FT_i <= k1 * FT_f && FT_i >= k2 * FT_f*/ 0){
-    
-    //READ CURRENT POSE
-    
-    //DESIRED POSE: CURRENTPOSE->z = CURRENTPOSE->z - 0.05;
+    std::cout << "PlacedDown_entry" << std::endl;
     
     //CALL SERVICE TO MOVE
-  
-    //WAIT FOR DESIRED POSE TO BE REACHED
+    // send a trajectory for the end effector as a segment
     
-    //READ RIGHT ARM FT ("/xbotcore/bigman/ft/r_arm_ft")
-    //ASSIGN THE NORM  OF IT TO AND FT_f
+    shared_data()._robot->sense();    
     
-  }
+    // RIGHT HAND
+    
+    Eigen::Affine3d poseRightHand;
+    geometry_msgs::Pose start_frame_pose;
 
-  // I now end the loop here  
-  std::cout << "THE END" << std::endl;
-  return;  
+    shared_data()._robot->model().getPose("RSoftHand", "Waist", poseRightHand);
+    tf::poseEigenToMsg (poseRightHand, start_frame_pose);
+
+    // define the start frame 
+    geometry_msgs::PoseStamped start_frame;
+    start_frame.pose = start_frame_pose;
+    
+    trajectory_utils::Cartesian start;
+    start.distal_frame = "RSoftHand";
+    start.frame = start_frame;
+    
+    // define the end frame - RIGHT HAND
+    geometry_msgs::PoseStamped end_frame;
+    
+    end_frame.pose = start_frame_pose;    
+
+    end_frame.pose.position.x = 0.451;
+    end_frame.pose.position.y = -0.940;
+    end_frame.pose.position.z = -0.040;
+    
+    end_frame.pose.orientation.x = -0.396;
+    end_frame.pose.orientation.y = -0.525;
+    end_frame.pose.orientation.z = -0.428;
+    end_frame.pose.orientation.w = 0.620;    
+    trajectory_utils::Cartesian end;
+    end.distal_frame = "RSoftHand";
+    end.frame = end_frame;
+
+    // define the first segment
+    trajectory_utils::segment s1;
+    s1.type.data = 0;        // min jerk traj
+    s1.T.data = 5.0;         // traj duration 5 second      
+    s1.start = start;        // start pose
+    s1.end = end;            // end pose 
+    
+    // only one segment in this example
+    std::vector<trajectory_utils::segment> segments;
+    segments.push_back(s1);
+    
+    // prapere the advr_segment_control
+    ADVR_ROS::advr_segment_control srv;
+    srv.request.segment_trj.header.frame_id = "Waist";
+    srv.request.segment_trj.header.stamp = ros::Time::now();
+    srv.request.segment_trj.segments = segments;
+    
+    // call the service
+    shared_data()._client.call(srv);    
+
 
 }
 
+
+// IN THE FUTURE THIS WILL BE THE REAL FUNCTION
+///////////////////////////////////////////////////////////////////////////////
+// void myfsm::PlacedDown::entry(const XBot::FSM::Message& msg){
+// 
+//   std::cout << "PlacedDown_entry" << std::endl;
+// 
+//   //READ RIGHT ARM FT ("/xbotcore/bigman/ft/r_arm_ft")
+//   //ASSIGN THE NORM  OF IT TO FT_i (AND FT_f)
+//   
+//   //until the debris is not touching the ground, lower it a bit
+//   while( /*FT_i <= k1 * FT_f && FT_i >= k2 * FT_f*/ 0){
+//     
+//     //READ CURRENT POSE
+//     
+//     //DESIRED POSE: CURRENTPOSE->z = CURRENTPOSE->z - 0.05;
+//     
+//     //CALL SERVICE TO MOVE
+//   
+//     //WAIT FOR DESIRED POSE TO BE REACHED
+//     
+//     //READ RIGHT ARM FT ("/xbotcore/bigman/ft/r_arm_ft")
+//     //ASSIGN THE NORM  OF IT TO AND FT_f
+//     
+//   }
+// 
+//   // I now end the loop here  
+//   std::cout << "THE END" << std::endl;
+//   return;  
+// 
+// }
+// 
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::PlacedDown::run(double time, double period){
 
@@ -649,6 +733,12 @@ void myfsm::Ungrasped::entry(const XBot::FSM::Message& msg){
   std::cout << "Ungrasped_entry" << std::endl;
   
   //CALL SERVICE TO UNGRASP  
+  std_msgs::String message;
+  message.data = "";
+//   for (int i=0; i<10; i++)
+    shared_data()._grasp_mag_pub.publish (message);
+  
+  
 
 }
 

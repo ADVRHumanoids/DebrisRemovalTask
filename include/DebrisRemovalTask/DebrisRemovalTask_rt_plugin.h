@@ -23,6 +23,10 @@
 #include <XCM/XBotControlPlugin.h>
 #include "fsm_definition.h"
 
+#include <ros/ros.h>
+#include <std_msgs/Bool.h>
+#include <std_msgs/String.h>
+
 
 namespace XBotPlugin {
 
