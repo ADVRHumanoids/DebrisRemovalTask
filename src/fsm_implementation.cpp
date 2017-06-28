@@ -226,9 +226,9 @@ void myfsm::Reached::entry(const XBot::FSM::Message& msg){
     
     end_frame.pose = start_frame_pose;    
 
-    end_frame.pose.position.x+= 0.3;
-    end_frame.pose.position.y+= 0.2;
-//     end_frame.pose.position.z = 0.134;    
+    end_frame.pose.position.x = 0.659;
+    end_frame.pose.position.y = -0.29;
+    end_frame.pose.position.z = -0.074;    
     
     end_frame.pose.orientation.x = 0.0;
     end_frame.pose.orientation.y = -0.7071070192004544;
@@ -251,7 +251,7 @@ void myfsm::Reached::entry(const XBot::FSM::Message& msg){
     // define the first segment
     trajectory_utils::segment s1;
     s1.type.data = 0;        // min jerk traj
-    s1.T.data = 5.0;         // traj duration 5 second      
+    s1.T.data = 15.0;         // traj duration 5 second      
     s1.start = start;        // start pose
     s1.end = end;            // end pose 
     
