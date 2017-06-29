@@ -33,10 +33,18 @@ void myfsm::Homing::entry(const XBot::FSM::Message& msg){
 
     shared_data()._robot->model().getPose("RSoftHand", "Waist", poseRightHand);
     tf::poseEigenToMsg (poseRightHand, start_frame_pose);
+    
+    //Offset needed for the current configuration of OpensotIk (with floating base)
+    KDL::Frame l_sole_T_Waist;
+    shared_data()._robot->model().getPose("Waist", "l_sole", l_sole_T_Waist);
+    double z_offset;
+    z_offset = l_sole_T_Waist.p.z();
+    
 
     // define the start frame 
     geometry_msgs::PoseStamped start_frame;
     start_frame.pose = start_frame_pose;
+    start_frame.pose.position.z+= z_offset; 
     
     trajectory_utils::Cartesian start;
     start.distal_frame = "RSoftHand";
@@ -46,15 +54,19 @@ void myfsm::Homing::entry(const XBot::FSM::Message& msg){
     geometry_msgs::PoseStamped end_frame;
     
     end_frame.pose = start_frame_pose;    
-
+    
     end_frame.pose.position.x = 0.306;
     end_frame.pose.position.y = -0.393;
-    end_frame.pose.position.z = -0.069;    
+    end_frame.pose.position.z = -0.069;     
     
     end_frame.pose.orientation.x = -0.068;
     end_frame.pose.orientation.y = -0.534;
     end_frame.pose.orientation.z = 0.067;
-    end_frame.pose.orientation.w = 0.840;    
+    end_frame.pose.orientation.w = 0.840;   
+    
+
+    end_frame.pose.position.z+= z_offset; 
+    
     trajectory_utils::Cartesian end;
     end.distal_frame = "RSoftHand";
     end.frame = end_frame;
@@ -213,13 +225,20 @@ void myfsm::Reached::entry(const XBot::FSM::Message& msg){
     shared_data()._robot->model().getPose("RSoftHand", "Waist", poseRightHand);
     tf::poseEigenToMsg (poseRightHand, start_frame_pose);
 
+    //Offset needed for the current configuration of OpensotIk (with floating base)
+    KDL::Frame l_sole_T_Waist;
+    shared_data()._robot->model().getPose("Waist", "l_sole", l_sole_T_Waist);
+    double z_offset;
+    z_offset = l_sole_T_Waist.p.z();
+    
     // define the start frame 
     geometry_msgs::PoseStamped start_frame;
     start_frame.pose = start_frame_pose;
+    start_frame.pose.position.z+= z_offset; 
     
     trajectory_utils::Cartesian start;
     start.distal_frame = "RSoftHand";
-    start.frame = start_frame;
+    start.frame = start_frame;    
     
     // define the end frame - RIGHT HAND
     geometry_msgs::PoseStamped end_frame;
@@ -233,16 +252,9 @@ void myfsm::Reached::entry(const XBot::FSM::Message& msg){
     end_frame.pose.orientation.x = 0.0;
     end_frame.pose.orientation.y = -0.7071070192004544;
     end_frame.pose.orientation.z = 0.0;
-    end_frame.pose.orientation.w = 0.7071070192004544;      
+    end_frame.pose.orientation.w = 0.7071070192004544;     
     
-//     end_frame.pose.position.x = 0.841;
-//     end_frame.pose.position.y = 0.051;
-//     end_frame.pose.position.z = 0.134;        
-//     
-//     end_frame.pose.orientation.x = -0.110;
-//     end_frame.pose.orientation.y = 0.739;
-//     end_frame.pose.orientation.z = -0.481;
-//     end_frame.pose.orientation.w = -0.459;  
+    end_frame.pose.position.z+= z_offset; 
     
     trajectory_utils::Cartesian end;
     end.distal_frame = "RSoftHand";
@@ -251,7 +263,7 @@ void myfsm::Reached::entry(const XBot::FSM::Message& msg){
     // define the first segment
     trajectory_utils::segment s1;
     s1.type.data = 0;        // min jerk traj
-    s1.T.data = 15.0;         // traj duration 5 second      
+    s1.T.data = 5.0;         // traj duration 5 second      
     s1.start = start;        // start pose
     s1.end = end;            // end pose 
     
@@ -386,10 +398,17 @@ void myfsm::Picked::entry(const XBot::FSM::Message& msg){
 
     shared_data()._robot->model().getPose("RSoftHand", "Waist", poseRightHand);
     tf::poseEigenToMsg (poseRightHand, start_frame_pose);
+    
+    //Offset needed for the current configuration of OpensotIk (with floating base)
+    KDL::Frame l_sole_T_Waist;
+    shared_data()._robot->model().getPose("Waist", "l_sole", l_sole_T_Waist);
+    double z_offset;
+    z_offset = l_sole_T_Waist.p.z();    
 
     // define the start frame 
     geometry_msgs::PoseStamped start_frame;
     start_frame.pose = start_frame_pose;
+    start_frame.pose.position.z+= z_offset; 
     
     trajectory_utils::Cartesian start;
     start.distal_frame = "RSoftHand";
@@ -407,7 +426,10 @@ void myfsm::Picked::entry(const XBot::FSM::Message& msg){
     end_frame.pose.orientation.x = -0.258;
     end_frame.pose.orientation.y = 0.691;
     end_frame.pose.orientation.z = -0.527;
-    end_frame.pose.orientation.w = -0.423;    
+    end_frame.pose.orientation.w = -0.423;  
+    
+    end_frame.pose.position.z+= z_offset; 
+    
     trajectory_utils::Cartesian end;
     end.distal_frame = "RSoftHand";
     end.frame = end_frame;
@@ -494,10 +516,17 @@ void myfsm::MovedAway::entry(const XBot::FSM::Message& msg){
 
     shared_data()._robot->model().getPose("RSoftHand", "Waist", poseRightHand);
     tf::poseEigenToMsg (poseRightHand, start_frame_pose);
+    
+    //Offset needed for the current configuration of OpensotIk (with floating base)
+    KDL::Frame l_sole_T_Waist;
+    shared_data()._robot->model().getPose("Waist", "l_sole", l_sole_T_Waist);
+    double z_offset;
+    z_offset = l_sole_T_Waist.p.z();    
 
     // define the start frame 
     geometry_msgs::PoseStamped start_frame;
     start_frame.pose = start_frame_pose;
+    start_frame.pose.position.z+= z_offset; 
     
     trajectory_utils::Cartesian start;
     start.distal_frame = "RSoftHand";
@@ -510,13 +539,15 @@ void myfsm::MovedAway::entry(const XBot::FSM::Message& msg){
 
     end_frame.pose.position.x = 0.451;
     end_frame.pose.position.y = -0.940;
-//     end_frame.pose.position.z = -0.040;
     end_frame.pose.position.z = 0.060;    
     
     end_frame.pose.orientation.x = -0.396;
     end_frame.pose.orientation.y = -0.525;
     end_frame.pose.orientation.z = -0.428;
-    end_frame.pose.orientation.w = 0.620;    
+    end_frame.pose.orientation.w = 0.620;
+    
+    end_frame.pose.position.z+= z_offset; 
+    
     trajectory_utils::Cartesian end;
     end.distal_frame = "RSoftHand";
     end.frame = end_frame;
@@ -604,10 +635,17 @@ void myfsm::PlacedDown::entry(const XBot::FSM::Message& msg){
 
     shared_data()._robot->model().getPose("RSoftHand", "Waist", poseRightHand);
     tf::poseEigenToMsg (poseRightHand, start_frame_pose);
+    
+    //Offset needed for the current configuration of OpensotIk (with floating base)
+    KDL::Frame l_sole_T_Waist;
+    shared_data()._robot->model().getPose("Waist", "l_sole", l_sole_T_Waist);
+    double z_offset;
+    z_offset = l_sole_T_Waist.p.z();    
 
     // define the start frame 
     geometry_msgs::PoseStamped start_frame;
     start_frame.pose = start_frame_pose;
+    start_frame.pose.position.z+= z_offset; 
     
     trajectory_utils::Cartesian start;
     start.distal_frame = "RSoftHand";
@@ -626,6 +664,9 @@ void myfsm::PlacedDown::entry(const XBot::FSM::Message& msg){
     end_frame.pose.orientation.y = -0.525;
     end_frame.pose.orientation.z = -0.428;
     end_frame.pose.orientation.w = 0.620;    
+    
+    end_frame.pose.position.z+= z_offset; 
+    
     trajectory_utils::Cartesian end;
     end.distal_frame = "RSoftHand";
     end.frame = end_frame;
