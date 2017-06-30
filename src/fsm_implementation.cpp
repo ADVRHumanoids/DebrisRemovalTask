@@ -206,7 +206,7 @@ void myfsm::Reached::entry(const XBot::FSM::Message& msg){
     //in the future the position to reach the debris will be given by a ros message published on the rostopic "debris_pose"
     
   // blocking call: wait for a pose on topic debris_pose
-//   shared_data()._debris_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>("debris_pose");
+  shared_data()._debris_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>("debris_pose");
   
   // Debug msg
 //   std::cout << "pose x : " << shared_data()._debris_pose->pose.position.x << std::endl;
@@ -244,15 +244,17 @@ void myfsm::Reached::entry(const XBot::FSM::Message& msg){
     geometry_msgs::PoseStamped end_frame;
     
     end_frame.pose = start_frame_pose;    
-
-    end_frame.pose.position.x = 0.659;
-    end_frame.pose.position.y = -0.29;
-    end_frame.pose.position.z = -0.074;    
     
-    end_frame.pose.orientation.x = 0.0;
-    end_frame.pose.orientation.y = -0.7071070192004544;
-    end_frame.pose.orientation.z = 0.0;
-    end_frame.pose.orientation.w = 0.7071070192004544;     
+    end_frame = *shared_data()._debris_pose;
+
+//     end_frame.pose.position.x = 0.659;
+//     end_frame.pose.position.y = -0.29;
+//     end_frame.pose.position.z = -0.074;    
+//     
+//     end_frame.pose.orientation.x = 0.0;
+//     end_frame.pose.orientation.y = -0.7071070192004544;
+//     end_frame.pose.orientation.z = 0.0;
+//     end_frame.pose.orientation.w = 0.7071070192004544;     
     
     end_frame.pose.position.z+= z_offset; 
     
@@ -329,9 +331,13 @@ void myfsm::Grasped::entry(const XBot::FSM::Message& msg){
 
   std::cout << "Grasped_entry" << std::endl;
   
+  // blocking call: wait for a pose on topic debris_pose
+  shared_data()._debris_number = ros::topic::waitForMessage<std_msgs::String>("debris_number");
+  
   //CALL SERVICE TO GRASP
   std_msgs::String message;
-  message.data = "wood_debris_1::body";
+//   message.data = "wood_debris_1::body";
+  message = *shared_data()._debris_number;
 //   for (int i=0; i<10; i++)
     shared_data()._grasp_mag_pub.publish (message);
   

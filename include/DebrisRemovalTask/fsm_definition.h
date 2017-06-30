@@ -62,6 +62,7 @@ namespace myfsm{
       XBot::RobotInterface::Ptr _robot;
       std::shared_ptr<ros::NodeHandle> _nh;
       geometry_msgs::PoseStamped::ConstPtr _debris_pose;
+      std_msgs::String::ConstPtr _debris_number;
       ros::ServiceClient _client;
       XBot::SubscriberRT<XBot::Command> command;
       XBot::Command current_command;
