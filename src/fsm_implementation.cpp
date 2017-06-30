@@ -1,6 +1,7 @@
 #include "fsm_definition.h"
 
 #include <vector>
+#include <string>
 
 
 
@@ -202,7 +203,21 @@ void myfsm::Reached::react(const XBot::FSM::Event& e) {
 void myfsm::Reached::entry(const XBot::FSM::Message& msg){
 
     std::cout << "Reached_entry" << std::endl;
-  
+    
+    std::cout << "End effector selection" << std::endl;
+    
+    // blocking call: wait for a msg on topic hand_selection
+    shared_data()._hand_selection = ros::topic::waitForMessage<std_msgs::String>("hand_selection");
+    std_msgs::String message;
+    message = *shared_data()._hand_selection;    
+    std::string selectedHand;
+    selectedHand = message.data;
+    
+    if(selectedHand.compare("RSoftHand") || selectedHand.compare("LSoftHand"))
+      std::cout << "Ok" << std::endl;
+    else
+      std::cout << "Incorrect input, you need to publish a different message" << std::endl;
+      
     //in the future the position to reach the debris will be given by a ros message published on the rostopic "debris_pose"
     
   // blocking call: wait for a pose on topic debris_pose
@@ -217,13 +232,13 @@ void myfsm::Reached::entry(const XBot::FSM::Message& msg){
     
     shared_data()._robot->sense();    
     
-    // RIGHT HAND
+    //HAND
     
-    Eigen::Affine3d poseRightHand;
+    Eigen::Affine3d poseHand;
     geometry_msgs::Pose start_frame_pose;
-
-    shared_data()._robot->model().getPose("RSoftHand", "Waist", poseRightHand);
-    tf::poseEigenToMsg (poseRightHand, start_frame_pose);
+    
+    shared_data()._robot->model().getPose(selectedHand, "Waist", poseHand);
+    tf::poseEigenToMsg (poseHand, start_frame_pose);
 
     //Offset needed for the current configuration of OpensotIk (with floating base)
     KDL::Frame l_sole_T_Waist;
@@ -237,10 +252,10 @@ void myfsm::Reached::entry(const XBot::FSM::Message& msg){
     start_frame.pose.position.z+= z_offset; 
     
     trajectory_utils::Cartesian start;
-    start.distal_frame = "RSoftHand";
+    start.distal_frame = selectedHand;
     start.frame = start_frame;    
     
-    // define the end frame - RIGHT HAND
+    // define the end frame
     geometry_msgs::PoseStamped end_frame;
     
     end_frame.pose = start_frame_pose;    
@@ -259,7 +274,7 @@ void myfsm::Reached::entry(const XBot::FSM::Message& msg){
     end_frame.pose.position.z+= z_offset; 
     
     trajectory_utils::Cartesian end;
-    end.distal_frame = "RSoftHand";
+    end.distal_frame = selectedHand;
     end.frame = end_frame;
 
     // define the first segment
@@ -331,15 +346,24 @@ void myfsm::Grasped::entry(const XBot::FSM::Message& msg){
 
   std::cout << "Grasped_entry" << std::endl;
   
+    //Hand selection
+    std_msgs::String message1;
+    message1 = *shared_data()._hand_selection;    
+    std::string selectedHand;
+    selectedHand = message1.data;
+
+  
   // blocking call: wait for a pose on topic debris_pose
   shared_data()._debris_number = ros::topic::waitForMessage<std_msgs::String>("debris_number");
   
   //CALL SERVICE TO GRASP
   std_msgs::String message;
-//   message.data = "wood_debris_1::body";
   message = *shared_data()._debris_number;
-//   for (int i=0; i<10; i++)
-    shared_data()._grasp_mag_pub.publish (message);
+  
+  if(!selectedHand.compare("RSoftHand"))
+    shared_data()._grasp_mag_pub_RSoftHand.publish (message);
+  else if(!selectedHand.compare("LSoftHand"))
+    shared_data()._grasp_mag_pub_LSoftHand.publish (message);
   
 
 }
@@ -397,13 +421,21 @@ void myfsm::Picked::entry(const XBot::FSM::Message& msg){
     
     shared_data()._robot->sense();    
     
-    // RIGHT HAND
+    //HAND
+    //Hand selection
+    std_msgs::String message;
+    message = *shared_data()._hand_selection;    
+    std::string selectedHand;
+    selectedHand = message.data;
     
-    Eigen::Affine3d poseRightHand;
+    std::cout << "SelectedHand: " << message.data << std::endl;
+
+    
+    Eigen::Affine3d poseHand;
     geometry_msgs::Pose start_frame_pose;
 
-    shared_data()._robot->model().getPose("RSoftHand", "Waist", poseRightHand);
-    tf::poseEigenToMsg (poseRightHand, start_frame_pose);
+    shared_data()._robot->model().getPose(selectedHand, "Waist", poseHand);
+    tf::poseEigenToMsg (poseHand, start_frame_pose);
     
     //Offset needed for the current configuration of OpensotIk (with floating base)
     KDL::Frame l_sole_T_Waist;
@@ -417,27 +449,49 @@ void myfsm::Picked::entry(const XBot::FSM::Message& msg){
     start_frame.pose.position.z+= z_offset; 
     
     trajectory_utils::Cartesian start;
-    start.distal_frame = "RSoftHand";
+    start.distal_frame = selectedHand;
     start.frame = start_frame;
     
     // define the end frame - RIGHT HAND
     geometry_msgs::PoseStamped end_frame;
     
-    end_frame.pose = start_frame_pose;    
-
-    end_frame.pose.position.x = 0.427;
-    end_frame.pose.position.y = -0.049;
-    end_frame.pose.position.z = 0.054;    
+    end_frame.pose = start_frame_pose; 
     
-    end_frame.pose.orientation.x = -0.258;
-    end_frame.pose.orientation.y = 0.691;
-    end_frame.pose.orientation.z = -0.527;
-    end_frame.pose.orientation.w = -0.423;  
+    if(!selectedHand.compare("RSoftHand")){
+      
+      std::cout << "Inside IF SelectedHand: RSoftHand " << std::endl;
+      
+      
+      end_frame.pose.position.x = 0.427;
+      end_frame.pose.position.y = -0.049;
+      end_frame.pose.position.z = 0.054;    
+      
+      end_frame.pose.orientation.x = -0.258;
+      end_frame.pose.orientation.y = 0.691;
+      end_frame.pose.orientation.z = -0.691;
+      end_frame.pose.orientation.w = -0.423;  
+      
+    }else if(!selectedHand.compare("LSoftHand")){
+      
+      end_frame.pose.position.x = 0.427;
+      end_frame.pose.position.y = 0.049;
+      end_frame.pose.position.z = 0.054;    
+      
+      end_frame.pose.orientation.x = 0.258;
+      end_frame.pose.orientation.y = 0.691;
+      end_frame.pose.orientation.z = 0.691;
+      end_frame.pose.orientation.w = -0.423;  
+
+      
+    }
+       
+
+
     
     end_frame.pose.position.z+= z_offset; 
     
     trajectory_utils::Cartesian end;
-    end.distal_frame = "RSoftHand";
+    end.distal_frame = selectedHand;
     end.frame = end_frame;
 
     // define the first segment
@@ -783,7 +837,7 @@ void myfsm::Ungrasped::entry(const XBot::FSM::Message& msg){
   std_msgs::String message;
   message.data = "";
 //   for (int i=0; i<10; i++)
-    shared_data()._grasp_mag_pub.publish (message);
+    shared_data()._grasp_mag_pub_RSoftHand.publish (message);
   
   
 

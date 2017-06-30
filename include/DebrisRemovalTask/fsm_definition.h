@@ -63,10 +63,12 @@ namespace myfsm{
       std::shared_ptr<ros::NodeHandle> _nh;
       geometry_msgs::PoseStamped::ConstPtr _debris_pose;
       std_msgs::String::ConstPtr _debris_number;
+      std_msgs::String::ConstPtr _hand_selection;
       ros::ServiceClient _client;
       XBot::SubscriberRT<XBot::Command> command;
       XBot::Command current_command;
-      ros::Publisher _grasp_mag_pub;
+      ros::Publisher _grasp_mag_pub_LSoftHand;
+      ros::Publisher _grasp_mag_pub_RSoftHand;
      
     };
     
