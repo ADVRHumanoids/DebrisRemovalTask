@@ -535,6 +535,10 @@ void myfsm::Picked::run(double time, double period){
     // Picked Succeeded
     if (!shared_data().current_command.str().compare("picked_success"))
       transit("MovedAway");
+    
+    // Picked Succeeded
+    if (!shared_data().current_command.str().compare("pick_second_hand"))
+      transit("PickSecondHand");
   } 
 
 
@@ -548,6 +552,175 @@ void myfsm::Picked::exit (){
 }
 
 /********************************* END Picked *******************************/
+
+
+/*************************** BEGIN PickSecondHand ***************************/
+
+///////////////////////////////////////////////////////////////////////////////
+void myfsm::PickSecondHand::react(const XBot::FSM::Event& e) {
+
+ 
+
+}
+
+///////////////////////////////////////////////////////////////////////////////
+void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
+
+    std::cout << "PickSecondHand" << std::endl;
+  
+    //CALL SERVICE TO MOVE
+    // send a trajectory for the end effector as a segment
+    
+    shared_data()._robot->sense();    
+    
+    //HAND
+    //Hand selection
+    std_msgs::String message;
+    message = *shared_data()._hand_selection;    
+    std::string holdingHand;
+    holdingHand = message.data;
+    
+    std::string secondHand;
+
+    if(!holdingHand.compare("RSoftHand"))
+      secondHand = "LSoftHand";
+    else if(!holdingHand.compare("LSoftHand"))
+      secondHand = "RSoftHand";
+    
+    std::cout << "holdingHand: " << holdingHand << std::endl;
+    std::cout << "secondHand: " << secondHand << std::endl;
+
+    
+    Eigen::Affine3d poseHoldingHand,poseSecondHand;
+    geometry_msgs::Pose start_frame_pose,start_frame_pose_holding_hand;
+
+    shared_data()._robot->model().getPose(holdingHand, "Waist", poseHoldingHand);
+    tf::poseEigenToMsg (poseSecondHand, start_frame_pose_holding_hand);
+
+    
+    shared_data()._robot->model().getPose(secondHand, "Waist", poseSecondHand);
+    tf::poseEigenToMsg (poseSecondHand, start_frame_pose);
+    
+    //Offset needed for the current configuration of OpensotIk (with floating base)
+    KDL::Frame l_sole_T_Waist;
+    shared_data()._robot->model().getPose("Waist", "l_sole", l_sole_T_Waist);
+    double z_offset;
+    z_offset = l_sole_T_Waist.p.z();    
+
+    // define the start frame 
+    geometry_msgs::PoseStamped start_frame;
+    start_frame.pose = start_frame_pose;
+    start_frame.pose.position.z+= z_offset; 
+    
+    trajectory_utils::Cartesian start;
+    start.distal_frame = secondHand;
+    start.frame = start_frame;
+    
+    // define the end frame
+    geometry_msgs::PoseStamped end_frame;
+    
+    end_frame.pose = start_frame_pose_holding_hand; //not working properly
+    
+    if(!secondHand.compare("RSoftHand")){
+      
+//       end_frame.pose.position.x = 0.427;
+//       end_frame.pose.position.y = -0.049;
+      end_frame.pose.position.z+=0.15;    
+      
+//       end_frame.pose.orientation.x = -0.258;
+//       end_frame.pose.orientation.y = 0.691;
+//       end_frame.pose.orientation.z = -0.691;
+//       end_frame.pose.orientation.w = -0.423;  
+      
+    }else if(!secondHand.compare("LSoftHand")){
+      
+//       end_frame.pose.position.x = 0.427;
+//       end_frame.pose.position.y = 0.049;
+//       end_frame.pose.position.z = 0.054;    
+//       
+//       end_frame.pose.orientation.x = 0.258;
+//       end_frame.pose.orientation.y = 0.691;
+//       end_frame.pose.orientation.z = 0.691;
+//       end_frame.pose.orientation.w = -0.423;  
+
+      
+    }
+
+    
+    end_frame.pose.position.z+= z_offset; 
+    
+    trajectory_utils::Cartesian end;
+    end.distal_frame = secondHand;
+    end.frame = end_frame;
+
+    // define the first segment
+    trajectory_utils::segment s1;
+    s1.type.data = 0;        // min jerk traj
+    s1.T.data = 5.0;         // traj duration 5 second      
+    s1.start = start;        // start pose
+    s1.end = end;            // end pose 
+    
+    // only one segment in this example
+    std::vector<trajectory_utils::segment> segments;
+    segments.push_back(s1);
+    
+    // prapere the advr_segment_control
+    ADVR_ROS::advr_segment_control srv;
+    srv.request.segment_trj.header.frame_id = "Waist";
+    srv.request.segment_trj.header.stamp = ros::Time::now();
+    srv.request.segment_trj.segments = segments;
+    
+    // call the service
+    shared_data()._client.call(srv);     
+}
+
+///////////////////////////////////////////////////////////////////////////////
+void myfsm::PickSecondHand::run(double time, double period){
+
+   
+  std::cout << "PickSecondHand run" << std::endl;
+  
+  //TBD: Check if the RH has reached the picked_pose
+  
+  // blocking reading: wait for a command
+//   if(shared_data().command.read(shared_data().current_command))
+//   {
+//     std::cout << "Command: " << shared_data().current_command.str() << std::endl;
+// 
+//     // Picked failed
+//     if (!shared_data().current_command.str().compare("picked_fail"))
+//       transit("Homing");
+//     
+//     // Picked Succeeded
+//     if (!shared_data().current_command.str().compare("picked_success"))
+//       transit("MovedAway");
+//   } 
+
+
+}
+
+///////////////////////////////////////////////////////////////////////////////
+void myfsm::PickSecondHand::exit (){
+
+ 
+
+}
+
+/********************************* END PickSecondHand *******************************/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 /****************************** BEGIN MovedAway *****************************/

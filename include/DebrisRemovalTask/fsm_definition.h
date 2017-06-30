@@ -149,6 +149,23 @@ namespace myfsm{
 
 
      };
+
+    class PickSecondHand : public MacroState {
+
+      virtual std::string get_name() const { return "PickSecondHand"; }
+
+      virtual void run(double time, double period);
+
+      virtual void entry(const XBot::FSM::Message& msg);
+
+      virtual void react(const XBot::FSM::Event& e);
+
+      virtual void exit ();
+
+      private:
+
+
+     };     
  
     class MovedAway : public MacroState {
 
