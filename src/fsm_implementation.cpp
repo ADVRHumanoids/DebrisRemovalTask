@@ -595,8 +595,7 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
     geometry_msgs::Pose start_frame_pose,start_frame_pose_holding_hand;
 
     shared_data()._robot->model().getPose(holdingHand, "Waist", poseHoldingHand);
-    tf::poseEigenToMsg (poseSecondHand, start_frame_pose_holding_hand);
-
+    tf::poseEigenToMsg (poseHoldingHand, start_frame_pose_holding_hand);
     
     shared_data()._robot->model().getPose(secondHand, "Waist", poseSecondHand);
     tf::poseEigenToMsg (poseSecondHand, start_frame_pose);
@@ -616,21 +615,75 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
     start.distal_frame = secondHand;
     start.frame = start_frame;
     
+    
+    
+    
+    // define the intermediate frame
+    geometry_msgs::PoseStamped intermediate_frame;
+    intermediate_frame.pose = start_frame_pose;
+    
+    
+    intermediate_frame.pose.position.x = 0.55;
+    intermediate_frame.pose.position.y = -0.29;
+    intermediate_frame.pose.position.z = -0.074;    
+    
+    intermediate_frame.pose.orientation.x = 0.0;
+    intermediate_frame.pose.orientation.y = -0.7071070192004544;
+    intermediate_frame.pose.orientation.z = 0.0;
+    intermediate_frame.pose.orientation.w = 0.7071070192004544;   	    
+    
+    intermediate_frame.pose.position.z+= z_offset; 
+    
+    trajectory_utils::Cartesian intermediate;
+    intermediate.distal_frame = secondHand;
+    intermediate.frame = intermediate_frame;
+    
+    
+    // define the first segment
+    trajectory_utils::segment s1;
+    s1.type.data = 0;        // min jerk traj
+    s1.T.data = 5.0;         // traj duration 5 second      
+    s1.start = start;        // start pose
+    s1.end = intermediate;            // end pose 
+    
+    // TWO segment in this example
+    std::vector<trajectory_utils::segment> segments;
+    segments.push_back(s1);    
+    
+    
+    geometry_msgs::Pose intermediate_frame_pose;    
+    
+    shared_data()._robot->model().getPose(secondHand, "Waist", poseSecondHand);
+    tf::poseEigenToMsg (poseSecondHand, intermediate_frame_pose);    
+    
     // define the end frame
     geometry_msgs::PoseStamped end_frame;
     
-    end_frame.pose = start_frame_pose_holding_hand; //not working properly
+//     end_frame.pose = start_frame_pose_holding_hand; //not working properly
+    
+    
+    //new
+    Eigen::Vector3d increase;
+    increase << 0.3,0,0;
+    geometry_msgs::Point delta;
+    increase = poseHoldingHand.linear() * increase;
+    tf::pointEigenToMsg(increase,delta);
+    
+	
+    //
     
     if(!secondHand.compare("RSoftHand")){
+
+      end_frame.pose.position.x = start_frame_pose_holding_hand.position.x + delta.x;
+      end_frame.pose.position.y = start_frame_pose_holding_hand.position.y + delta.y;
+      end_frame.pose.position.z = start_frame_pose_holding_hand.position.z + delta.z;
+	
+//       end_frame.pose.position.z+=0.15;    
       
-//       end_frame.pose.position.x = 0.427;
-//       end_frame.pose.position.y = -0.049;
-      end_frame.pose.position.z+=0.15;    
-      
-//       end_frame.pose.orientation.x = -0.258;
-//       end_frame.pose.orientation.y = 0.691;
-//       end_frame.pose.orientation.z = -0.691;
-//       end_frame.pose.orientation.w = -0.423;  
+      end_frame.pose.orientation.x = -start_frame_pose_holding_hand.orientation.x;
+      end_frame.pose.orientation.y = start_frame_pose_holding_hand.orientation.y;
+      end_frame.pose.orientation.z = -start_frame_pose_holding_hand.orientation.z;
+      end_frame.pose.orientation.w = start_frame_pose_holding_hand.orientation.w;
       
     }else if(!secondHand.compare("LSoftHand")){
       
@@ -653,16 +706,15 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
     end.distal_frame = secondHand;
     end.frame = end_frame;
 
-    // define the first segment
-    trajectory_utils::segment s1;
-    s1.type.data = 0;        // min jerk traj
-    s1.T.data = 5.0;         // traj duration 5 second      
-    s1.start = start;        // start pose
-    s1.end = end;            // end pose 
+    // define the second segment
+    trajectory_utils::segment s2;
+    s2.type.data = 0;        // min jerk traj
+    s2.T.data = 5.0;         // traj duration 5 second      
+    s2.start = intermediate;        // start pose
+    s2.end = end;            // end pose 
     
     // only one segment in this example
-    std::vector<trajectory_utils::segment> segments;
-    segments.push_back(s1);
+    segments.push_back(s2);
     
     // prapere the advr_segment_control
     ADVR_ROS::advr_segment_control srv;
@@ -678,7 +730,7 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
 void myfsm::PickSecondHand::run(double time, double period){
 
    
-  std::cout << "PickSecondHand run" << std::endl;
+//   std::cout << "PickSecondHand run" << std::endl;
   
   //TBD: Check if the RH has reached the picked_pose
   
