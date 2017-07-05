@@ -204,7 +204,7 @@ void myfsm::Reached::entry(const XBot::FSM::Message& msg){
 
     std::cout << "Reached_entry" << std::endl;
     
-    std::cout << "End effector selection" << std::endl;
+    std::cout << "Select the End Effector you want to use." << std::endl;
     
     // blocking call: wait for a msg on topic hand_selection
     shared_data()._hand_selection = ros::topic::waitForMessage<std_msgs::String>("hand_selection");
@@ -214,7 +214,7 @@ void myfsm::Reached::entry(const XBot::FSM::Message& msg){
     selectedHand = message.data;
     
     if(selectedHand.compare("RSoftHand") || selectedHand.compare("LSoftHand"))
-      std::cout << "Ok" << std::endl;
+      std::cout << "Select the pose where the debris is." << std::endl;
     else
       std::cout << "Incorrect input, you need to publish a different message" << std::endl;
       
@@ -318,6 +318,10 @@ void myfsm::Reached::run(double time, double period){
     // Reached Succeeded
     if (!shared_data().current_command.str().compare("reached_success"))
       transit("Grasped");
+    
+    // to be canceled
+    if (!shared_data().current_command.str().compare("gotoreach"))
+      transit("Reached");      
   } 
 
 }
@@ -345,6 +349,7 @@ void myfsm::Grasped::react(const XBot::FSM::Event& e) {
 void myfsm::Grasped::entry(const XBot::FSM::Message& msg){
 
   std::cout << "Grasped_entry" << std::endl;
+  std::cout << "Select which debris you want to attach to." << std::endl;
   
     //Hand selection
     std_msgs::String message1;
@@ -388,6 +393,10 @@ void myfsm::Grasped::run(double time, double period){
     // Grasped Succeeded
     if (!shared_data().current_command.str().compare("grasped_success"))
       transit("Picked");
+    
+    // new: moveaway after handover
+    if (!shared_data().current_command.str().compare("move_away_after_ho"))
+      transit("MovedAway");    
   } 
 
 }
@@ -464,7 +473,8 @@ void myfsm::Picked::entry(const XBot::FSM::Message& msg){
       
       end_frame.pose.position.x = 0.427;
       end_frame.pose.position.y = -0.049;
-      end_frame.pose.position.z = 0.054;    
+//       end_frame.pose.position.z = 0.054;
+      end_frame.pose.position.z = -0.15;    
       
       end_frame.pose.orientation.x = -0.258;
       end_frame.pose.orientation.y = 0.691;
@@ -475,7 +485,8 @@ void myfsm::Picked::entry(const XBot::FSM::Message& msg){
       
       end_frame.pose.position.x = 0.427;
       end_frame.pose.position.y = 0.049;
-      end_frame.pose.position.z = 0.054;    
+//       end_frame.pose.position.z = 0.054;
+      end_frame.pose.position.z = -0.15;   
       
       end_frame.pose.orientation.x = 0.258;
       end_frame.pose.orientation.y = 0.691;
@@ -591,11 +602,9 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
     std::cout << "secondHand: " << secondHand << std::endl;
 
     
-    Eigen::Affine3d poseHoldingHand,poseSecondHand;
-    geometry_msgs::Pose start_frame_pose,start_frame_pose_holding_hand;
+    Eigen::Affine3d poseSecondHand;
+    geometry_msgs::Pose start_frame_pose;
 
-    shared_data()._robot->model().getPose(holdingHand, "Waist", poseHoldingHand);
-    tf::poseEigenToMsg (poseHoldingHand, start_frame_pose_holding_hand);
     
     shared_data()._robot->model().getPose(secondHand, "Waist", poseSecondHand);
     tf::poseEigenToMsg (poseSecondHand, start_frame_pose);
@@ -618,44 +627,44 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
     
     
     
-    // define the intermediate frame
-    geometry_msgs::PoseStamped intermediate_frame;
-    intermediate_frame.pose = start_frame_pose;
-    
-    
-    intermediate_frame.pose.position.x = 0.55;
-    intermediate_frame.pose.position.y = -0.29;
-    intermediate_frame.pose.position.z = -0.074;    
-    
-    intermediate_frame.pose.orientation.x = 0.0;
-    intermediate_frame.pose.orientation.y = -0.7071070192004544;
-    intermediate_frame.pose.orientation.z = 0.0;
-    intermediate_frame.pose.orientation.w = 0.7071070192004544;   	    
-    
-    intermediate_frame.pose.position.z+= z_offset; 
-    
-    trajectory_utils::Cartesian intermediate;
-    intermediate.distal_frame = secondHand;
-    intermediate.frame = intermediate_frame;
-    
-    
-    // define the first segment
-    trajectory_utils::segment s1;
-    s1.type.data = 0;        // min jerk traj
-    s1.T.data = 5.0;         // traj duration 5 second      
-    s1.start = start;        // start pose
-    s1.end = intermediate;            // end pose 
-    
-    // TWO segment in this example
-    std::vector<trajectory_utils::segment> segments;
-    segments.push_back(s1);    
-    
-    
-    geometry_msgs::Pose intermediate_frame_pose;    
-    
-    shared_data()._robot->model().getPose(secondHand, "Waist", poseSecondHand);
-    tf::poseEigenToMsg (poseSecondHand, intermediate_frame_pose);    
-    
+//     // define the intermediate frame
+//     geometry_msgs::PoseStamped intermediate_frame;
+//     intermediate_frame.pose = start_frame_pose;
+//     
+//     
+//     intermediate_frame.pose.position.x = 0.45;
+//     intermediate_frame.pose.position.y = -0.29;
+//     intermediate_frame.pose.position.z = -0.074;    
+//     
+//     intermediate_frame.pose.orientation.x = 0.0;
+//     intermediate_frame.pose.orientation.y = -0.7071070192004544;
+//     intermediate_frame.pose.orientation.z = 0.0;
+//     intermediate_frame.pose.orientation.w = 0.7071070192004544;   	    
+//     
+//     intermediate_frame.pose.position.z+= z_offset; 
+//     
+//     trajectory_utils::Cartesian intermediate;
+//     intermediate.distal_frame = secondHand;
+//     intermediate.frame = intermediate_frame;
+//     
+//     
+//     // define the first segment
+//     trajectory_utils::segment s1;
+//     s1.type.data = 0;        // min jerk traj
+//     s1.T.data = 5.0;         // traj duration 5 second      
+//     s1.start = start;        // start pose
+//     s1.end = intermediate;            // end pose 
+//     
+//     // TWO segment in this example
+//     std::vector<trajectory_utils::segment> segments;
+//     segments.push_back(s1);    
+//     
+//     
+//     geometry_msgs::Pose intermediate_frame_pose;    
+//     
+//     shared_data()._robot->model().getPose(secondHand, "Waist", poseSecondHand);
+//     tf::poseEigenToMsg (poseSecondHand, intermediate_frame_pose);    
+//     
     // define the end frame
     geometry_msgs::PoseStamped end_frame;
     
@@ -663,27 +672,91 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
     
     
     //new
-    Eigen::Vector3d increase;
-    increase << 0.3,0,0;
-    geometry_msgs::Point delta;
-    increase = poseHoldingHand.linear() * increase;
-    tf::pointEigenToMsg(increase,delta);
     
+    Eigen::Affine3d poseHoldingHand,poseSecondHandFinal,poseHoldingHand_Affine;
+    geometry_msgs::Pose start_frame_pose_holding_hand;
+
+    KDL::Frame poseHoldingHand_KDL;
+    shared_data()._robot->model().getPose(holdingHand, "Waist", poseHoldingHand_KDL);
+   
+    shared_data()._robot->model().getPose(holdingHand, "Waist", poseHoldingHand);
+//     tf::poseEigenToMsg (poseHoldingHand, start_frame_pose_holding_hand);
+
+    //old
+//     Eigen::Vector3d increase;
+//     increase << 0.3,0,0;
+//     geometry_msgs::Point delta;
+//     increase = poseHoldingHand.linear() * increase;
+//     tf::pointEigenToMsg(increase,delta);
+    
+    
+    
+	//print KDL frame
+	std::cout << "Before rotation" << std::endl;
+	std::cout<<"    pose: ["<<poseHoldingHand_KDL.p.x()<<", "<<poseHoldingHand_KDL.p.y()<<", "<<poseHoldingHand_KDL.p.z()<<"]"<<std::endl;
+        double qx, qy,qz,qw;
+        poseHoldingHand_KDL.M.GetQuaternion(qx,qy,qz,qw);
+        std::cout<<"    quat: ["<<qx<<", "<<qy<<", "<<qz<<", "<<qw<<"]"<<std::endl;
+	
+    poseHoldingHand_KDL.M.DoRotX(M_PI);
+    poseHoldingHand_KDL.p.x(0.25);
+    poseHoldingHand_KDL.p.y(-0.05);
+    poseHoldingHand_KDL.p.z(0);
+    
+	//print KDL frame
+	std::cout << "After rotation" << std::endl;
+	std::cout<<"    pose: ["<<poseHoldingHand_KDL.p.x()<<", "<<poseHoldingHand_KDL.p.y()<<", "<<poseHoldingHand_KDL.p.z()<<"]"<<std::endl;
+//         double qx, qy,qz,qw;
+        poseHoldingHand_KDL.M.GetQuaternion(qx,qy,qz,qw);
+        std::cout<<"    quat: ["<<qx<<", "<<qy<<", "<<qz<<", "<<qw<<"]"<<std::endl;
+	
+	
+    tf::transformKDLToEigen(poseHoldingHand_KDL,poseHoldingHand_Affine);
+    
+    poseSecondHandFinal = poseHoldingHand * poseHoldingHand_Affine;
+
+    tf::poseEigenToMsg (poseSecondHandFinal, start_frame_pose_holding_hand);
+
+    //new line
+    poseHoldingHand_KDL.M.GetQuaternion(qx,qy,qz,qw);
+    
+
+    
+    //reused poseHoldingHand_KDL just for testing
+//     tf::transformEigenToKDL(poseSecondHandFinal,poseHoldingHand_KDL);
+// 	std::cout << "Pose that sould be reached" << std::endl;
+// 	std::cout<<"    pose: ["<<poseHoldingHand_KDL.p.x()<<", "<<poseHoldingHand_KDL.p.y()<<", "<<poseHoldingHand_KDL.p.z()<<"]"<<std::endl;
+//         poseHoldingHand_KDL.M.GetQuaternion(qx,qy,qz,qw);
+//         std::cout<<"    quat: ["<<qx<<", "<<qy<<", "<<qz<<", "<<qw<<"]"<<std::endl;    
 	
     //
     
     if(!secondHand.compare("RSoftHand")){
 
-      end_frame.pose.position.x = start_frame_pose_holding_hand.position.x + delta.x;
-      end_frame.pose.position.y = start_frame_pose_holding_hand.position.y + delta.y;
-      end_frame.pose.position.z = start_frame_pose_holding_hand.position.z + delta.z;
+//       end_frame.pose.position.x = start_frame_pose_holding_hand.position.x + delta.x;
+//       end_frame.pose.position.y = start_frame_pose_holding_hand.position.y + delta.y;
+//       end_frame.pose.position.z = start_frame_pose_holding_hand.position.z + delta.z;
 	
 //       end_frame.pose.position.z+=0.15;    
       
-      end_frame.pose.orientation.x = -start_frame_pose_holding_hand.orientation.x;
-      end_frame.pose.orientation.y = start_frame_pose_holding_hand.orientation.y;
-      end_frame.pose.orientation.z = -start_frame_pose_holding_hand.orientation.z;
-      end_frame.pose.orientation.w = start_frame_pose_holding_hand.orientation.w;
+//       end_frame.pose.orientation.x = -start_frame_pose_holding_hand.orientation.x;
+//       end_frame.pose.orientation.y = start_frame_pose_holding_hand.orientation.y;
+//       end_frame.pose.orientation.z = -start_frame_pose_holding_hand.orientation.z;
+//       end_frame.pose.orientation.w = start_frame_pose_holding_hand.orientation.w;
+      
+      end_frame.pose.position.x = start_frame_pose_holding_hand.position.x;
+      end_frame.pose.position.y = start_frame_pose_holding_hand.position.y;
+      end_frame.pose.position.z = start_frame_pose_holding_hand.position.z;
+	      
+//       end_frame.pose.orientation.x = start_frame_pose_holding_hand.orientation.x;
+//       end_frame.pose.orientation.y = start_frame_pose_holding_hand.orientation.y;
+//       end_frame.pose.orientation.z = start_frame_pose_holding_hand.orientation.z;
+//       end_frame.pose.orientation.w = start_frame_pose_holding_hand.orientation.w;  
+      
+      end_frame.pose.orientation.x = qx;
+      end_frame.pose.orientation.y = qy;
+      end_frame.pose.orientation.z = qz;
+      end_frame.pose.orientation.w = qw;        
       
     }else if(!secondHand.compare("LSoftHand")){
       
@@ -710,10 +783,12 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
     trajectory_utils::segment s2;
     s2.type.data = 0;        // min jerk traj
     s2.T.data = 5.0;         // traj duration 5 second      
-    s2.start = intermediate;        // start pose
+//     s2.start = intermediate;        // start pose	//uncomment this line if you want also intermediate frame 
+    s2.start = start;        // start pose		//delete this line if you want also intermediate frame 
     s2.end = end;            // end pose 
     
     // only one segment in this example
+    std::vector<trajectory_utils::segment> segments; //delete this line if you want also intermediate frame    
     segments.push_back(s2);
     
     // prapere the advr_segment_control
@@ -735,18 +810,25 @@ void myfsm::PickSecondHand::run(double time, double period){
   //TBD: Check if the RH has reached the picked_pose
   
   // blocking reading: wait for a command
-//   if(shared_data().command.read(shared_data().current_command))
-//   {
-//     std::cout << "Command: " << shared_data().current_command.str() << std::endl;
-// 
-//     // Picked failed
-//     if (!shared_data().current_command.str().compare("picked_fail"))
-//       transit("Homing");
-//     
-//     // Picked Succeeded
-//     if (!shared_data().current_command.str().compare("picked_success"))
-//       transit("MovedAway");
-//   } 
+  if(shared_data().command.read(shared_data().current_command))
+  {
+    std::cout << "Command: " << shared_data().current_command.str() << std::endl;
+
+    // Picked failed
+    if (!shared_data().current_command.str().compare("homing"))
+      transit("Homing");
+    
+    // Picked Succeeded
+    std::cout << "Select the End Effector you want to use." << std::endl;    
+    shared_data()._hand_selection = ros::topic::waitForMessage<std_msgs::String>("hand_selection");
+    std_msgs::String message;
+    message = *shared_data()._hand_selection;    
+    std::string selectedHand;
+    selectedHand = message.data;
+    
+    if (!shared_data().current_command.str().compare("picked_success"))
+      transit("Grasped");
+  } 
 
 
 }
