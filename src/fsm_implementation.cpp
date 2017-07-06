@@ -220,12 +220,8 @@ void myfsm::Reached::entry(const XBot::FSM::Message& msg){
       
     //in the future the position to reach the debris will be given by a ros message published on the rostopic "debris_pose"
     
-  // blocking call: wait for a pose on topic debris_pose
-  shared_data()._debris_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>("debris_pose");
-  
-  // Debug msg
-//   std::cout << "pose x : " << shared_data()._debris_pose->pose.position.x << std::endl;
-
+    // blocking call: wait for a pose on topic debris_pose
+    shared_data()._debris_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>("debris_pose");
   
     //CALL SERVICE TO MOVE
     // send a trajectory for the end effector as a segment
@@ -261,15 +257,6 @@ void myfsm::Reached::entry(const XBot::FSM::Message& msg){
     end_frame.pose = start_frame_pose;    
     
     end_frame = *shared_data()._debris_pose;
-
-//     end_frame.pose.position.x = 0.659;
-//     end_frame.pose.position.y = -0.29;
-//     end_frame.pose.position.z = -0.074;    
-//     
-//     end_frame.pose.orientation.x = 0.0;
-//     end_frame.pose.orientation.y = -0.7071070192004544;
-//     end_frame.pose.orientation.z = 0.0;
-//     end_frame.pose.orientation.w = 0.7071070192004544;     
     
     end_frame.pose.position.z+= z_offset; 
     
@@ -302,7 +289,8 @@ void myfsm::Reached::entry(const XBot::FSM::Message& msg){
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::Reached::run(double time, double period){
    
-  std::cout << "Reached run" << std::endl;
+//   std::cout << "Reached run" << std::endl;
+  std::cout << "Reached run. 'reached_fail'-> Homing	'reached_sucess'->Grasped	'gotoreach'->Reached" << std::endl;
   
   //TBD: Check if the RH has reached the reached_pose
   
@@ -348,8 +336,8 @@ void myfsm::Grasped::react(const XBot::FSM::Event& e) {
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::Grasped::entry(const XBot::FSM::Message& msg){
 
-  std::cout << "Grasped_entry" << std::endl;
-  std::cout << "Select which debris you want to attach to." << std::endl;
+    std::cout << "Grasped_entry" << std::endl;
+    std::cout << "Select the debris you want to attach to." << std::endl;
   
     //Hand selection
     std_msgs::String message1;
@@ -357,20 +345,18 @@ void myfsm::Grasped::entry(const XBot::FSM::Message& msg){
     std::string selectedHand;
     selectedHand = message1.data;
 
+    // blocking call: wait for a pose on topic debris_pose
+    shared_data()._debris_number = ros::topic::waitForMessage<std_msgs::String>("debris_number");
   
-  // blocking call: wait for a pose on topic debris_pose
-  shared_data()._debris_number = ros::topic::waitForMessage<std_msgs::String>("debris_number");
+    //CALL SERVICE TO GRASP
+    std_msgs::String message;
+    message = *shared_data()._debris_number;
   
-  //CALL SERVICE TO GRASP
-  std_msgs::String message;
-  message = *shared_data()._debris_number;
+    if(!selectedHand.compare("RSoftHand"))
+      shared_data()._grasp_mag_pub_RSoftHand.publish (message);
+    else if(!selectedHand.compare("LSoftHand"))
+      shared_data()._grasp_mag_pub_LSoftHand.publish (message);
   
-  if(!selectedHand.compare("RSoftHand"))
-    shared_data()._grasp_mag_pub_RSoftHand.publish (message);
-  else if(!selectedHand.compare("LSoftHand"))
-    shared_data()._grasp_mag_pub_LSoftHand.publish (message);
-  
-
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -378,6 +364,8 @@ void myfsm::Grasped::run(double time, double period){
 
    
 //   std::cout << "Grasped run" << std::endl;
+  std::cout << "Grasped run. 'grasped_fail'-> Grasped	'grasped_success'->Picked	'move_away_after_ho'->MovedAway" << std::endl;
+  
   
   //TBD: Check if the RH has reached the grasped_pose
   
@@ -530,7 +518,8 @@ void myfsm::Picked::entry(const XBot::FSM::Message& msg){
 void myfsm::Picked::run(double time, double period){
 
    
-  std::cout << "Picked run" << std::endl;
+//   std::cout << "Picked run" << std::endl;
+  std::cout << "Picked run. 'picked_fail'-> Homing	'picked_success'->MovedAway	'pick_second_hand'->PickSecondHand" << std::endl;
   
   //TBD: Check if the RH has reached the picked_pose
   
@@ -680,35 +669,25 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
     shared_data()._robot->model().getPose(holdingHand, "Waist", poseHoldingHand_KDL);
    
     shared_data()._robot->model().getPose(holdingHand, "Waist", poseHoldingHand);
-//     tf::poseEigenToMsg (poseHoldingHand, start_frame_pose_holding_hand);
-
-    //old
-//     Eigen::Vector3d increase;
-//     increase << 0.3,0,0;
-//     geometry_msgs::Point delta;
-//     increase = poseHoldingHand.linear() * increase;
-//     tf::pointEigenToMsg(increase,delta);
     
     
-    
-	//print KDL frame
-	std::cout << "Before rotation" << std::endl;
-	std::cout<<"    pose: ["<<poseHoldingHand_KDL.p.x()<<", "<<poseHoldingHand_KDL.p.y()<<", "<<poseHoldingHand_KDL.p.z()<<"]"<<std::endl;
-        double qx, qy,qz,qw;
-        poseHoldingHand_KDL.M.GetQuaternion(qx,qy,qz,qw);
-        std::cout<<"    quat: ["<<qx<<", "<<qy<<", "<<qz<<", "<<qw<<"]"<<std::endl;
+//     //print KDL frame
+//     std::cout << "Before rotation" << std::endl;
+//     std::cout<<"    pose: ["<<poseHoldingHand_KDL.p.x()<<", "<<poseHoldingHand_KDL.p.y()<<", "<<poseHoldingHand_KDL.p.z()<<"]"<<std::endl;
+//     double qx, qy,qz,qw;
+//     poseHoldingHand_KDL.M.GetQuaternion(qx,qy,qz,qw);
+//     std::cout<<"    quat: ["<<qx<<", "<<qy<<", "<<qz<<", "<<qw<<"]"<<std::endl;
 	
     poseHoldingHand_KDL.M.DoRotX(M_PI);
     poseHoldingHand_KDL.p.x(0.25);
     poseHoldingHand_KDL.p.y(-0.05);
     poseHoldingHand_KDL.p.z(0);
     
-	//print KDL frame
-	std::cout << "After rotation" << std::endl;
-	std::cout<<"    pose: ["<<poseHoldingHand_KDL.p.x()<<", "<<poseHoldingHand_KDL.p.y()<<", "<<poseHoldingHand_KDL.p.z()<<"]"<<std::endl;
-//         double qx, qy,qz,qw;
-        poseHoldingHand_KDL.M.GetQuaternion(qx,qy,qz,qw);
-        std::cout<<"    quat: ["<<qx<<", "<<qy<<", "<<qz<<", "<<qw<<"]"<<std::endl;
+//     //print KDL frame
+//     std::cout << "After rotation" << std::endl;
+//     std::cout<<"    pose: ["<<poseHoldingHand_KDL.p.x()<<", "<<poseHoldingHand_KDL.p.y()<<", "<<poseHoldingHand_KDL.p.z()<<"]"<<std::endl;
+//     poseHoldingHand_KDL.M.GetQuaternion(qx,qy,qz,qw);
+//     std::cout<<"    quat: ["<<qx<<", "<<qy<<", "<<qz<<", "<<qw<<"]"<<std::endl;
 	
 	
     tf::transformKDLToEigen(poseHoldingHand_KDL,poseHoldingHand_Affine);
@@ -718,6 +697,7 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
     tf::poseEigenToMsg (poseSecondHandFinal, start_frame_pose_holding_hand);
 
     //new line
+    double qx, qy,qz,qw;
     poseHoldingHand_KDL.M.GetQuaternion(qx,qy,qz,qw);
     
 
@@ -729,20 +709,7 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
 //         poseHoldingHand_KDL.M.GetQuaternion(qx,qy,qz,qw);
 //         std::cout<<"    quat: ["<<qx<<", "<<qy<<", "<<qz<<", "<<qw<<"]"<<std::endl;    
 	
-    //
-    
     if(!secondHand.compare("RSoftHand")){
-
-//       end_frame.pose.position.x = start_frame_pose_holding_hand.position.x + delta.x;
-//       end_frame.pose.position.y = start_frame_pose_holding_hand.position.y + delta.y;
-//       end_frame.pose.position.z = start_frame_pose_holding_hand.position.z + delta.z;
-	
-//       end_frame.pose.position.z+=0.15;    
-      
-//       end_frame.pose.orientation.x = -start_frame_pose_holding_hand.orientation.x;
-//       end_frame.pose.orientation.y = start_frame_pose_holding_hand.orientation.y;
-//       end_frame.pose.orientation.z = -start_frame_pose_holding_hand.orientation.z;
-//       end_frame.pose.orientation.w = start_frame_pose_holding_hand.orientation.w;
       
       end_frame.pose.position.x = start_frame_pose_holding_hand.position.x;
       end_frame.pose.position.y = start_frame_pose_holding_hand.position.y;
@@ -841,19 +808,6 @@ void myfsm::PickSecondHand::exit (){
 }
 
 /********************************* END PickSecondHand *******************************/
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
