@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 
+#include <eigen_conversions/eigen_msg.h>
 
 
 
@@ -25,27 +26,29 @@ void myfsm::Homing::entry(const XBot::FSM::Message& msg){
     //CALL SERVICE TO MOVE
     // send a trajectory for the end effector as a segment
     
-    shared_data()._robot->sense();    
+    shared_data()._robot->sense(); 
+    
+    Eigen::Affine3d world_T_bl;
+    std::string fb;  
+    
+    shared_data()._robot->model().getFloatingBaseLink(fb);
+    tf.getTransformTf(fb, "world_odom", world_T_bl);
+   
+    shared_data()._robot->model().setFloatingBasePose(world_T_bl);
+    shared_data()._robot->model().update();  
+    
     
     // RIGHT HAND
-    
     Eigen::Affine3d poseRightHand;
     geometry_msgs::Pose start_frame_pose;
 
-    shared_data()._robot->model().getPose("RSoftHand", "Waist", poseRightHand);
+    shared_data()._robot->model().getPose("RSoftHand", poseRightHand);
     tf::poseEigenToMsg (poseRightHand, start_frame_pose);
-    
-    //Offset needed for the current configuration of OpensotIk (with floating base)
-    KDL::Frame l_sole_T_Waist;
-    shared_data()._robot->model().getPose("Waist", "l_sole", l_sole_T_Waist);
-    double z_offset;
-    z_offset = l_sole_T_Waist.p.z();
     
 
     // define the start frame 
     geometry_msgs::PoseStamped start_frame;
     start_frame.pose = start_frame_pose;
-    start_frame.pose.position.z+= z_offset; 
     
     trajectory_utils::Cartesian start;
     start.distal_frame = "RSoftHand";
@@ -54,19 +57,14 @@ void myfsm::Homing::entry(const XBot::FSM::Message& msg){
     // define the end frame - RIGHT HAND
     geometry_msgs::PoseStamped end_frame;
     
-    end_frame.pose = start_frame_pose;    
-    
     end_frame.pose.position.x = 0.306;
     end_frame.pose.position.y = -0.393;
-    end_frame.pose.position.z = -0.069;     
+    end_frame.pose.position.z = 0.978;     
     
     end_frame.pose.orientation.x = -0.068;
     end_frame.pose.orientation.y = -0.534;
     end_frame.pose.orientation.z = 0.067;
     end_frame.pose.orientation.w = 0.840;   
-    
-
-    end_frame.pose.position.z+= z_offset; 
     
     trajectory_utils::Cartesian end;
     end.distal_frame = "RSoftHand";
@@ -85,7 +83,7 @@ void myfsm::Homing::entry(const XBot::FSM::Message& msg){
     
     // prapere the advr_segment_control
     ADVR_ROS::advr_segment_control srv;
-    srv.request.segment_trj.header.frame_id = "Waist";
+    srv.request.segment_trj.header.frame_id = "world_odom";
     srv.request.segment_trj.header.stamp = ros::Time::now();
     srv.request.segment_trj.segments = segments;
     
