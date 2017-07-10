@@ -224,26 +224,35 @@ void myfsm::Reached::entry(const XBot::FSM::Message& msg){
     //CALL SERVICE TO MOVE
     // send a trajectory for the end effector as a segment
     
-    shared_data()._robot->sense();    
+    shared_data()._robot->sense(); 
+    
+    Eigen::Affine3d world_T_bl;
+    std::string fb;  
+    
+    shared_data()._robot->model().getFloatingBaseLink(fb);
+    tf.getTransformTf(fb, "world_odom", world_T_bl);
+   
+    shared_data()._robot->model().setFloatingBasePose(world_T_bl);
+    shared_data()._robot->model().update();    
     
     //HAND
     
     Eigen::Affine3d poseHand;
     geometry_msgs::Pose start_frame_pose;
     
-    shared_data()._robot->model().getPose(selectedHand, "Waist", poseHand);
+    shared_data()._robot->model().getPose(selectedHand, poseHand);
     tf::poseEigenToMsg (poseHand, start_frame_pose);
 
     //Offset needed for the current configuration of OpensotIk (with floating base)
-    KDL::Frame l_sole_T_Waist;
-    shared_data()._robot->model().getPose("Waist", "l_sole", l_sole_T_Waist);
-    double z_offset;
-    z_offset = l_sole_T_Waist.p.z();
+//     KDL::Frame l_sole_T_Waist;
+//     shared_data()._robot->model().getPose("Waist", "l_sole", l_sole_T_Waist);
+//     double z_offset;
+//     z_offset = l_sole_T_Waist.p.z();
     
     // define the start frame 
     geometry_msgs::PoseStamped start_frame;
     start_frame.pose = start_frame_pose;
-    start_frame.pose.position.z+= z_offset; 
+//     start_frame.pose.position.z+= z_offset; 
     
     trajectory_utils::Cartesian start;
     start.distal_frame = selectedHand;
@@ -256,7 +265,7 @@ void myfsm::Reached::entry(const XBot::FSM::Message& msg){
     
     end_frame = *shared_data()._debris_pose;
     
-    end_frame.pose.position.z+= z_offset; 
+//     end_frame.pose.position.z+= z_offset; 
     
     trajectory_utils::Cartesian end;
     end.distal_frame = selectedHand;
@@ -275,7 +284,7 @@ void myfsm::Reached::entry(const XBot::FSM::Message& msg){
     
     // prapere the advr_segment_control
     ADVR_ROS::advr_segment_control srv;
-    srv.request.segment_trj.header.frame_id = "Waist";
+    srv.request.segment_trj.header.frame_id = "world_odom";
     srv.request.segment_trj.header.stamp = ros::Time::now();
     srv.request.segment_trj.segments = segments;
     
@@ -414,7 +423,16 @@ void myfsm::Picked::entry(const XBot::FSM::Message& msg){
     //CALL SERVICE TO MOVE
     // send a trajectory for the end effector as a segment
     
-    shared_data()._robot->sense();    
+    shared_data()._robot->sense(); 
+    
+    Eigen::Affine3d world_T_bl;
+    std::string fb;  
+    
+    shared_data()._robot->model().getFloatingBaseLink(fb);
+    tf.getTransformTf(fb, "world_odom", world_T_bl);
+   
+    shared_data()._robot->model().setFloatingBasePose(world_T_bl);
+    shared_data()._robot->model().update();  
     
     //HAND
     //Hand selection
@@ -429,19 +447,19 @@ void myfsm::Picked::entry(const XBot::FSM::Message& msg){
     Eigen::Affine3d poseHand;
     geometry_msgs::Pose start_frame_pose;
 
-    shared_data()._robot->model().getPose(selectedHand, "Waist", poseHand);
+    shared_data()._robot->model().getPose(selectedHand, poseHand);
     tf::poseEigenToMsg (poseHand, start_frame_pose);
     
-    //Offset needed for the current configuration of OpensotIk (with floating base)
-    KDL::Frame l_sole_T_Waist;
-    shared_data()._robot->model().getPose("Waist", "l_sole", l_sole_T_Waist);
-    double z_offset;
-    z_offset = l_sole_T_Waist.p.z();    
+//     //Offset needed for the current configuration of OpensotIk (with floating base)
+//     KDL::Frame l_sole_T_Waist;
+//     shared_data()._robot->model().getPose("Waist", "l_sole", l_sole_T_Waist);
+//     double z_offset;
+//     z_offset = l_sole_T_Waist.p.z();    
 
     // define the start frame 
     geometry_msgs::PoseStamped start_frame;
     start_frame.pose = start_frame_pose;
-    start_frame.pose.position.z+= z_offset; 
+//     start_frame.pose.position.z+= z_offset; 
     
     trajectory_utils::Cartesian start;
     start.distal_frame = selectedHand;
@@ -454,64 +472,32 @@ void myfsm::Picked::entry(const XBot::FSM::Message& msg){
     
     if(!selectedHand.compare("RSoftHand")){
       
-      std::cout << "Inside IF SelectedHand: RSoftHand " << std::endl;
-      
-      
-//       end_frame.pose.position.x = 0.427;
-//       end_frame.pose.position.y = -0.049;
-// //       end_frame.pose.position.z = 0.054;
-//       end_frame.pose.position.z = -0.15;    
-//       
-//       end_frame.pose.orientation.x = -0.258;
-//       end_frame.pose.orientation.y = 0.691;
-//       end_frame.pose.orientation.z = -0.691;
-//       end_frame.pose.orientation.w = -0.423;  
-
       end_frame.pose.position.x = 0.352;
       end_frame.pose.position.y = -0.2;
-      end_frame.pose.position.z = -0.05;   
-
+      end_frame.pose.position.z = 1.00;   
       
       end_frame.pose.orientation.x = 0.225;
       end_frame.pose.orientation.y = -0.592;
       end_frame.pose.orientation.z = 0.432;
       end_frame.pose.orientation.w = 0.641;  
-
       
     }else if(!selectedHand.compare("LSoftHand")){
-/*      
-      end_frame.pose.position.x = 0.427;
-      end_frame.pose.position.y = 0.049;
-//       end_frame.pose.position.z = 0.054;
-      end_frame.pose.position.z = -0.15;   
-      
-      end_frame.pose.orientation.x = 0.258;
-      end_frame.pose.orientation.y = 0.691;
-      end_frame.pose.orientation.z = 0.691;
-      end_frame.pose.orientation.w = -0.423;  */
 
       end_frame.pose.position.x = 0.352;
-//       end_frame.pose.position.y = 0.337;
       end_frame.pose.position.y = 0.03;
-//       end_frame.pose.position.z = -0.18;   
-      end_frame.pose.position.z = -0.05;   
-      
-//       end_frame.pose.orientation.x = -0.074;
-//       end_frame.pose.orientation.y = -0.526;
-//       end_frame.pose.orientation.z = -0.545;
-//       end_frame.pose.orientation.w = 0.648;
+      end_frame.pose.position.z = 1.00;   
+
       end_frame.pose.orientation.x = -0.225;
       end_frame.pose.orientation.y = -0.592;
       end_frame.pose.orientation.z = -0.432;
       end_frame.pose.orientation.w = 0.641;      
-
       
     }
        
 
 
     
-    end_frame.pose.position.z+= z_offset; 
+//     end_frame.pose.position.z+= z_offset; 
     
     trajectory_utils::Cartesian end;
     end.distal_frame = selectedHand;
@@ -530,7 +516,7 @@ void myfsm::Picked::entry(const XBot::FSM::Message& msg){
     
     // prapere the advr_segment_control
     ADVR_ROS::advr_segment_control srv;
-    srv.request.segment_trj.header.frame_id = "Waist";
+    srv.request.segment_trj.header.frame_id = "world_odom";
     srv.request.segment_trj.header.stamp = ros::Time::now();
     srv.request.segment_trj.segments = segments;
     
@@ -595,7 +581,16 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
     //CALL SERVICE TO MOVE
     // send a trajectory for the end effector as a segment
     
-    shared_data()._robot->sense();    
+    shared_data()._robot->sense(); 
+    
+    Eigen::Affine3d world_T_bl;
+    std::string fb;  
+    
+    shared_data()._robot->model().getFloatingBaseLink(fb);
+    tf.getTransformTf(fb, "world_odom", world_T_bl);
+   
+    shared_data()._robot->model().setFloatingBasePose(world_T_bl);
+    shared_data()._robot->model().update();   
     
     //HAND
     //Hand selection
@@ -619,19 +614,19 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
     geometry_msgs::Pose start_frame_pose;
 
     
-    shared_data()._robot->model().getPose(secondHand, "Waist", poseSecondHand);
+    shared_data()._robot->model().getPose(secondHand, poseSecondHand);
     tf::poseEigenToMsg (poseSecondHand, start_frame_pose);
     
     //Offset needed for the current configuration of OpensotIk (with floating base)
-    KDL::Frame l_sole_T_Waist;
-    shared_data()._robot->model().getPose("Waist", "l_sole", l_sole_T_Waist);
-    double z_offset;
-    z_offset = l_sole_T_Waist.p.z();    
+//     KDL::Frame l_sole_T_Waist;
+//     shared_data()._robot->model().getPose("Waist", "l_sole", l_sole_T_Waist);
+//     double z_offset;
+//     z_offset = l_sole_T_Waist.p.z();    
 
     // define the start frame 
     geometry_msgs::PoseStamped start_frame;
     start_frame.pose = start_frame_pose;
-    start_frame.pose.position.z+= z_offset; 
+//     start_frame.pose.position.z+= z_offset; 
     
     trajectory_utils::Cartesian start;
     start.distal_frame = secondHand;
@@ -692,9 +687,9 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
     geometry_msgs::Pose start_frame_pose_holding_hand;
 
     KDL::Frame poseHoldingHand_KDL;
-    shared_data()._robot->model().getPose(holdingHand, "Waist", poseHoldingHand_KDL);
+    shared_data()._robot->model().getPose(holdingHand, poseHoldingHand_KDL);
    
-    shared_data()._robot->model().getPose(holdingHand, "Waist", poseHoldingHand);
+    shared_data()._robot->model().getPose(holdingHand, poseHoldingHand);
     
 
     poseHoldingHand_KDL.M.DoRotX(M_PI);
@@ -737,7 +732,7 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
     }
 
     
-    intermediate_frame.pose.position.z+= z_offset; 
+//     intermediate_frame.pose.position.z+= z_offset; 
     
     trajectory_utils::Cartesian intermediate;
     intermediate.distal_frame = secondHand;
@@ -787,9 +782,9 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
     KDL::Frame poseHoldingHand_KDL_2;
 
     
-    shared_data()._robot->model().getPose(holdingHand, "Waist", poseHoldingHand_KDL_2);
+    shared_data()._robot->model().getPose(holdingHand, poseHoldingHand_KDL_2);
 
-    shared_data()._robot->model().getPose(holdingHand, "Waist", poseHoldingHand_2);    
+    shared_data()._robot->model().getPose(holdingHand, poseHoldingHand_2);    
     
     
 //     //print KDL frame
@@ -861,7 +856,7 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
     }
 
     
-    end_frame.pose.position.z+= z_offset; 
+//     end_frame.pose.position.z+= z_offset; 
     
     trajectory_utils::Cartesian end;
     end.distal_frame = secondHand;
@@ -881,7 +876,7 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
     
     // prapere the advr_segment_control
     ADVR_ROS::advr_segment_control srv;
-    srv.request.segment_trj.header.frame_id = "Waist";
+    srv.request.segment_trj.header.frame_id = "world_odom";
     srv.request.segment_trj.header.stamp = ros::Time::now();
     srv.request.segment_trj.segments = segments;
     
@@ -949,26 +944,35 @@ void myfsm::MovedAway::entry(const XBot::FSM::Message& msg){
     //CALL SERVICE TO MOVE
     // send a trajectory for the end effector as a segment
     
-    shared_data()._robot->sense();    
+    shared_data()._robot->sense(); 
+    
+    Eigen::Affine3d world_T_bl;
+    std::string fb;  
+    
+    shared_data()._robot->model().getFloatingBaseLink(fb);
+    tf.getTransformTf(fb, "world_odom", world_T_bl);
+   
+    shared_data()._robot->model().setFloatingBasePose(world_T_bl);
+    shared_data()._robot->model().update();    
     
     // RIGHT HAND
     
     Eigen::Affine3d poseRightHand;
     geometry_msgs::Pose start_frame_pose;
 
-    shared_data()._robot->model().getPose("RSoftHand", "Waist", poseRightHand);
+    shared_data()._robot->model().getPose("RSoftHand", poseRightHand);
     tf::poseEigenToMsg (poseRightHand, start_frame_pose);
     
     //Offset needed for the current configuration of OpensotIk (with floating base)
-    KDL::Frame l_sole_T_Waist;
-    shared_data()._robot->model().getPose("Waist", "l_sole", l_sole_T_Waist);
-    double z_offset;
-    z_offset = l_sole_T_Waist.p.z();    
+//     KDL::Frame l_sole_T_Waist;
+//     shared_data()._robot->model().getPose("Waist", "l_sole", l_sole_T_Waist);
+//     double z_offset;
+//     z_offset = l_sole_T_Waist.p.z();    
 
     // define the start frame 
     geometry_msgs::PoseStamped start_frame;
     start_frame.pose = start_frame_pose;
-    start_frame.pose.position.z+= z_offset; 
+//     start_frame.pose.position.z+= z_offset; 
     
     trajectory_utils::Cartesian start;
     start.distal_frame = "RSoftHand";
@@ -993,14 +997,14 @@ void myfsm::MovedAway::entry(const XBot::FSM::Message& msg){
     
     intermediate_frame.pose.position.x = 0.50;
     intermediate_frame.pose.position.y = -0.393;
-    intermediate_frame.pose.position.z = 0.14;     
+    intermediate_frame.pose.position.z = 1.19;     
     
     intermediate_frame.pose.orientation.x = -0.068;
     intermediate_frame.pose.orientation.y = -0.534;
     intermediate_frame.pose.orientation.z = 0.067;
     intermediate_frame.pose.orientation.w = 0.840;       
     
-    intermediate_frame.pose.position.z+= z_offset; 
+//     intermediate_frame.pose.position.z+= z_offset; 
     
     trajectory_utils::Cartesian intermediate;
     intermediate.distal_frame = "RSoftHand";
@@ -1024,14 +1028,14 @@ void myfsm::MovedAway::entry(const XBot::FSM::Message& msg){
 
     end_frame.pose.position.x = 0.451;
     end_frame.pose.position.y = -0.940;
-    end_frame.pose.position.z = 0.060;    
+    end_frame.pose.position.z = 1.110;    
     
     end_frame.pose.orientation.x = -0.396;
     end_frame.pose.orientation.y = -0.525;
     end_frame.pose.orientation.z = -0.428;
     end_frame.pose.orientation.w = 0.620;
     
-    end_frame.pose.position.z+= z_offset; 
+//     end_frame.pose.position.z+= z_offset; 
     
     trajectory_utils::Cartesian end;
     end.distal_frame = "RSoftHand";
@@ -1050,7 +1054,7 @@ void myfsm::MovedAway::entry(const XBot::FSM::Message& msg){
     
     // prapere the advr_segment_control
     ADVR_ROS::advr_segment_control srv;
-    srv.request.segment_trj.header.frame_id = "Waist";
+    srv.request.segment_trj.header.frame_id = "world_odom";
     srv.request.segment_trj.header.stamp = ros::Time::now();
     srv.request.segment_trj.segments = segments;
     
@@ -1111,26 +1115,35 @@ void myfsm::PlacedDown::entry(const XBot::FSM::Message& msg){
     //CALL SERVICE TO MOVE
     // send a trajectory for the end effector as a segment
     
-    shared_data()._robot->sense();    
+    shared_data()._robot->sense(); 
+    
+    Eigen::Affine3d world_T_bl;
+    std::string fb;  
+    
+    shared_data()._robot->model().getFloatingBaseLink(fb);
+    tf.getTransformTf(fb, "world_odom", world_T_bl);
+   
+    shared_data()._robot->model().setFloatingBasePose(world_T_bl);
+    shared_data()._robot->model().update();     
     
     // RIGHT HAND
     
     Eigen::Affine3d poseRightHand;
     geometry_msgs::Pose start_frame_pose;
 
-    shared_data()._robot->model().getPose("RSoftHand", "Waist", poseRightHand);
+    shared_data()._robot->model().getPose("RSoftHand", poseRightHand);
     tf::poseEigenToMsg (poseRightHand, start_frame_pose);
     
     //Offset needed for the current configuration of OpensotIk (with floating base)
-    KDL::Frame l_sole_T_Waist;
-    shared_data()._robot->model().getPose("Waist", "l_sole", l_sole_T_Waist);
-    double z_offset;
-    z_offset = l_sole_T_Waist.p.z();    
+//     KDL::Frame l_sole_T_Waist;
+//     shared_data()._robot->model().getPose("Waist", "l_sole", l_sole_T_Waist);
+//     double z_offset;
+//     z_offset = l_sole_T_Waist.p.z();    
 
     // define the start frame 
     geometry_msgs::PoseStamped start_frame;
     start_frame.pose = start_frame_pose;
-    start_frame.pose.position.z+= z_offset; 
+//     start_frame.pose.position.z+= z_offset; 
     
     trajectory_utils::Cartesian start;
     start.distal_frame = "RSoftHand";
@@ -1143,14 +1156,14 @@ void myfsm::PlacedDown::entry(const XBot::FSM::Message& msg){
 
     end_frame.pose.position.x = 0.451;
     end_frame.pose.position.y = -0.940;
-    end_frame.pose.position.z = -0.040;
+    end_frame.pose.position.z = 1.010;
     
     end_frame.pose.orientation.x = -0.396;
     end_frame.pose.orientation.y = -0.525;
     end_frame.pose.orientation.z = -0.428;
     end_frame.pose.orientation.w = 0.620;    
     
-    end_frame.pose.position.z+= z_offset; 
+//     end_frame.pose.position.z+= z_offset; 
     
     trajectory_utils::Cartesian end;
     end.distal_frame = "RSoftHand";
@@ -1169,7 +1182,7 @@ void myfsm::PlacedDown::entry(const XBot::FSM::Message& msg){
     
     // prapere the advr_segment_control
     ADVR_ROS::advr_segment_control srv;
-    srv.request.segment_trj.header.frame_id = "Waist";
+    srv.request.segment_trj.header.frame_id = "world_odom";
     srv.request.segment_trj.header.stamp = ros::Time::now();
     srv.request.segment_trj.segments = segments;
     
