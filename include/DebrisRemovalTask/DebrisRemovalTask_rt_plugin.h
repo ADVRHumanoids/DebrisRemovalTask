@@ -27,6 +27,8 @@
 #include <std_msgs/Bool.h>
 #include <std_msgs/String.h>
 
+#include <tf/transform_listener.h>
+
 
 namespace XBotPlugin {
 

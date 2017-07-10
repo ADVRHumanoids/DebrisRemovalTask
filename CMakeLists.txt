@@ -41,6 +41,9 @@ include(MacroYCMInstallLibrary)
 
 # find required packages
 find_package(XCM REQUIRED)
+find_package(roscpp REQUIRED)
+find_package(tf REQUIRED)
+find_package(geometry_msgs REQUIRED)
 
 # XENOMAI
 set(ENABLE_XENO CACHE BOOL "ON")
@@ -64,7 +67,7 @@ if ( Xenomai_FOUND )
 endif()
 
 # linking
-target_link_libraries(${PROJECT_NAME} ${XCM_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${XCM_LIBRARIES} ${roscpp_LIBRARIES} ${geometry_msgs_LIBRARIES} ${tf_LIBRARIES})
 
 #install
 ycm_library_install(${PROJECT_NAME} 1 0 0)

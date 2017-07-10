@@ -31,6 +31,9 @@
 
 #include <XBotCore-interfaces/XDomainCommunication.h>
 
+#include <tf/transform_listener.h>
+#include <Eigen/Dense>
+
 
 namespace myfsm{
 
@@ -56,7 +59,44 @@ namespace myfsm{
       int id;
 	
     };
-*/
+*/class tfHandler{
+    public:
+      tfHandler():
+      _listener(), _gm_transform(), _transform()
+      {
+	
+      }
+      
+      bool getTransformTf(const std::string& parent, const std::string& child, Eigen::Affine3d& world_T_bl )
+      {
+	try
+	{
+	  ros::Time now = ros::Time::now();
+	  //if(_listener.waitForTransform(child, parent, now, ros::Duration(5.0)))
+	  //{
+	    _listener.lookupTransform(child, parent,  ros::Time(0), _transform);
+	  
+	    tf::transformTFToMsg(_transform, _gm_transform);
+	    tf::transformMsgToEigen(_gm_transform, world_T_bl);
+	  
+	    return true;
+	  //}
+// 	  else
+// 	    return false;
+	}
+	catch (tf::TransformException ex)
+	{
+	  ROS_ERROR("%s",ex.what());
+	  return false;
+	}
+      }
+    private:
+     tf::TransformListener _listener; 
+      geometry_msgs::Transform _gm_transform; 
+      tf::StampedTransform _transform;
+      
+    };
+
     struct SharedData {
       
       XBot::RobotInterface::Ptr _robot;
@@ -78,6 +118,7 @@ namespace myfsm{
 	
 	virtual void entry(const XBot::FSM::Message& msg) {};
 	virtual void react(const XBot::FSM::Event& e){};
+	tfHandler tf;
       
     };  
 
