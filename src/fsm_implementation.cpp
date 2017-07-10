@@ -830,12 +830,17 @@ void myfsm::MovedAway::entry(const XBot::FSM::Message& msg){
 
     intermediate_frame.pose.position.x = 0.50;
     intermediate_frame.pose.position.y = -0.393;
-    intermediate_frame.pose.position.z = 1.19;     
+    intermediate_frame.pose.position.z = 1.09;     
     
-    intermediate_frame.pose.orientation.x = -0.068;
-    intermediate_frame.pose.orientation.y = -0.534;
-    intermediate_frame.pose.orientation.z = 0.067;
-    intermediate_frame.pose.orientation.w = 0.840;       
+//     intermediate_frame.pose.orientation.x = -0.068;
+//     intermediate_frame.pose.orientation.y = -0.534;
+//     intermediate_frame.pose.orientation.z = 0.067;
+//     intermediate_frame.pose.orientation.w = 0.840; 
+    
+    intermediate_frame.pose.orientation.x = 0.0;
+    intermediate_frame.pose.orientation.y = -0.7071070192004544;
+    intermediate_frame.pose.orientation.z = 0.0;
+    intermediate_frame.pose.orientation.w = 0.7071070192004544;     
     
     trajectory_utils::Cartesian intermediate;
     intermediate.distal_frame = "RSoftHand";
@@ -854,16 +859,24 @@ void myfsm::MovedAway::entry(const XBot::FSM::Message& msg){
     // define the end frame - RIGHT HAND
     geometry_msgs::PoseStamped end_frame;
     
-    end_frame.pose = start_frame_pose;    
-
+//     end_frame.pose.position.x = 0.451;
+//     end_frame.pose.position.y = -0.940;
+//     end_frame.pose.position.z = 1.110;    
+//     
+//     end_frame.pose.orientation.x = -0.396;
+//     end_frame.pose.orientation.y = -0.525;
+//     end_frame.pose.orientation.z = -0.428;
+//     end_frame.pose.orientation.w = 0.620;
+    
     end_frame.pose.position.x = 0.451;
     end_frame.pose.position.y = -0.940;
-    end_frame.pose.position.z = 1.110;    
+    end_frame.pose.position.z = 1.05;
     
-    end_frame.pose.orientation.x = -0.396;
-    end_frame.pose.orientation.y = -0.525;
-    end_frame.pose.orientation.z = -0.428;
-    end_frame.pose.orientation.w = 0.620;
+    end_frame.pose.orientation.x = -0.386;
+    end_frame.pose.orientation.y = -0.429;
+    end_frame.pose.orientation.z = -0.452;
+    end_frame.pose.orientation.w = 0.678;    
+ 
 
     trajectory_utils::Cartesian end;
     end.distal_frame = "RSoftHand";
@@ -975,12 +988,12 @@ void myfsm::PlacedDown::entry(const XBot::FSM::Message& msg){
 
     end_frame.pose.position.x = 0.451;
     end_frame.pose.position.y = -0.940;
-    end_frame.pose.position.z = 1.010;
+    end_frame.pose.position.z = 0.88;
     
-    end_frame.pose.orientation.x = -0.396;
-    end_frame.pose.orientation.y = -0.525;
-    end_frame.pose.orientation.z = -0.428;
-    end_frame.pose.orientation.w = 0.620;    
+    end_frame.pose.orientation.x = -0.386;
+    end_frame.pose.orientation.y = -0.429;
+    end_frame.pose.orientation.z = -0.452;
+    end_frame.pose.orientation.w = 0.678;    
 
     trajectory_utils::Cartesian end;
     end.distal_frame = "RSoftHand";
