@@ -1132,9 +1132,14 @@ void myfsm::Ungrasped::entry(const XBot::FSM::Message& msg){
   std::cout << "Ungrasped_entry" << std::endl;
   
   //CALL SERVICE TO UNGRASP  
-  std_msgs::String message;
-  message.data = "";
-  shared_data()._grasp_mag_pub_RSoftHand.publish (message);
+//   std_msgs::String message;
+//   message.data = "";
+//   shared_data()._grasp_mag_pub_RSoftHand.publish (message);
+  
+  //     //l hand moving
+    int r_hand_id = shared_data()._robot->getHand()["r_handj"]->getHandId();
+    XBot::Hand::Ptr r_hand = shared_data()._robot->getHand(r_hand_id);
+    r_hand->grasp(0);
   
   std::cout << "Ungrasped run. 'ungrasped_fail'-> Ungrasped	'ungrasped_success'->Homing" << std::endl;
 
