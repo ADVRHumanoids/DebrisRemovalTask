@@ -34,6 +34,7 @@
 #include <tf/transform_listener.h>
 #include <Eigen/Dense>
 
+#include <geometry_msgs/WrenchStamped.h>
 
 namespace myfsm{
 
@@ -109,6 +110,11 @@ namespace myfsm{
       XBot::Command current_command;
       ros::Publisher _grasp_mag_pub_LSoftHand;
       ros::Publisher _grasp_mag_pub_RSoftHand;
+      geometry_msgs::WrenchStamped::ConstPtr _ft_r_arm;
+      double _w_F_ft_initial;
+//       Eigen::Vector3d _RH_Rot_Z;
+      bool _feedback;
+
      
     };
     
@@ -241,7 +247,7 @@ namespace myfsm{
 
 
      };
- 
+     
     class Ungrasped : public MacroState {
 
       virtual std::string get_name() const { return "Ungrasped"; }
