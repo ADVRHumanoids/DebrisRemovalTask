@@ -59,6 +59,7 @@ bool DebrisRemovalTask::init_control_plugin(std::string path_to_config_file,
     fsm.shared_data()._grasp_mag_pub_LSoftHand = fsm.shared_data()._nh->advertise<std_msgs::String>("/grasp/LWrMot3/goalGrasp",1);
      _feedBack = fsm.shared_data()._nh->subscribe("Manipulation_status",1,&DebrisRemovalTask::on_manipulation_status,this);
     manipulation_status = true;
+    fsm.shared_data()._SoftHandPose_pub = fsm.shared_data()._nh->advertise<geometry_msgs::PoseStamped>("/w_T_right_ee",1);
 
     
     /*Saves robot as shared variable between states*/

@@ -114,6 +114,7 @@ namespace myfsm{
       double _w_F_ft_initial;
 //       Eigen::Vector3d _RH_Rot_Z;
       bool _feedback;
+      ros::Publisher _SoftHandPose_pub;
 
      
     };

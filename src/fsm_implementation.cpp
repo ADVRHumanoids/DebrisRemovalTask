@@ -365,6 +365,7 @@ void myfsm::Grasped::entry(const XBot::FSM::Message& msg){
     
     int hand_id = shared_data()._robot->getHand()[handJoint]->getHandId();
     XBot::Hand::Ptr hand = shared_data()._robot->getHand(hand_id);
+    //MAYBE ON THE REAL ROBOT HERE PUT AN IF AND A WAITFORMESSAGE TO BE SURE YOU WANT TO GRASP, YOU DON'T TRY EVERY TIME AS IN SIMULATION
     hand->grasp(1);
     
     //IF is not grasping perform a movement to the left/right
@@ -885,7 +886,7 @@ void myfsm::PickSecondHand::run(double time, double period){
     std::cout << "Command: " << shared_data().current_command.str() << std::endl;
 
     // Picked failed
-    if (!shared_data().current_command.str().compare("homing"))
+    if (!shared_data().current_command.str().compare("pick_second_hand_fail"))
       transit("Homing");
     
     // Picked Succeeded
@@ -1117,10 +1118,7 @@ void myfsm::PlacedDown::react(const XBot::FSM::Event& e) {
 void myfsm::PlacedDown::entry(const XBot::FSM::Message& msg){
 
     std::cout << "PlacedDown_entry" << std::endl;
-    
-    //CALL SERVICE TO MOVE
-    // send a trajectory for the end effector as a segment
-    
+        
     shared_data()._robot->sense(); 
     
     Eigen::Affine3d world_T_bl;
@@ -1138,53 +1136,15 @@ void myfsm::PlacedDown::entry(const XBot::FSM::Message& msg){
     geometry_msgs::Pose start_frame_pose;
 
     shared_data()._robot->model().getPose("RSoftHand", poseRightHand);
-//     shared_data()._robot->model().getPose("LSoftHand", poseRightHand); //tmp_ft_prova
     tf::poseEigenToMsg (poseRightHand, start_frame_pose);
-    
-// // //     shared_data()._RH_Rot_Z = poseRightHand.matrix().bottomRightCorner(1,3);
-    
-    // define the start frame 
-    geometry_msgs::PoseStamped start_frame;
-    start_frame.pose = start_frame_pose;
-    
-    trajectory_utils::Cartesian start;
-    start.distal_frame = "RSoftHand";
-//     start.distal_frame = "LSoftHand"; //tmp_ft_prova
-    start.frame = start_frame;
-    
-    // define the end frame - RIGHT HAND
-    geometry_msgs::PoseStamped end_frame;
-    
-    end_frame.pose = start_frame_pose;    
-    end_frame.pose.position.z-= 0.03;
-    
-    std::cout << "Z-axis pose: " << end_frame.pose.position.z << std::endl;
-    
-    trajectory_utils::Cartesian end;
-    end.distal_frame = "RSoftHand"; 
-//     end.distal_frame = "LSoftHand"; //tmp_ft_prova
-    end.frame = end_frame;
 
-    // define the first segment
-    trajectory_utils::segment s1;
-    s1.type.data = 0;        // min jerk traj
-    s1.T.data = 5.0;         // traj duration 5 second      
-    s1.start = start;        // start pose
-    s1.end = end;            // end pose 
+    geometry_msgs::PoseStamped poseHandStamped;
+    poseHandStamped.pose = start_frame_pose;
+    poseHandStamped.pose.position.z-=0.01;
     
-    // only one segment in this example
-    std::vector<trajectory_utils::segment> segments;
-    segments.push_back(s1);
-    
-    // prapere the advr_segment_control
-    ADVR_ROS::advr_segment_control srv;
-    srv.request.segment_trj.header.frame_id = "world_odom";
-    srv.request.segment_trj.header.stamp = ros::Time::now();
-    srv.request.segment_trj.segments = segments;
-    
-    // call the service
-    shared_data()._client.call(srv);
-    
+    //publish ros message
+    shared_data()._SoftHandPose_pub.publish (poseHandStamped);
+//     usleep(10);
 
 }
 
@@ -1192,10 +1152,6 @@ void myfsm::PlacedDown::entry(const XBot::FSM::Message& msg){
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::PlacedDown::run(double time, double period){
   
-  //Wait for the trajectory to be completed
-  if(!shared_data()._feedback){
-
-    
     shared_data()._robot->sense(); 
     
     Eigen::Affine3d world_T_bl;
@@ -1213,8 +1169,6 @@ void myfsm::PlacedDown::run(double time, double period){
     geometry_msgs::Pose start_frame_pose;
 
     shared_data()._robot->model().getPose("RSoftHand", poseRightHand);
-    
-    
     
     //Reading initial wrench from ros topic
     double f_x,f_y,f_z,w_Fz_ft;
@@ -1238,13 +1192,11 @@ void myfsm::PlacedDown::run(double time, double period){
 
     std::cout << "w_Fz_ft: " << w_Fz_ft << std::endl;
 
-    if(w_Fz_ft <= 0) //k * shared_data()._w_F_ft_initial)
+    if(w_Fz_ft <= 50) //k * shared_data()._w_F_ft_initial)
       transit("PlacedDown");
     else
       transit("Ungrasped");
-    
-  }
-
+  
 }
 
 ///////////////////////////////////////////////////////////////////////////////
