@@ -415,11 +415,11 @@ void myfsm::Grasped::entry(const XBot::FSM::Message& msg){
       
       if(!selectedHand.compare("RSoftHand")){
 	
-	end_frame.pose.position.y-= -0.01;
+	end_frame.pose.position.y+= -0.01;
 
       }else if(!selectedHand.compare("LSoftHand")){
 	
-	end_frame.pose.position.y+= 0.01;   
+	end_frame.pose.position.y-= 0.01;   
 
       }
 
@@ -511,8 +511,15 @@ void myfsm::Grasped::run(double time, double period){
 	transit("Picked");
       
       // new: moveaway after handover
-      if (!shared_data().current_command.str().compare("move_away_after_ho"))
+      if (!shared_data().current_command.str().compare("move_away_after_ho")){
+	
+	//Ungrasp left hand
+	int hand_id = shared_data()._robot->getHand()["l_handj"]->getHandId();
+	XBot::Hand::Ptr hand = shared_data()._robot->getHand(hand_id);
+	hand->grasp(0);
+
 	transit("MovedAway");    
+      }
     } 
       
 
