@@ -208,8 +208,12 @@ void myfsm::Reached::entry(const XBot::FSM::Message& msg){
     
     std::cout << "Select the End Effector you want to use." << std::endl;
     
+    //CHANGED TRIAL REAL ROBOT
     // blocking call: wait for a msg on topic hand_selection
-    shared_data()._hand_selection = ros::topic::waitForMessage<std_msgs::String>("hand_selection");
+//     shared_data()._hand_selection = ros::topic::waitForMessage<std_msgs::String>("hand_selection");
+    std_msgs::String rh;
+    rh.data = "RSoftHand";
+    shared_data()._hand_selection = boost::shared_ptr<std_msgs::String>(new std_msgs::String(rh));
     std_msgs::String message;
     message = *shared_data()._hand_selection;    
     std::string selectedHand;
@@ -222,9 +226,22 @@ void myfsm::Reached::entry(const XBot::FSM::Message& msg){
       
     //in the future the position to reach the debris will be given by a ros message published on the rostopic "debris_pose"
     
+    //COMMENTED FOR FIRST TRIALS ON THE REAL ROBOT
     // blocking call: wait for a pose on topic debris_pose
-    shared_data()._debris_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>("debris_pose");
-  
+//     shared_data()._debris_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>("debris_pose");
+    geometry_msgs::PoseStamped poseDebris1;
+    poseDebris1.pose.position.x = 0.619;
+    poseDebris1.pose.position.y = -0.29;
+    poseDebris1.pose.position.z = 0.873;
+    
+    poseDebris1.pose.orientation.x = 0;
+    poseDebris1.pose.orientation.y = -0.5591931143131625;
+    poseDebris1.pose.orientation.z = 0;
+    poseDebris1.pose.orientation.w = 8290374303399975;
+    
+    shared_data()._debris_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(poseDebris1));
+    
+    
     //CALL SERVICE TO MOVE
     // send a trajectory for the end effector as a segment
     
@@ -367,89 +384,93 @@ void myfsm::Grasped::entry(const XBot::FSM::Message& msg){
     XBot::Hand::Ptr hand = shared_data()._robot->getHand(hand_id);
     //MAYBE ON THE REAL ROBOT HERE PUT AN IF AND A WAITFORMESSAGE TO BE SURE YOU WANT TO GRASP, YOU DON'T TRY EVERY TIME AS IN SIMULATION
     hand->grasp(1);
+   
     
-    //IF is not grasping perform a movement to the left/right
-    //READ GRASP STATE
-    double grasped;
-    grasped = hand->getGraspState();
-      
-    if(!grasped){
-      
-      //move 1 cm to the left/right
-      std::cout << "Not grasped, moving 1 cm to the left/right" << std::endl;
-      
-      //CALL SERVICE TO MOVE
-      // send a trajectory for the end effector as a segment
-      
-      shared_data()._robot->sense(); 
-      
-      Eigen::Affine3d world_T_bl;
-      std::string fb;  
-      
-      shared_data()._robot->model().getFloatingBaseLink(fb);
-      tf.getTransformTf(fb, "world_odom", world_T_bl);
+    //COMMENTED FOR FIRST TRIALS ON THE REAL ROBOT
     
-      shared_data()._robot->model().setFloatingBasePose(world_T_bl);
-      shared_data()._robot->model().update();  
-      
-      
-      Eigen::Affine3d poseHand;
-      geometry_msgs::Pose start_frame_pose;
-
-      shared_data()._robot->model().getPose(selectedHand, poseHand);
-      tf::poseEigenToMsg (poseHand, start_frame_pose);
-
-
-      // define the start frame 
-      geometry_msgs::PoseStamped start_frame;
-      start_frame.pose = start_frame_pose;
-      
-      trajectory_utils::Cartesian start;
-      start.distal_frame = selectedHand;
-      start.frame = start_frame;
-      
-      // define the end frame - RIGHT HAND
-      geometry_msgs::PoseStamped end_frame;
-      
-      end_frame.pose = start_frame_pose; 
-      
-      if(!selectedHand.compare("RSoftHand")){
-	
-	end_frame.pose.position.y+= -0.01;
-
-      }else if(!selectedHand.compare("LSoftHand")){
-	
-	end_frame.pose.position.y-= 0.01;   
-
-      }
-
-      trajectory_utils::Cartesian end;
-      end.distal_frame = selectedHand;
-      end.frame = end_frame;
-
-      // define the first segment
-      trajectory_utils::segment s1;
-      s1.type.data = 0;        // min jerk traj
-      s1.T.data = 3.0;         // traj duration 3 second      
-      s1.start = start;        // start pose
-      s1.end = end;            // end pose 
-      
-      // only one segment in this example
-      std::vector<trajectory_utils::segment> segments;
-      segments.push_back(s1);
-      
-      // prapere the advr_segment_control
-      ADVR_ROS::advr_segment_control srv;
-      srv.request.segment_trj.header.frame_id = "world_odom";
-      srv.request.segment_trj.header.stamp = ros::Time::now();
-      srv.request.segment_trj.segments = segments;
-      
-      // call the service
-      shared_data()._client.call(srv);
-      
-      
-      
-    }
+    
+//     //IF is not grasping perform a movement to the left/right
+//     //READ GRASP STATE
+//     double grasped;
+//     grasped = hand->getGraspState();
+//       
+//     if(!grasped){
+//       
+//       //move 1 cm to the left/right
+//       std::cout << "Not grasped, moving 1 cm to the left/right" << std::endl;
+//       
+//       //CALL SERVICE TO MOVE
+//       // send a trajectory for the end effector as a segment
+//       
+//       shared_data()._robot->sense(); 
+//       
+//       Eigen::Affine3d world_T_bl;
+//       std::string fb;  
+//       
+//       shared_data()._robot->model().getFloatingBaseLink(fb);
+//       tf.getTransformTf(fb, "world_odom", world_T_bl);
+//     
+//       shared_data()._robot->model().setFloatingBasePose(world_T_bl);
+//       shared_data()._robot->model().update();  
+//       
+//       
+//       Eigen::Affine3d poseHand;
+//       geometry_msgs::Pose start_frame_pose;
+// 
+//       shared_data()._robot->model().getPose(selectedHand, poseHand);
+//       tf::poseEigenToMsg (poseHand, start_frame_pose);
+// 
+// 
+//       // define the start frame 
+//       geometry_msgs::PoseStamped start_frame;
+//       start_frame.pose = start_frame_pose;
+//       
+//       trajectory_utils::Cartesian start;
+//       start.distal_frame = selectedHand;
+//       start.frame = start_frame;
+//       
+//       // define the end frame - RIGHT HAND
+//       geometry_msgs::PoseStamped end_frame;
+//       
+//       end_frame.pose = start_frame_pose; 
+//       
+//       if(!selectedHand.compare("RSoftHand")){
+// 	
+// 	end_frame.pose.position.y+= -0.01;
+// 
+//       }else if(!selectedHand.compare("LSoftHand")){
+// 	
+// 	end_frame.pose.position.y-= 0.01;   
+// 
+//       }
+// 
+//       trajectory_utils::Cartesian end;
+//       end.distal_frame = selectedHand;
+//       end.frame = end_frame;
+// 
+//       // define the first segment
+//       trajectory_utils::segment s1;
+//       s1.type.data = 0;        // min jerk traj
+//       s1.T.data = 3.0;         // traj duration 3 second      
+//       s1.start = start;        // start pose
+//       s1.end = end;            // end pose 
+//       
+//       // only one segment in this example
+//       std::vector<trajectory_utils::segment> segments;
+//       segments.push_back(s1);
+//       
+//       // prapere the advr_segment_control
+//       ADVR_ROS::advr_segment_control srv;
+//       srv.request.segment_trj.header.frame_id = "world_odom";
+//       srv.request.segment_trj.header.stamp = ros::Time::now();
+//       srv.request.segment_trj.segments = segments;
+//       
+//       // call the service
+//       shared_data()._client.call(srv);
+//       
+//       
+//       
+//     }
   
 }
 
@@ -459,40 +480,40 @@ void myfsm::Grasped::run(double time, double period){
   //Wait for the trajectory to be completed
   if(!shared_data()._feedback){
     
-    
-    //HAND
-    //Hand selection
-    std_msgs::String message;
-    message = *shared_data()._hand_selection;    
-    std::string selectedHand;
-    selectedHand = message.data;
-    
-    std::cout << "SelectedHand: " << message.data << std::endl;
-    
-    //try to grasp
-    
-    std::string handJoint;
-    
-    if(!selectedHand.compare("RSoftHand"))
-      handJoint = "r_handj";
-    else if(!selectedHand.compare("LSoftHand")){
-      handJoint = "l_handj"; 
-    }
-    
-    
-    int hand_id = shared_data()._robot->getHand()[handJoint]->getHandId();
-    XBot::Hand::Ptr hand = shared_data()._robot->getHand(hand_id);
-    hand->grasp(1);
-    
-    //IF is not grasping perform a movement to the left/right
-    //READ GRASP STATE
-    double grasped;
-    grasped = hand->getGraspState();
-    
-    if(!grasped){
-      std::cout << "Grasped fail, trying again" << std::endl;
-      transit("Grasped");
-    }
+    //COMMENTED FOR FIRST TRIALS ON THE REAL ROBOT
+//     //HAND
+//     //Hand selection
+//     std_msgs::String message;
+//     message = *shared_data()._hand_selection;    
+//     std::string selectedHand;
+//     selectedHand = message.data;
+//     
+//     std::cout << "SelectedHand: " << message.data << std::endl;
+//     
+//     //try to grasp
+//     
+//     std::string handJoint;
+//     
+//     if(!selectedHand.compare("RSoftHand"))
+//       handJoint = "r_handj";
+//     else if(!selectedHand.compare("LSoftHand")){
+//       handJoint = "l_handj"; 
+//     }
+//     
+//     
+//     int hand_id = shared_data()._robot->getHand()[handJoint]->getHandId();
+//     XBot::Hand::Ptr hand = shared_data()._robot->getHand(hand_id);
+//     hand->grasp(1);
+//     
+//     //IF is not grasping perform a movement to the left/right
+//     //READ GRASP STATE
+//     double grasped;
+//     grasped = hand->getGraspState();
+//     
+//     if(!grasped){
+//       std::cout << "Grasped fail, trying again" << std::endl;
+//       transit("Grasped");
+//     }
     
   
     std::cout << "Grasped run. 'grasped_fail'-> Grasped	'grasped_success'->Picked	'move_away_after_ho'->MovedAway" << std::endl;
@@ -502,9 +523,10 @@ void myfsm::Grasped::run(double time, double period){
     {
       std::cout << "Command: " << shared_data().current_command.str() << std::endl;
 
-//       // Grasped failed
-//       if (!shared_data().current_command.str().compare("grasped_fail"))
-// 	transit("Grasped");
+      //UNCOMMENTED FOR FIRST TRIALS ON THE REAL ROBOT
+      // Grasped failed
+      if (!shared_data().current_command.str().compare("grasped_fail"))
+	transit("Grasped");
       
       // Grasped Succeeded
       if (!shared_data().current_command.str().compare("grasped_success"))
