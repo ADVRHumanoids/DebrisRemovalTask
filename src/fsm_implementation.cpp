@@ -237,7 +237,7 @@ void myfsm::Reached::entry(const XBot::FSM::Message& msg){
     poseDebris1.pose.orientation.x = 0;
     poseDebris1.pose.orientation.y = -0.5591931143131625;
     poseDebris1.pose.orientation.z = 0;
-    poseDebris1.pose.orientation.w = 8290374303399975;
+    poseDebris1.pose.orientation.w = 0.8290374303399975;
     
     shared_data()._debris_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(poseDebris1));
     
