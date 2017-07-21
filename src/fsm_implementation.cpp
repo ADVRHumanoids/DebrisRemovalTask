@@ -69,6 +69,8 @@ void myfsm::Homing::entry(const XBot::FSM::Message& msg){
     trajectory_utils::Cartesian end;
     end.distal_frame = "RSoftHand";
     end.frame = end_frame;
+    
+    shared_data()._last_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(end_frame));
 
     // define the first segment
     trajectory_utils::segment s1;
@@ -245,29 +247,30 @@ void myfsm::Reached::entry(const XBot::FSM::Message& msg){
     //CALL SERVICE TO MOVE
     // send a trajectory for the end effector as a segment
     
-    shared_data()._robot->sense(); 
-    
-    Eigen::Affine3d world_T_bl;
-    std::string fb;  
-    
-    shared_data()._robot->model().getFloatingBaseLink(fb);
-    tf.getTransformTf(fb, "world_odom", world_T_bl);
-   
-    shared_data()._robot->model().setFloatingBasePose(world_T_bl);
-    shared_data()._robot->model().update();    
+//     shared_data()._robot->sense(); 
+//     
+//     Eigen::Affine3d world_T_bl;
+//     std::string fb;  
+//     
+//     shared_data()._robot->model().getFloatingBaseLink(fb);
+//     tf.getTransformTf(fb, "world_odom", world_T_bl);
+//    
+//     shared_data()._robot->model().setFloatingBasePose(world_T_bl);
+//     shared_data()._robot->model().update();    
     
     //HAND
     
-    Eigen::Affine3d poseHand;
-    geometry_msgs::Pose start_frame_pose;
+//     Eigen::Affine3d poseHand;
+//     geometry_msgs::Pose start_frame_pose;
     
-    shared_data()._robot->model().getPose(selectedHand, poseHand);
-    tf::poseEigenToMsg (poseHand, start_frame_pose);
+//     shared_data()._robot->model().getPose(selectedHand, poseHand);
+//     tf::poseEigenToMsg (poseHand, start_frame_pose);
 
 
     // define the start frame 
     geometry_msgs::PoseStamped start_frame;
-    start_frame.pose = start_frame_pose;
+//     start_frame.pose = start_frame_pose;
+    start_frame = *shared_data()._last_pose;
     
     trajectory_utils::Cartesian start;
     start.distal_frame = selectedHand;
@@ -276,7 +279,7 @@ void myfsm::Reached::entry(const XBot::FSM::Message& msg){
     // define the end frame
     geometry_msgs::PoseStamped end_frame;
     
-    end_frame.pose = start_frame_pose;    
+//     end_frame.pose = start_frame_pose;    
     
     end_frame = *shared_data()._debris_pose;
     
@@ -285,6 +288,8 @@ void myfsm::Reached::entry(const XBot::FSM::Message& msg){
     end.distal_frame = selectedHand;
     end.frame = end_frame;
 
+    shared_data()._last_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(end_frame));
+    
     // define the first segment
     trajectory_utils::segment s1;
     s1.type.data = 0;        // min jerk traj
@@ -578,7 +583,7 @@ void myfsm::Picked::entry(const XBot::FSM::Message& msg){
   
     //CALL SERVICE TO MOVE
     // send a trajectory for the end effector as a segment
-    
+/*    
     shared_data()._robot->sense(); 
     
     Eigen::Affine3d world_T_bl;
@@ -588,7 +593,7 @@ void myfsm::Picked::entry(const XBot::FSM::Message& msg){
     tf.getTransformTf(fb, "world_odom", world_T_bl);
    
     shared_data()._robot->model().setFloatingBasePose(world_T_bl);
-    shared_data()._robot->model().update();  
+    shared_data()._robot->model().update();  */
     
     //HAND
     //Hand selection
@@ -600,16 +605,17 @@ void myfsm::Picked::entry(const XBot::FSM::Message& msg){
     std::cout << "SelectedHand: " << message.data << std::endl;
 
     
-    Eigen::Affine3d poseHand;
-    geometry_msgs::Pose start_frame_pose;
-
-    shared_data()._robot->model().getPose(selectedHand, poseHand);
-    tf::poseEigenToMsg (poseHand, start_frame_pose);
+//     Eigen::Affine3d poseHand;
+//     geometry_msgs::Pose start_frame_pose;
+// 
+//     shared_data()._robot->model().getPose(selectedHand, poseHand);
+//     tf::poseEigenToMsg (poseHand, start_frame_pose);
 
 
     // define the start frame 
     geometry_msgs::PoseStamped start_frame;
-    start_frame.pose = start_frame_pose;
+//     start_frame.pose = start_frame_pose;
+    start_frame = *shared_data()._last_pose;
     
     trajectory_utils::Cartesian start;
     start.distal_frame = selectedHand;
@@ -618,7 +624,7 @@ void myfsm::Picked::entry(const XBot::FSM::Message& msg){
     // define the end frame - RIGHT HAND
     geometry_msgs::PoseStamped end_frame;
     
-    end_frame.pose = start_frame_pose; 
+//     end_frame.pose = start_frame_pose; 
     
     if(!selectedHand.compare("RSoftHand")){
       
@@ -649,6 +655,8 @@ void myfsm::Picked::entry(const XBot::FSM::Message& msg){
     trajectory_utils::Cartesian end;
     end.distal_frame = selectedHand;
     end.frame = end_frame;
+    
+    shared_data()._last_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(end_frame));
 
     // define the first segment
     trajectory_utils::segment s1;
@@ -964,29 +972,31 @@ void myfsm::MovedAway::entry(const XBot::FSM::Message& msg){
     //CALL SERVICE TO MOVE
     // send a trajectory for the end effector as a segment
     
-    shared_data()._robot->sense(); 
-    
-    Eigen::Affine3d world_T_bl;
-    std::string fb;  
-    
-    shared_data()._robot->model().getFloatingBaseLink(fb);
-    tf.getTransformTf(fb, "world_odom", world_T_bl);
-   
-    shared_data()._robot->model().setFloatingBasePose(world_T_bl);
-    shared_data()._robot->model().update();    
+//     shared_data()._robot->sense(); 
+//     
+//     Eigen::Affine3d world_T_bl;
+//     std::string fb;  
+//     
+//     shared_data()._robot->model().getFloatingBaseLink(fb);
+//     tf.getTransformTf(fb, "world_odom", world_T_bl);
+//    
+//     shared_data()._robot->model().setFloatingBasePose(world_T_bl);
+//     shared_data()._robot->model().update();    
     
     // RIGHT HAND
     
-    Eigen::Affine3d poseRightHand;
-    geometry_msgs::Pose start_frame_pose;
-
-    shared_data()._robot->model().getPose("RSoftHand", poseRightHand);
-//     shared_data()._robot->model().getPose("LSoftHand", poseRightHand); // tmp_ft_prova
-    tf::poseEigenToMsg (poseRightHand, start_frame_pose);
+//     Eigen::Affine3d poseRightHand;
+//     geometry_msgs::Pose start_frame_pose;
+// 
+//     shared_data()._robot->model().getPose("RSoftHand", poseRightHand);
+// //     shared_data()._robot->model().getPose("LSoftHand", poseRightHand); // tmp_ft_prova
+//     tf::poseEigenToMsg (poseRightHand, start_frame_pose);
 
     // define the start frame 
     geometry_msgs::PoseStamped start_frame;
-    start_frame.pose = start_frame_pose;
+//     start_frame.pose = start_frame_pose;
+    
+    start_frame = *shared_data()._last_pose;
     
     trajectory_utils::Cartesian start;
     start.distal_frame = "RSoftHand";
@@ -1037,6 +1047,7 @@ void myfsm::MovedAway::entry(const XBot::FSM::Message& msg){
 //     end_frame.pose.orientation.z = 0.452;
     end_frame.pose.orientation.w = 0.678;    
  
+    shared_data()._last_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(end_frame));
 
     trajectory_utils::Cartesian end;
     end.distal_frame = "RSoftHand";

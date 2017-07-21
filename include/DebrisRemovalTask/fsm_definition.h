@@ -115,6 +115,7 @@ namespace myfsm{
 //       Eigen::Vector3d _RH_Rot_Z;
       bool _feedback;
       ros::Publisher _SoftHandPose_pub;
+      geometry_msgs::PoseStamped::ConstPtr _last_pose;
 
      
     };
