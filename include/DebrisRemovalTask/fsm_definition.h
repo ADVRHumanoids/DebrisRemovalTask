@@ -24,6 +24,7 @@
 #include <std_msgs/String.h>
 
 #include <ADVR_ROS/advr_segment_control.h>
+#include <ADVR_ROS/advr_grasp_control_srv.h>
 #include<eigen_conversions/eigen_msg.h>
 
 #include <trajectory_utils/segment.h>
@@ -116,6 +117,7 @@ namespace myfsm{
       bool _feedback;
       ros::Publisher _SoftHandPose_pub;
       geometry_msgs::PoseStamped::ConstPtr _last_pose;
+      ros::ServiceClient _grasp_client;
 
      
     };

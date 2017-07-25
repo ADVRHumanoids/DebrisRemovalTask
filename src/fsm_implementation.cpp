@@ -376,19 +376,25 @@ void myfsm::Grasped::entry(const XBot::FSM::Message& msg){
     
     //try to grasp
     
-    std::string handJoint;
+//     std::string handJoint;
     
-    if(!selectedHand.compare("RSoftHand"))
-      handJoint = "r_handj";
-    else if(!selectedHand.compare("LSoftHand")){
-      handJoint = "l_handj"; 
-    }
+//     if(!selectedHand.compare("RSoftHand"))
+//       handJoint = "r_handj";
+//     else if(!selectedHand.compare("LSoftHand")){
+//       handJoint = "l_handj"; 
+//     }
     
     
-    int hand_id = shared_data()._robot->getHand()[handJoint]->getHandId();
-    XBot::Hand::Ptr hand = shared_data()._robot->getHand(hand_id);
-    //MAYBE ON THE REAL ROBOT HERE PUT AN IF AND A WAITFORMESSAGE TO BE SURE YOU WANT TO GRASP, YOU DON'T TRY EVERY TIME AS IN SIMULATION
-    hand->grasp(1);
+//     int hand_id = shared_data()._robot->getHand()[handJoint]->getHandId();
+//     XBot::Hand::Ptr hand = shared_data()._robot->getHand(hand_id);
+//     //MAYBE ON THE REAL ROBOT HERE PUT AN IF AND A WAITFORMESSAGE TO BE SURE YOU WANT TO GRASP, YOU DON'T TRY EVERY TIME AS IN SIMULATION
+//     hand->grasp(1);
+
+      ADVR_ROS::advr_grasp_control_srv srv;
+      srv.request.right_grasp = 1.0;
+      srv.request.left_grasp = 0.0;
+       // call the service
+      shared_data()._grasp_client.call(srv);
    
     
     //COMMENTED FOR FIRST TRIALS ON THE REAL ROBOT
@@ -540,6 +546,7 @@ void myfsm::Grasped::run(double time, double period){
       // new: moveaway after handover
       if (!shared_data().current_command.str().compare("move_away_after_ho")){
 	
+	//TBD
 	//Ungrasp left hand
 	int hand_id = shared_data()._robot->getHand()["l_handj"]->getHandId();
 	XBot::Hand::Ptr hand = shared_data()._robot->getHand(hand_id);
@@ -1096,6 +1103,9 @@ void myfsm::MovedAway::run(double time, double period){
     // MovedAway Succeeded
     if (!shared_data().current_command.str().compare("movedaway_success")){
       
+      //TEMPORARY
+      transit("Ungrasped");
+      
       //Hand Pose to get the initial wrench for the PlacedDown state
       shared_data()._robot->sense(); 
     
@@ -1269,10 +1279,15 @@ void myfsm::Ungrasped::entry(const XBot::FSM::Message& msg){
 //   shared_data()._grasp_mag_pub_RSoftHand.publish (message);
   
   //     //l hand moving
-    int r_hand_id = shared_data()._robot->getHand()["r_handj"]->getHandId();
-    XBot::Hand::Ptr r_hand = shared_data()._robot->getHand(r_hand_id);
-    r_hand->grasp(0);
-    
+//     int r_hand_id = shared_data()._robot->getHand()["r_handj"]->getHandId();
+//     XBot::Hand::Ptr r_hand = shared_data()._robot->getHand(r_hand_id);
+//     r_hand->grasp(0);
+  
+        ADVR_ROS::advr_grasp_control_srv srv;
+      srv.request.right_grasp = 0.0;
+      srv.request.left_grasp = 0.0;
+       // call the service
+      shared_data()._grasp_client.call(srv);
 
   
   std::cout << "Ungrasped run. 'ungrasped_fail'-> Ungrasped	'ungrasped_success'->Homing" << std::endl;
