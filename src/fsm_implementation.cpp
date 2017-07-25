@@ -1193,7 +1193,7 @@ void myfsm::PlacedDown::entry(const XBot::FSM::Message& msg){
 
     geometry_msgs::PoseStamped poseHandStamped;
     poseHandStamped.pose = start_frame_pose;
-    poseHandStamped.pose.position.z-=0.002;
+    poseHandStamped.pose.position.z-=0.00001;
     
     //publish ros message
     shared_data()._SoftHandPose_pub.publish (poseHandStamped);
