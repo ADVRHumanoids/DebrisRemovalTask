@@ -25,6 +25,7 @@
 
 #include <ADVR_ROS/advr_segment_control.h>
 #include <ADVR_ROS/advr_grasp_control_srv.h>
+#include <ADVR_ROS/im_pose_msg.h>
 #include<eigen_conversions/eigen_msg.h>
 
 #include <trajectory_utils/segment.h>

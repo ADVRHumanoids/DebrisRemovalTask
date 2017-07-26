@@ -212,10 +212,10 @@ void myfsm::Reached::entry(const XBot::FSM::Message& msg){
     
     //CHANGED TRIAL REAL ROBOT
     // blocking call: wait for a msg on topic hand_selection
-//     shared_data()._hand_selection = ros::topic::waitForMessage<std_msgs::String>("hand_selection");
-    std_msgs::String rh;
-    rh.data = "RSoftHand";
-    shared_data()._hand_selection = boost::shared_ptr<std_msgs::String>(new std_msgs::String(rh));
+    shared_data()._hand_selection = ros::topic::waitForMessage<std_msgs::String>("hand_selection");
+//     std_msgs::String rh;
+//     rh.data = "RSoftHand";
+//     shared_data()._hand_selection = boost::shared_ptr<std_msgs::String>(new std_msgs::String(rh));
     std_msgs::String message;
     message = *shared_data()._hand_selection;    
     std::string selectedHand;
@@ -231,17 +231,22 @@ void myfsm::Reached::entry(const XBot::FSM::Message& msg){
     //COMMENTED FOR FIRST TRIALS ON THE REAL ROBOT
     // blocking call: wait for a pose on topic debris_pose
 //     shared_data()._debris_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>("debris_pose");
-    geometry_msgs::PoseStamped poseDebris1;
-    poseDebris1.pose.position.x = 0.619;
-    poseDebris1.pose.position.y = -0.29;
-    poseDebris1.pose.position.z = 0.873;
+    ADVR_ROS::im_pose_msg::ConstPtr tmp;
+    tmp = ros::topic::waitForMessage<ADVR_ROS::im_pose_msg>("debris_pose");
+
+    shared_data()._debris_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(tmp->pose_stamped));
     
-    poseDebris1.pose.orientation.x = 0;
-    poseDebris1.pose.orientation.y = -0.5591931143131625;
-    poseDebris1.pose.orientation.z = 0;
-    poseDebris1.pose.orientation.w = 0.8290374303399975;
-    
-    shared_data()._debris_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(poseDebris1));
+//     geometry_msgs::PoseStamped poseDebris1;
+//     poseDebris1.pose.position.x = 0.619;
+//     poseDebris1.pose.position.y = -0.29;
+//     poseDebris1.pose.position.z = 0.873;
+//     
+//     poseDebris1.pose.orientation.x = 0;
+//     poseDebris1.pose.orientation.y = -0.5591931143131625;
+//     poseDebris1.pose.orientation.z = 0;
+//     poseDebris1.pose.orientation.w = 0.8290374303399975;
+//     
+//     shared_data()._debris_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(poseDebris1));
     
     
     //CALL SERVICE TO MOVE
@@ -1193,7 +1198,7 @@ void myfsm::PlacedDown::entry(const XBot::FSM::Message& msg){
 
     geometry_msgs::PoseStamped poseHandStamped;
     poseHandStamped.pose = start_frame_pose;
-    poseHandStamped.pose.position.z-=0.00001;
+    poseHandStamped.pose.position.z-=0.000001;
     
     //publish ros message
     shared_data()._SoftHandPose_pub.publish (poseHandStamped);
