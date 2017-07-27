@@ -75,15 +75,16 @@ void myfsm::Homing::entry(const XBot::FSM::Message& msg){
     //save the hand poses
     shared_data()._last_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(end_frame));
 
-//     geometry_msgs::PoseStamped leftHandFrame;
-//     leftHandFrame.pose = left_hand_pose;
+    geometry_msgs::PoseStamped leftHandFrame;
+    leftHandFrame.pose = left_hand_pose;
     shared_data()._initial_pose_right_hand = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(end_frame));
+    shared_data()._initial_pose_left_hand = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(leftHandFrame));
 
 
     // define the first segment
     trajectory_utils::segment s1;
     s1.type.data = 0;        // min jerk traj
-    s1.T.data = 5.0;         // traj duration 5 second      
+    s1.T.data = 25.0;         // traj duration 5 second      
     s1.start = start;        // start pose
     s1.end = end;            // end pose 
     
@@ -140,7 +141,7 @@ void myfsm::Homing::entry(const XBot::FSM::Message& msg){
 //     // define the first segment
 //     trajectory_utils::segment s2;
 //     s2.type.data = 0;        // min jerk traj
-//     s2.T.data = 5.0;         // traj duration 5 second      
+//     s2.T.data = 25.0;         // traj duration 5 second      
 //     s2.start = start2;        // start pose
 //     s2.end = end2;            // end pose 
 //     
@@ -283,7 +284,10 @@ void myfsm::Reached::entry(const XBot::FSM::Message& msg){
     // define the start frame 
     geometry_msgs::PoseStamped start_frame;
 //     start_frame.pose = start_frame_pose;
-    start_frame = *shared_data()._last_pose;
+    
+    //TEMPORARY
+//     start_frame = *shared_data()._last_pose;
+    start_frame = *shared_data()._initial_pose_left_hand;
     
     trajectory_utils::Cartesian start;
     start.distal_frame = selectedHand;
@@ -306,7 +310,7 @@ void myfsm::Reached::entry(const XBot::FSM::Message& msg){
     // define the first segment
     trajectory_utils::segment s1;
     s1.type.data = 0;        // min jerk traj
-    s1.T.data = 5.0;         // traj duration 5 second      
+    s1.T.data = 25.0;         // traj duration 5 second      
     s1.start = start;        // start pose
     s1.end = end;            // end pose 
     
@@ -689,7 +693,7 @@ void myfsm::Picked::entry(const XBot::FSM::Message& msg){
     // define the first segment
     trajectory_utils::segment s1;
     s1.type.data = 0;        // min jerk traj
-    s1.T.data = 5.0;         // traj duration 5 second      
+    s1.T.data = 25.0;         // traj duration 5 second      
     s1.start = start;        // start pose
     s1.end = end;            // end pose 
     
@@ -872,7 +876,7 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
     // define the first segment
     trajectory_utils::segment s1;
     s1.type.data = 0;        // min jerk traj
-    s1.T.data = 5.0;         // traj duration 5 second      
+    s1.T.data = 25.0;         // traj duration 5 second      
     s1.start = start;        // start pose
     s1.end = intermediate;            // end pose 
     
@@ -944,7 +948,7 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
     // define the second segment
     trajectory_utils::segment s2;
     s2.type.data = 0;        // min jerk traj
-    s2.T.data = 5.0;         // traj duration 5 second      
+    s2.T.data = 25.0;         // traj duration 5 second      
     s2.start = intermediate;        // start pose
     s2.end = end;            // end pose 
     
@@ -1076,7 +1080,7 @@ void myfsm::MovedAway::entry(const XBot::FSM::Message& msg){
     // define the first segment
     trajectory_utils::segment s1;
     s1.type.data = 0;        // min jerk traj
-    s1.T.data = 5.0;         // traj duration 5 second      
+    s1.T.data = 25.0;         // traj duration 5 second      
     s1.start = start;        // start pose
     s1.end = intermediate;            // end pose 
     
@@ -1108,7 +1112,7 @@ void myfsm::MovedAway::entry(const XBot::FSM::Message& msg){
     // define the second segment
     trajectory_utils::segment s2;
     s2.type.data = 0;        // min jerk traj
-    s2.T.data = 5.0;         // traj duration 5 second      
+    s2.T.data = 25.0;         // traj duration 5 second      
     s2.start = intermediate;        // start pose
     s2.end = end;            // end pose 
 
