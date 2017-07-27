@@ -39,12 +39,14 @@ void myfsm::Homing::entry(const XBot::FSM::Message& msg){
     
     
     // RIGHT HAND
-    Eigen::Affine3d poseRightHand;
-    geometry_msgs::Pose start_frame_pose;
+    Eigen::Affine3d poseRightHand,poseLeftHand;
+    geometry_msgs::Pose start_frame_pose,left_hand_pose;
 
     shared_data()._robot->model().getPose("RSoftHand", poseRightHand);
-    tf::poseEigenToMsg (poseRightHand, start_frame_pose);
+    shared_data()._robot->model().getPose("LSoftHand", poseLeftHand);
     
+    tf::poseEigenToMsg (poseRightHand, start_frame_pose);
+    tf::poseEigenToMsg (poseLeftHand, left_hand_pose);
 
     // define the start frame 
     geometry_msgs::PoseStamped start_frame;
@@ -70,7 +72,13 @@ void myfsm::Homing::entry(const XBot::FSM::Message& msg){
     end.distal_frame = "RSoftHand";
     end.frame = end_frame;
     
+    //save the hand poses
     shared_data()._last_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(end_frame));
+
+//     geometry_msgs::PoseStamped leftHandFrame;
+//     leftHandFrame.pose = left_hand_pose;
+    shared_data()._initial_pose_right_hand = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(end_frame));
+
 
     // define the first segment
     trajectory_utils::segment s1;
@@ -487,6 +495,9 @@ void myfsm::Grasped::entry(const XBot::FSM::Message& msg){
 //       
 //       
 //     }
+      
+    std::cout << "Grasped run. 'grasped_fail'-> Grasped	'grasped_success'->Picked	'move_away_after_ho'->MovedAway" << std::endl;
+
   
 }
 
@@ -532,7 +543,7 @@ void myfsm::Grasped::run(double time, double period){
 //     }
     
   
-    std::cout << "Grasped run. 'grasped_fail'-> Grasped	'grasped_success'->Picked	'move_away_after_ho'->MovedAway" << std::endl;
+//     std::cout << "Grasped run. 'grasped_fail'-> Grasped	'grasped_success'->Picked	'move_away_after_ho'->MovedAway" << std::endl;
     
     // blocking reading: wait for a command
     if(shared_data().command.read(shared_data().current_command))
@@ -551,12 +562,17 @@ void myfsm::Grasped::run(double time, double period){
       // new: moveaway after handover
       if (!shared_data().current_command.str().compare("move_away_after_ho")){
 	
-	//TBD
 	//Ungrasp left hand
-	int hand_id = shared_data()._robot->getHand()["l_handj"]->getHandId();
-	XBot::Hand::Ptr hand = shared_data()._robot->getHand(hand_id);
-	hand->grasp(0);
-
+// 	int hand_id = shared_data()._robot->getHand()["l_handj"]->getHandId();
+// 	XBot::Hand::Ptr hand = shared_data()._robot->getHand(hand_id);
+// 	hand->grasp(0);
+	
+	ADVR_ROS::advr_grasp_control_srv srv;
+	srv.request.right_grasp = 0.0;
+	srv.request.left_grasp = 0.0;
+	// call the service
+	shared_data()._grasp_client.call(srv);
+	
 	transit("MovedAway");    
       }
     } 
@@ -749,16 +765,16 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
     //CALL SERVICE TO MOVE
     // send a trajectory for the end effector as a segment
     
-    shared_data()._robot->sense(); 
+//     shared_data()._robot->sense(); 
     
-    Eigen::Affine3d world_T_bl;
-    std::string fb;  
+//     Eigen::Affine3d world_T_bl;
+//     std::string fb;  
     
-    shared_data()._robot->model().getFloatingBaseLink(fb);
-    tf.getTransformTf(fb, "world_odom", world_T_bl);
+//     shared_data()._robot->model().getFloatingBaseLink(fb);
+//     tf.getTransformTf(fb, "world_odom", world_T_bl);
    
-    shared_data()._robot->model().setFloatingBasePose(world_T_bl);
-    shared_data()._robot->model().update();   
+//     shared_data()._robot->model().setFloatingBasePose(world_T_bl);
+//     shared_data()._robot->model().update();   
     
     //HAND
     //Hand selection
@@ -782,12 +798,13 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
     geometry_msgs::Pose start_frame_pose;
 
     
-    shared_data()._robot->model().getPose(secondHand, poseSecondHand);
-    tf::poseEigenToMsg (poseSecondHand, start_frame_pose);
+//     shared_data()._robot->model().getPose(secondHand, poseSecondHand);
+//     tf::poseEigenToMsg (poseSecondHand, start_frame_pose);
     
     // define the start frame 
     geometry_msgs::PoseStamped start_frame;
-    start_frame.pose = start_frame_pose;
+//     start_frame.pose = start_frame_pose;
+    start_frame = *shared_data()._initial_pose_right_hand;
     
     trajectory_utils::Cartesian start;
     start.distal_frame = secondHand;
@@ -800,9 +817,20 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
     geometry_msgs::Pose start_frame_pose_holding_hand;
 
     KDL::Frame poseHoldingHand_KDL;
-    shared_data()._robot->model().getPose(holdingHand, poseHoldingHand_KDL);
+    
+    //retrieve this two from the last pose
+//     shared_data()._robot->model().getPose(holdingHand, poseHoldingHand_KDL);
    
-    shared_data()._robot->model().getPose(holdingHand, poseHoldingHand);
+//     shared_data()._robot->model().getPose(holdingHand, poseHoldingHand);
+    
+    geometry_msgs::PoseStamped poseStampedHoldingHand;
+    poseStampedHoldingHand = *shared_data()._last_pose;
+    
+    tf::poseMsgToEigen(poseStampedHoldingHand.pose,poseHoldingHand);
+    
+    poseHoldingHand_KDL.M = poseHoldingHand_KDL.M.Quaternion(poseStampedHoldingHand.pose.orientation.x,
+      poseStampedHoldingHand.pose.orientation.y, poseStampedHoldingHand.pose.orientation.z,
+      poseStampedHoldingHand.pose.orientation.w);
     
 
     poseHoldingHand_KDL.M.DoRotX(M_PI);
@@ -851,7 +879,7 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
     std::vector<trajectory_utils::segment> segments;
     segments.push_back(s1);
 
-    shared_data()._robot->sense();        
+//     shared_data()._robot->sense();        
     
     // define the end frame
     geometry_msgs::PoseStamped end_frame;
@@ -863,9 +891,18 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
     KDL::Frame poseHoldingHand_KDL_2;
 
     
-    shared_data()._robot->model().getPose(holdingHand, poseHoldingHand_KDL_2);
+//     shared_data()._robot->model().getPose(holdingHand, poseHoldingHand_KDL_2);
 
-    shared_data()._robot->model().getPose(holdingHand, poseHoldingHand_2);    
+//     shared_data()._robot->model().getPose(holdingHand, poseHoldingHand_2);    
+    
+    
+    tf::poseMsgToEigen(poseStampedHoldingHand.pose,poseHoldingHand_2);
+    
+    poseHoldingHand_KDL_2.M = poseHoldingHand_KDL_2.M.Quaternion(poseStampedHoldingHand.pose.orientation.x,
+    poseStampedHoldingHand.pose.orientation.y, poseStampedHoldingHand.pose.orientation.z,
+    poseStampedHoldingHand.pose.orientation.w);
+    
+    
     
     poseHoldingHand_KDL_2.M.DoRotX(M_PI);
     poseHoldingHand_KDL_2.p.x(0.25);
@@ -902,6 +939,8 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
     end.distal_frame = secondHand;
     end.frame = end_frame;
 
+    shared_data()._last_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(end_frame));
+    
     // define the second segment
     trajectory_utils::segment s2;
     s2.type.data = 0;        // min jerk traj

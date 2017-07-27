@@ -118,6 +118,7 @@ namespace myfsm{
       bool _feedback;
       ros::Publisher _SoftHandPose_pub;
       geometry_msgs::PoseStamped::ConstPtr _last_pose;
+      geometry_msgs::PoseStamped::ConstPtr _initial_pose_right_hand;
       ros::ServiceClient _grasp_client;
 
      
