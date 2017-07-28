@@ -121,6 +121,8 @@ namespace myfsm{
       geometry_msgs::PoseStamped::ConstPtr _initial_pose_right_hand;
       geometry_msgs::PoseStamped::ConstPtr _initial_pose_left_hand;
       ros::ServiceClient _grasp_client;
+      
+      bool _hand_over_phase;
 
      
     };
