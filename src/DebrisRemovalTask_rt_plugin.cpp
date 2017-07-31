@@ -70,6 +70,7 @@ bool DebrisRemovalTask::init_control_plugin(std::string path_to_config_file,
     
     /*Registers states*/
     fsm.register_state(std::make_shared<myfsm::Homing>());
+    fsm.register_state(std::make_shared<myfsm::LeftHoming>());
     fsm.register_state(std::make_shared<myfsm::Reached>());
     fsm.register_state(std::make_shared<myfsm::Grasped>());
     fsm.register_state(std::make_shared<myfsm::Picked>());

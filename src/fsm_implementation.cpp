@@ -128,6 +128,86 @@ void myfsm::Homing::exit (){
 /********************************* END Homing ********************************/
 
 
+/****************************** BEGIN LeftHoming *****************************/
+///////////////////////////////////////////////////////////////////////////////
+
+void myfsm::LeftHoming::react(const XBot::FSM::Event& e) {
+
+}
+
+///////////////////////////////////////////////////////////////////////////////
+void myfsm::LeftHoming::entry(const XBot::FSM::Message& msg){
+
+    std::cout << "LeftHoming_entry" << std::endl;
+    //CALL SERVICE TO MOVE
+
+    // define the start frame 
+    geometry_msgs::PoseStamped start_frame;
+    start_frame = *shared_data()._last_pose_left_hand;
+    
+    trajectory_utils::Cartesian start;
+    start.distal_frame = "LSoftHand";
+    start.frame = start_frame;
+    
+    // define the end frame
+    geometry_msgs::PoseStamped end_frame;
+    end_frame = *shared_data()._initial_pose_left_hand;    
+
+    trajectory_utils::Cartesian end;
+    end.distal_frame = "LSoftHand";
+    end.frame = end_frame;
+    
+    // define the first segment
+    trajectory_utils::segment s1;
+    s1.type.data = 0;        // min jerk traj
+    s1.T.data = 25.0;         // traj duration 5 second      
+    s1.start = start;        // start pose
+    s1.end = end;            // end pose 
+    
+    // only one segment in this example
+    std::vector<trajectory_utils::segment> segments;
+    segments.push_back(s1);
+    
+    // prepare the advr_segment_control
+    ADVR_ROS::advr_segment_control srv;
+    srv.request.segment_trj.header.frame_id = "world_odom";
+    srv.request.segment_trj.header.stamp = ros::Time::now();
+    srv.request.segment_trj.segments = segments;
+    
+    // call the service
+    shared_data()._client.call(srv);  
+   
+    std::cout << "LeftHoming run. 'lefthoming_fail'-> Homing\t\t'lefthoming_sucess'->MovedAway\t\t" << std::endl;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+void myfsm::LeftHoming::run(double time, double period){
+  
+  // blocking reading: wait for a command
+  if(shared_data().command.read(shared_data().current_command))
+  {
+    std::cout << "Command: " << shared_data().current_command.str() << std::endl;
+
+    // Homing failed
+    if (!shared_data().current_command.str().compare("lefthoming_fail"))
+      transit("Homing");
+    
+    // Homing Succeeded
+    if (!shared_data().current_command.str().compare("lefthoming_success"))
+      transit("MovedAway");
+  }
+
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+void myfsm::LeftHoming::exit (){
+
+}
+
+/******************************* END LeftHoming ******************************/
+
+
 /******************************* BEGIN Reached *******************************/
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -180,12 +260,12 @@ void myfsm::Reached::entry(const XBot::FSM::Message& msg){
 
     // define the start frame 
     geometry_msgs::PoseStamped start_frame;
-    if(selectedHand.compare("RSoftHand"))
+    if(!selectedHand.compare("RSoftHand"))
       start_frame = *shared_data()._initial_pose_right_hand;
-    else if(selectedHand.compare("LSoftHand"))
+    else if(!selectedHand.compare("LSoftHand"))
       start_frame = *shared_data()._initial_pose_left_hand;
-    
-    trajectory_utils::Cartesian start;
+
+      trajectory_utils::Cartesian start;
     start.distal_frame = selectedHand;
     start.frame = start_frame;    
     
@@ -292,7 +372,7 @@ void myfsm::Grasped::entry(const XBot::FSM::Message& msg){
     // call the service
     shared_data()._grasp_client.call(srv);    
       
-    std::cout << "Grasped run. 'grasped_fail'-> Grasped\t\t'grasped_success'->Picked\t\t'move_away_after_ho'->MovedAway" << std::endl;
+    std::cout << "Grasped run. 'grasped_fail'-> Grasped\t\t'grasped_success'->Picked\t\t'move_away_after_ho'->LeftHoming" << std::endl;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -323,7 +403,7 @@ void myfsm::Grasped::run(double time, double period){
         // call the service
         shared_data()._grasp_client.call(srv);
         
-        transit("MovedAway");    
+        transit("LeftHoming");    
       }
     } 
   }
@@ -380,7 +460,9 @@ void myfsm::Picked::entry(const XBot::FSM::Message& msg){
       end_frame.pose.orientation.x = 0.225;
       end_frame.pose.orientation.y = -0.592;
       end_frame.pose.orientation.z = 0.432;
-      end_frame.pose.orientation.w = 0.641;  
+      end_frame.pose.orientation.w = 0.641; 
+      
+      shared_data()._last_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(end_frame));
       
     }else if(!selectedHand.compare("LSoftHand")){
 
@@ -391,7 +473,9 @@ void myfsm::Picked::entry(const XBot::FSM::Message& msg){
       end_frame.pose.orientation.x = -0.225;
       end_frame.pose.orientation.y = -0.592;
       end_frame.pose.orientation.z = -0.432;
-      end_frame.pose.orientation.w = 0.641;      
+      end_frame.pose.orientation.w = 0.641;
+      
+      shared_data()._last_pose_left_hand = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(end_frame));
       
     }
        
@@ -400,8 +484,6 @@ void myfsm::Picked::entry(const XBot::FSM::Message& msg){
     end.distal_frame = selectedHand;
     end.frame = end_frame;
     
-    shared_data()._last_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(end_frame));
-
     // define the first segment
     trajectory_utils::segment s1;
     s1.type.data = 0;        // min jerk traj
@@ -507,7 +589,7 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
     KDL::Frame poseHoldingHand_KDL;
     
     geometry_msgs::PoseStamped poseStampedHoldingHand;
-    poseStampedHoldingHand = *shared_data()._last_pose;
+    poseStampedHoldingHand = *shared_data()._last_pose_left_hand;
     
     tf::poseMsgToEigen(poseStampedHoldingHand.pose,poseHoldingHand);
     
@@ -648,12 +730,16 @@ void myfsm::PickSecondHand::run(double time, double period){
     // Picked Succeeded
     if (!shared_data().current_command.str().compare("pick_second_hand_success")){
       
-      std::cout << "Select the End Effector you want to use." << std::endl;    
-      shared_data()._hand_selection = ros::topic::waitForMessage<std_msgs::String>("hand_selection");
+      std::cout << "Select the End Effector you want to use." << std::endl;
       std_msgs::String message;
-      message = *shared_data()._hand_selection;    
-      std::string selectedHand;
-      selectedHand = message.data;
+      message.data = "RSoftHand";
+//       shared_data()._hand_selection = ros::topic::waitForMessage<std_msgs::String>("hand_selection");
+      shared_data()._hand_selection = boost::shared_ptr<std_msgs::String>(new std_msgs::String(message));
+      
+//       std_msgs::String message;
+//       message = *shared_data()._hand_selection;    
+//       std::string selectedHand;
+//       selectedHand = message.data;
       
       shared_data()._hand_over_phase = true;
       
@@ -779,40 +865,40 @@ void myfsm::MovedAway::run(double time, double period){
       //TEMPORARY
       transit("Ungrasped");
       
-      std::cout << "PROVAAAAAAAAAAAAAAAAAA" << std::endl;
-      
-      //Hand Pose to get the initial wrench for the PlacedDown state
-      shared_data()._robot->sense(); 
-    
-      Eigen::Affine3d world_T_bl;
-      std::string fb;  
-      
-      shared_data()._robot->model().getFloatingBaseLink(fb);
-      tf.getTransformTf(fb, "world_odom", world_T_bl);
-    
-      shared_data()._robot->model().setFloatingBasePose(world_T_bl);
-      shared_data()._robot->model().update();     
-      
-      // RIGHT HAND
-      
-      Eigen::Affine3d poseRightHand;
-      shared_data()._robot->model().getPose("RSoftHand", poseRightHand);
-      
-      //Reading initial wrench from ros topic
-      double f_x,f_y,f_z,w_Fz_ft;
-      
-      shared_data()._ft_r_arm = ros::topic::waitForMessage<geometry_msgs::WrenchStamped>("/xbotcore/bigman/ft/r_arm_ft");
-      
-      f_x = shared_data()._ft_r_arm->wrench.force.x;
-      f_y = shared_data()._ft_r_arm->wrench.force.y;
-      f_z = shared_data()._ft_r_arm->wrench.force.z;
-  
-      Eigen::Vector3d ft_F_ft, w_F_ft;
-      ft_F_ft << f_x, f_y, f_z;
-      w_F_ft = poseRightHand * ft_F_ft;
-      shared_data()._w_F_ft_initial = w_F_ft(2);
-      
-      transit("PlacedDown");
+//       std::cout << "PROVAAAAAAAAAAAAAAAAAA" << std::endl;
+//       
+//       //Hand Pose to get the initial wrench for the PlacedDown state
+//       shared_data()._robot->sense(); 
+//     
+//       Eigen::Affine3d world_T_bl;
+//       std::string fb;  
+//       
+//       shared_data()._robot->model().getFloatingBaseLink(fb);
+//       tf.getTransformTf(fb, "world_odom", world_T_bl);
+//     
+//       shared_data()._robot->model().setFloatingBasePose(world_T_bl);
+//       shared_data()._robot->model().update();     
+//       
+//       // RIGHT HAND
+//       
+//       Eigen::Affine3d poseRightHand;
+//       shared_data()._robot->model().getPose("RSoftHand", poseRightHand);
+//       
+//       //Reading initial wrench from ros topic
+//       double f_x,f_y,f_z,w_Fz_ft;
+//       
+//       shared_data()._ft_r_arm = ros::topic::waitForMessage<geometry_msgs::WrenchStamped>("/xbotcore/bigman/ft/r_arm_ft");
+//       
+//       f_x = shared_data()._ft_r_arm->wrench.force.x;
+//       f_y = shared_data()._ft_r_arm->wrench.force.y;
+//       f_z = shared_data()._ft_r_arm->wrench.force.z;
+//   
+//       Eigen::Vector3d ft_F_ft, w_F_ft;
+//       ft_F_ft << f_x, f_y, f_z;
+//       w_F_ft = poseRightHand * ft_F_ft;
+//       shared_data()._w_F_ft_initial = w_F_ft(2);
+//       
+//       transit("PlacedDown");
     }
   } 
 }

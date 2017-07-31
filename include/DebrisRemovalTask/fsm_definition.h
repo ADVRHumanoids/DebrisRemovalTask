@@ -120,6 +120,7 @@ namespace myfsm{
       geometry_msgs::PoseStamped::ConstPtr _last_pose;
       geometry_msgs::PoseStamped::ConstPtr _initial_pose_right_hand;
       geometry_msgs::PoseStamped::ConstPtr _initial_pose_left_hand;
+      geometry_msgs::PoseStamped::ConstPtr _last_pose_left_hand;
       ros::ServiceClient _grasp_client;
       
       bool _hand_over_phase;
@@ -130,10 +131,10 @@ namespace myfsm{
     class MacroState : public  XBot::FSM::State< MacroState , SharedData > {
       
     public:
-	
-	virtual void entry(const XBot::FSM::Message& msg) {};
-	virtual void react(const XBot::FSM::Event& e){};
-	tfHandler tf;
+
+        virtual void entry(const XBot::FSM::Message& msg) {};
+        virtual void react(const XBot::FSM::Event& e){};
+        tfHandler tf;
       
     };  
 
@@ -154,6 +155,23 @@ namespace myfsm{
 
 
      };
+
+    class LeftHoming : public MacroState {
+
+      virtual std::string get_name() const { return "LeftHoming"; }
+
+      virtual void run(double time, double period);
+
+      virtual void entry(const XBot::FSM::Message& msg);
+
+      virtual void react(const XBot::FSM::Event& e);
+
+      virtual void exit ();
+
+      private:
+
+
+     };     
  
     class Reached : public MacroState {
 
@@ -221,7 +239,7 @@ namespace myfsm{
       private:
 
 
-     };     
+     }; 
  
     class MovedAway : public MacroState {
 
