@@ -37,6 +37,7 @@
 #include <Eigen/Dense>
 
 #include <geometry_msgs/WrenchStamped.h>
+#include <XCM/XBotPluginStatus.h>
 
 namespace myfsm{
 
@@ -124,6 +125,7 @@ namespace myfsm{
       ros::ServiceClient _grasp_client;
       
       bool _hand_over_phase;
+      std::shared_ptr<XBot::PluginStatus> plugin_status;
 
      
     };

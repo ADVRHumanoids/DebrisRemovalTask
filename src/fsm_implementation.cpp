@@ -10,14 +10,15 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 void myfsm::Homing::react(const XBot::FSM::Event& e) {
-
+    
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::Homing::entry(const XBot::FSM::Message& msg){
 
+    shared_data().plugin_status->setStatus("HOMING");
+    
     std::cout << "Homing_entry" << std::endl;
-  
   
     //CALL SERVICE TO MOVE
     // send a trajectory for the end effector as a segment
@@ -138,6 +139,8 @@ void myfsm::LeftHoming::react(const XBot::FSM::Event& e) {
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::LeftHoming::entry(const XBot::FSM::Message& msg){
 
+    shared_data().plugin_status->setStatus("LEFTHOMING");
+      
     std::cout << "LeftHoming_entry" << std::endl;
     //CALL SERVICE TO MOVE
 
@@ -218,6 +221,8 @@ void myfsm::Reached::react(const XBot::FSM::Event& e) {
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::Reached::entry(const XBot::FSM::Message& msg){
 
+    shared_data().plugin_status->setStatus("REACHED");
+      
     std::cout << "Reached_entry" << std::endl;
     
     std::cout << "Select the End Effector you want to use." << std::endl;
@@ -340,6 +345,8 @@ void myfsm::Grasped::react(const XBot::FSM::Event& e) {
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::Grasped::entry(const XBot::FSM::Message& msg){
 
+    shared_data().plugin_status->setStatus("GRASPED");
+      
     std::cout << "Grasped_entry" << std::endl;
     
     //HAND
@@ -427,6 +434,8 @@ void myfsm::Picked::react(const XBot::FSM::Event& e) {
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::Picked::entry(const XBot::FSM::Message& msg){
 
+    shared_data().plugin_status->setStatus("PICKED");
+    
     std::cout << "Picked_entry" << std::endl;
   
     //CALL SERVICE TO MOVE
@@ -547,6 +556,8 @@ void myfsm::PickSecondHand::react(const XBot::FSM::Event& e) {
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
 
+    shared_data().plugin_status->setStatus("PICKSECONDHAND");
+    
     std::cout << "PickSecondHand entry" << std::endl;
   
     //CALL SERVICE TO MOVE
@@ -767,6 +778,8 @@ void myfsm::MovedAway::react(const XBot::FSM::Event& e) {
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::MovedAway::entry(const XBot::FSM::Message& msg){
 
+    shared_data().plugin_status->setStatus("MOVEDAWAY");
+    
     std::cout << "MovedAway_entry" << std::endl;
   
     //CALL SERVICE TO MOVE
@@ -921,6 +934,8 @@ void myfsm::PlacedDown::react(const XBot::FSM::Event& e) {
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::PlacedDown::entry(const XBot::FSM::Message& msg){
 
+    shared_data().plugin_status->setStatus("PLACEDDOWN");
+    
     std::cout << "PlacedDown_entry" << std::endl;
         
     shared_data()._robot->sense(); 
@@ -1033,6 +1048,8 @@ void myfsm::Ungrasped::react(const XBot::FSM::Event& e) {
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::Ungrasped::entry(const XBot::FSM::Message& msg){
 
+  shared_data().plugin_status->setStatus("UNGRASPED");
+      
   std::cout << "Ungrasped_entry" << std::endl;
   
   //CALL SERVICE TO UNGRASP  

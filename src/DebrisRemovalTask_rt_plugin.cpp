@@ -53,6 +53,7 @@ bool DebrisRemovalTask::init_control_plugin(std::string path_to_config_file,
     fsm.shared_data()._nh =  std::make_shared<ros::NodeHandle>();
     fsm.shared_data().command = command;
     fsm.shared_data().current_command = current_command;
+    fsm.shared_data().plugin_status = _custom_status;
     
     fsm.shared_data()._client = fsm.shared_data()._nh->serviceClient<ADVR_ROS::advr_segment_control>("segment_control");    
     fsm.shared_data()._grasp_mag_pub_RSoftHand = fsm.shared_data()._nh->advertise<std_msgs::String>("/grasp/RWrMot3/goalGrasp",1);
