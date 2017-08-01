@@ -611,7 +611,7 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
     poseHoldingHand_KDL.M.DoRotX(M_PI);
     poseHoldingHand_KDL.p.x(0.25);
     poseHoldingHand_KDL.p.y(0.10);
-    poseHoldingHand_KDL.p.z(0);
+    poseHoldingHand_KDL.p.z(-0.05);
 
     tf::transformKDLToEigen(poseHoldingHand_KDL,poseHoldingHand_Affine);
     
@@ -671,7 +671,7 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
     poseHoldingHand_KDL_2.M.DoRotX(M_PI);
     poseHoldingHand_KDL_2.p.x(0.25);
     poseHoldingHand_KDL_2.p.y(-0.05);
-    poseHoldingHand_KDL_2.p.z(0);
+    poseHoldingHand_KDL_2.p.z(-0.05);
     
     tf::transformKDLToEigen(poseHoldingHand_KDL_2,poseSecondHand_Affine);
     
