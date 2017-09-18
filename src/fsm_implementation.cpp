@@ -878,7 +878,7 @@ void myfsm::MovedAway::run(double time, double period){
     if (!shared_data().current_command.str().compare("movedaway_success")){
       
       //TEMPORARY
-      transit("Ungrasped");
+      transit("PlacedDown");
       
 //       std::cout << "PROVAAAAAAAAAAAAAAAAAA" << std::endl;
 //       
@@ -934,103 +934,176 @@ void myfsm::PlacedDown::react(const XBot::FSM::Event& e) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+
 void myfsm::PlacedDown::entry(const XBot::FSM::Message& msg){
-
     shared_data().plugin_status->setStatus("PLACEDDOWN");
+      
     
-    std::cout << "PlacedDown_entry" << std::endl;
-        
-    shared_data()._robot->sense(); 
-    
-    Eigen::Affine3d world_T_bl;
-    std::string fb;  
-    
-    shared_data()._robot->model().getFloatingBaseLink(fb);
-    tf.getTransformTf(fb, "world_odom", world_T_bl);
-   
-    shared_data()._robot->model().setFloatingBasePose(world_T_bl);
-    shared_data()._robot->model().update();     
-    
-    // RIGHT HAND
-    
-    Eigen::Affine3d poseRightHand;
-    geometry_msgs::Pose start_frame_pose;
+    //CALL SERVICE TO MOVE
 
-    shared_data()._robot->model().getPose("RSoftHand", poseRightHand);
-    tf::poseEigenToMsg (poseRightHand, start_frame_pose);
-
-    geometry_msgs::PoseStamped poseHandStamped;
-    poseHandStamped.pose = start_frame_pose;
-    poseHandStamped.pose.position.z-=0.000001;
+    geometry_msgs::PoseStamped start_frame;
     
-    //publish ros message
-    shared_data()._SoftHandPose_pub.publish (poseHandStamped);
+    start_frame = *shared_data()._last_pose;
+    
+    trajectory_utils::Cartesian start;
+    start.distal_frame = "RSoftHand";
+    start.frame = start_frame; 
+    
+    // define the end frame
+    geometry_msgs::PoseStamped end_frame;
+    end_frame = start_frame;
+    
+    end_frame.pose.position.z = start_frame.pose.position.z - 0.10;
+    
+    
+    trajectory_utils::Cartesian end;
+    end.distal_frame = "RSoftHand";
+    end.frame = end_frame;
 
+    shared_data()._last_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(end_frame));
+    
+    // define the first segment
+    trajectory_utils::segment s1;
+    s1.type.data = 0;        // min jerk traj
+    s1.T.data = TRAJ_DURATION;         // traj duration 5 second      
+    s1.start = start;        // start pose
+    s1.end = end;            // end pose 
+    
+    // only one segment in this example
+    std::vector<trajectory_utils::segment> segments;
+    segments.push_back(s1);
+    
+    // prepare the advr_segment_control
+    ADVR_ROS::advr_segment_control srv;
+    srv.request.segment_trj.header.frame_id = "world_odom";
+    srv.request.segment_trj.header.stamp = ros::Time::now();
+    srv.request.segment_trj.segments = segments;
+    
+    // call the service
+    shared_data()._client.call(srv);
+
+    std::cout << "Reached run. 'reached_fail'-> Homing\t\t'reached_sucess'->Grasped"<< std::endl;
+    
 }
-
 
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::PlacedDown::run(double time, double period){
-  
-    shared_data()._robot->sense(); 
-    
-    Eigen::Affine3d world_T_bl;
-    std::string fb;  
-    
-    shared_data()._robot->model().getFloatingBaseLink(fb);
-    tf.getTransformTf(fb, "world_odom", world_T_bl);
-   
-    shared_data()._robot->model().setFloatingBasePose(world_T_bl);
-    shared_data()._robot->model().update();     
-    
-    // RIGHT HAND
-    
-    Eigen::Affine3d poseRightHand;
-    geometry_msgs::Pose start_frame_pose;
 
-    shared_data()._robot->model().getPose("RSoftHand", poseRightHand);
-    
-    //Reading initial wrench from ros topic
-    double f_x,f_y,f_z,w_Fz_ft;
-    
-    shared_data()._ft_r_arm = ros::topic::waitForMessage<geometry_msgs::WrenchStamped>("/xbotcore/bigman/ft/r_arm_ft");
-    
-    f_x = shared_data()._ft_r_arm->wrench.force.x;
-    f_y = shared_data()._ft_r_arm->wrench.force.y;
-    f_z = shared_data()._ft_r_arm->wrench.force.z;
-
-    Eigen::Vector3d ft_F_ft,w_F_ft;
-    ft_F_ft << f_x, f_y, f_z;
-    w_F_ft = poseRightHand * ft_F_ft;
-    w_Fz_ft = w_F_ft(2);
-      
-//     w_Fz_ft = shared_data()._RH_Rot_Z.dot(ft_F_ft);
-      
-//     double k;
-//     k = 0.7;
-
-    std::cout << "w_Fz_ft: " << w_Fz_ft << std::endl;
-
-    if(w_Fz_ft <= 50) //k * shared_data()._w_F_ft_initial)
-      transit("PlacedDown");
-    else
-      transit("Ungrasped");
-    
-      // blocking reading: wait for a command
+  // blocking reading: wait for a command
   if(shared_data().command.read(shared_data().current_command))
   {
     std::cout << "Command: " << shared_data().current_command.str() << std::endl;
 
-    // Ungrasped failed
+    // Reached failed
+    if (!shared_data().current_command.str().compare("placedown_fail"))
+      transit("Homing");
+    
+    // Reached Succeeded
     if (!shared_data().current_command.str().compare("placeddown_success"))
       transit("Ungrasped");
-    
-    // Ungrasped Succeeded
-    if (!shared_data().current_command.str().compare("placeddown_failed"))
-      transit("Homing");
-  }
-  
+  } 
+
 }
+
+///////////////////////////////////////////////////////////////////////////////
+
+    // void myfsm::PlacedDown::entry(const XBot::FSM::Message& msg){
+// 
+//     shared_data().plugin_status->setStatus("PLACEDDOWN");
+//     
+//     std::cout << "PlacedDown_entry" << std::endl;
+//         
+//     shared_data()._robot->sense(); 
+//     
+//     Eigen::Affine3d world_T_bl;
+//     std::string fb;  
+//     
+//     shared_data()._robot->model().getFloatingBaseLink(fb);
+//     tf.getTransformTf(fb, "world_odom", world_T_bl);
+//    
+//     shared_data()._robot->model().setFloatingBasePose(world_T_bl);
+//     shared_data()._robot->model().update();     
+//     
+//     // RIGHT HAND
+//     
+//     Eigen::Affine3d poseRightHand;
+//     geometry_msgs::Pose start_frame_pose;
+// 
+//     shared_data()._robot->model().getPose("RSoftHand", poseRightHand);
+//     tf::poseEigenToMsg (poseRightHand, start_frame_pose);
+// 
+//     geometry_msgs::PoseStamped poseHandStamped;
+//     poseHandStamped.pose = start_frame_pose;
+//     poseHandStamped.pose.position.z-=0.000001;
+//     
+//     //publish ros message
+//     shared_data()._SoftHandPose_pub.publish (poseHandStamped);
+// 
+// }
+// 
+// 
+// ///////////////////////////////////////////////////////////////////////////////
+// void myfsm::PlacedDown::run(double time, double period){
+//   
+//     shared_data()._robot->sense(); 
+//     
+//     Eigen::Affine3d world_T_bl;
+//     std::string fb;  
+//     
+//     shared_data()._robot->model().getFloatingBaseLink(fb);
+//     tf.getTransformTf(fb, "world_odom", world_T_bl);
+//    
+//     shared_data()._robot->model().setFloatingBasePose(world_T_bl);
+//     shared_data()._robot->model().update();     
+//     
+//     // RIGHT HAND
+//     
+//     Eigen::Affine3d poseRightHand;
+//     geometry_msgs::Pose start_frame_pose;
+// 
+//     shared_data()._robot->model().getPose("RSoftHand", poseRightHand);
+//     
+//     //Reading initial wrench from ros topic
+//     double f_x,f_y,f_z,w_Fz_ft;
+//     
+//     shared_data()._ft_r_arm = ros::topic::waitForMessage<geometry_msgs::WrenchStamped>("/xbotcore/bigman/ft/r_arm_ft");
+//     
+//     f_x = shared_data()._ft_r_arm->wrench.force.x;
+//     f_y = shared_data()._ft_r_arm->wrench.force.y;
+//     f_z = shared_data()._ft_r_arm->wrench.force.z;
+// 
+//     Eigen::Vector3d ft_F_ft,w_F_ft;
+//     ft_F_ft << f_x, f_y, f_z;
+//     w_F_ft = poseRightHand * ft_F_ft;
+//     w_Fz_ft = w_F_ft(2);
+//       
+// //     w_Fz_ft = shared_data()._RH_Rot_Z.dot(ft_F_ft);
+//       
+// //     double k;
+// //     k = 0.7;
+// 
+//     std::cout << "w_Fz_ft: " << w_Fz_ft << std::endl;
+// 
+//     if(w_Fz_ft <= 50) //k * shared_data()._w_F_ft_initial)
+//       transit("PlacedDown");
+//     else
+//       transit("Ungrasped");
+//     
+//       // blocking reading: wait for a command
+//   if(shared_data().command.read(shared_data().current_command))
+//   {
+//     std::cout << "Command: " << shared_data().current_command.str() << std::endl;
+// 
+//     // Ungrasped failed
+//     if (!shared_data().current_command.str().compare("placeddown_success"))
+//       transit("Ungrasped");
+//     
+//     // Ungrasped Succeeded
+//     if (!shared_data().current_command.str().compare("placeddown_failed"))
+//       transit("Homing");
+//   }
+//   
+// }
 
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::PlacedDown::exit (){
