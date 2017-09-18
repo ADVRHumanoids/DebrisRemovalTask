@@ -5,7 +5,6 @@
 
 #include <eigen_conversions/eigen_msg.h>
 
-
 /******************************** BEGIN Homing *******************************/
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -364,16 +363,16 @@ void myfsm::Grasped::entry(const XBot::FSM::Message& msg){
   
     if(!selectedHand.compare("RSoftHand")){
       if(!shared_data()._hand_over_phase){
-          srv.request.right_grasp = 1.0;
+          srv.request.right_grasp = 0.9;
           srv.request.left_grasp = 0.0;
       }else{
-          srv.request.right_grasp = 1.0;
-          srv.request.left_grasp = 1.0;
+          srv.request.right_grasp = 0.9;
+          srv.request.left_grasp = 0.9;
           shared_data()._hand_over_phase = false;
       }
     }else if(!selectedHand.compare("LSoftHand")){
           srv.request.right_grasp = 0.0;
-          srv.request.left_grasp = 1.0;
+          srv.request.left_grasp = 0.9;
     }
     
     // call the service
@@ -611,7 +610,7 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
     poseHoldingHand_KDL.M.DoRotX(M_PI);
     poseHoldingHand_KDL.p.x(0.25);
     poseHoldingHand_KDL.p.y(0.10);
-    poseHoldingHand_KDL.p.z(-0.05);
+    poseHoldingHand_KDL.p.z(0.05);
 
     tf::transformKDLToEigen(poseHoldingHand_KDL,poseHoldingHand_Affine);
     
@@ -671,7 +670,7 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
     poseHoldingHand_KDL_2.M.DoRotX(M_PI);
     poseHoldingHand_KDL_2.p.x(0.25);
     poseHoldingHand_KDL_2.p.y(-0.05);
-    poseHoldingHand_KDL_2.p.z(-0.05);
+    poseHoldingHand_KDL_2.p.z(0.05);
     
     tf::transformKDLToEigen(poseHoldingHand_KDL_2,poseSecondHand_Affine);
     
