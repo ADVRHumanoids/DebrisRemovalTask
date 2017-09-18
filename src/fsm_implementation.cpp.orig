@@ -5,9 +5,12 @@
 
 #include <eigen_conversions/eigen_msg.h>
 
+<<<<<<< HEAD
+=======
 #define TRAJ_DURATION 25
 
 
+>>>>>>> 8a5ce2ff0704d506f90f06258ff2972a4de32f20
 /******************************** BEGIN Homing *******************************/
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -613,7 +616,7 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
     poseHoldingHand_KDL.M.DoRotX(M_PI);
     poseHoldingHand_KDL.p.x(0.25);
     poseHoldingHand_KDL.p.y(0.10);
-    poseHoldingHand_KDL.p.z(-0.05);
+    poseHoldingHand_KDL.p.z(0.05);
 
     tf::transformKDLToEigen(poseHoldingHand_KDL,poseHoldingHand_Affine);
     
@@ -936,7 +939,6 @@ void myfsm::PlacedDown::react(const XBot::FSM::Event& e) {
 ///////////////////////////////////////////////////////////////////////////////
 
 void myfsm::PlacedDown::entry(const XBot::FSM::Message& msg){
-
     shared_data().plugin_status->setStatus("PLACEDDOWN");
       
     
