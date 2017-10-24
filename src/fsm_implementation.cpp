@@ -983,7 +983,7 @@ void myfsm::PlacedDown::entry(const XBot::FSM::Message& msg){
     // call the service
     shared_data()._client.call(srv);
 
-    std::cout << "Reached run. 'reached_fail'-> Homing\t\t'reached_sucess'->Grasped"<< std::endl;
+    std::cout << "PlacedDown run. 'placeddown_fail'-> Homing\t\t'placeddown_sucess'->Ungrasped"<< std::endl;
     
 }
 
