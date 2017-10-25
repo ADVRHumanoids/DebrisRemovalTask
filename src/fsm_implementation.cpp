@@ -1466,7 +1466,7 @@ void myfsm::ValveGoBack::entry(const XBot::FSM::Message& msg){
     // define the intermediate frame
     geometry_msgs::PoseStamped intermediate_frame;
     intermediate_frame = *shared_data()._valve_pose;
-    intermediate_frame.pose.position.z += 0.2;
+//     intermediate_frame.pose.position.z += 0.2;
     
     
     trajectory_utils::Cartesian intermediate;

@@ -63,6 +63,11 @@ pose_stamped:
       w: 0.8290374303399975"
 
 ----------------------------------------------------------------------------
+tested valve pose without causing elbow up configuration!
+      x: 1.0
+      y: -0.35
+      z: 1.60
+----------------------------------------------------------------------------
 
 VALVE (FROM RIGHT)
 rostopic pub /valve_pose ADVR_ROS/im_pose_msg "name: ''
@@ -75,9 +80,9 @@ pose_stamped:
     frame_id: ''
   pose:
     position:
-      x: 0.68
-      y: -0.25
-      z: 1.80
+      x: 1.0
+      y: -0.35
+      z: 1.60
     orientation:
       x: 0.0
       y: -0.7071070192004544
