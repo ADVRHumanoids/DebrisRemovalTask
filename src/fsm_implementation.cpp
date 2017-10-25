@@ -464,7 +464,8 @@ void myfsm::Picked::entry(const XBot::FSM::Message& msg){
     
     if(!selectedHand.compare("RSoftHand")){
       
-      end_frame.pose.position.x = 0.352;
+//       end_frame.pose.position.x = 0.352;
+      end_frame.pose.position.x = 0.5;
       end_frame.pose.position.y = -0.2;
       end_frame.pose.position.z = 1.00;   
       
