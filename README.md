@@ -5,14 +5,14 @@ roslaunch bigman_gazebo bigman_valve.launch
 ```
 
 ```cpp
-CommunicationHandler advr-superbuild/configs/ADVR_shared/bigman/configs/config_walkman_floating_base.yaml
+CommunicationHandler $ROBOTOLOGY_ROOT/configs/ADVR_shared/bigman/configs/config_walkman_floating_base.yaml
 ```
 
 ```cpp
-NRTDeployer /home/user/advr-superbuild/configs/ADVR_shared/bigman/configs/config_walkman_floating_base.yaml 
+NRTDeployer $ROBOTOLOGY_ROOT/configs/ADVR_shared/bigman/configs/config_walkman_floating_base.yaml 
 
 ```
 
 ```cpp
-XBotGUI /home/user/advr-superbuild/configs/ADVR_shared/bigman/configs/config_walkman_floating_base.yaml 
+XBotGUI $ROBOTOLOGY_ROOT/configs/ADVR_shared/bigman/configs/config_walkman_floating_base.yaml 
 ```
