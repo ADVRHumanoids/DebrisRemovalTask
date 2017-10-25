@@ -80,6 +80,12 @@ bool DebrisRemovalTask::init_control_plugin(std::string path_to_config_file,
     fsm.register_state(std::make_shared<myfsm::PlacedDown>());
     fsm.register_state(std::make_shared<myfsm::Ungrasped>());
     
+    //For valve turning
+    fsm.register_state(std::make_shared<myfsm::ValveReach>());
+    fsm.register_state(std::make_shared<myfsm::ValveTurn>());
+    fsm.register_state(std::make_shared<myfsm::ValveGoBack>());
+    
+    
 
 
     return true;

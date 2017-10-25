@@ -106,6 +106,7 @@ namespace myfsm{
       XBot::RobotInterface::Ptr _robot;
       std::shared_ptr<ros::NodeHandle> _nh;
       geometry_msgs::PoseStamped::ConstPtr _debris_pose;
+      geometry_msgs::PoseStamped::ConstPtr _valve_pose;
       std_msgs::String::ConstPtr _debris_number;
       std_msgs::String::ConstPtr _hand_selection;
       ros::ServiceClient _client;
@@ -293,6 +294,54 @@ namespace myfsm{
 
 
      };
-     
+
+    class ValveReach : public MacroState {
+
+      virtual std::string get_name() const { return "ValveReach"; }
+
+      virtual void run(double time, double period);
+
+      virtual void entry(const XBot::FSM::Message& msg);
+
+      virtual void react(const XBot::FSM::Event& e);
+
+      virtual void exit ();
+
+      private:
+
+
+     };
+    class ValveTurn : public MacroState {
+
+      virtual std::string get_name() const { return "ValveTurn"; }
+
+      virtual void run(double time, double period);
+
+      virtual void entry(const XBot::FSM::Message& msg);
+
+      virtual void react(const XBot::FSM::Event& e);
+
+      virtual void exit ();
+
+      private:
+
+
+     };
+    class ValveGoBack : public MacroState {
+
+      virtual std::string get_name() const { return "ValveGoBack"; }
+
+      virtual void run(double time, double period);
+
+      virtual void entry(const XBot::FSM::Message& msg);
+
+      virtual void react(const XBot::FSM::Event& e);
+
+      virtual void exit ();
+
+      private:
+
+
+     };     
       
 }
