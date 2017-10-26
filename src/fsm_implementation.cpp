@@ -1229,7 +1229,7 @@ void myfsm::ValveReach::entry(const XBot::FSM::Message& msg){
     // define the intermediate frame
     geometry_msgs::PoseStamped intermediate_frame;
     intermediate_frame = *shared_data()._valve_pose;
-    intermediate_frame.pose.position.y-= 0.2; 
+    intermediate_frame.pose.position.y -= 0.1; 
     
     trajectory_utils::Cartesian intermediate;
     intermediate.distal_frame = selectedHand;
@@ -1349,6 +1349,7 @@ void myfsm::ValveTurn::entry(const XBot::FSM::Message& msg){
     geometry_msgs::PoseStamped end_frame;
     double qx,qy,qz,qw;
     end_frame_kdl.M.GetQuaternion(qx,qy,qz,qw);
+    
     end_frame.pose.orientation.x = qx;
     end_frame.pose.orientation.y = qy;
     end_frame.pose.orientation.z = qz;
@@ -1362,7 +1363,7 @@ void myfsm::ValveTurn::entry(const XBot::FSM::Message& msg){
     geometry_msgs::Vector3 circle_center;
     circle_center.x = start_frame.pose.position.x;
     circle_center.y = start_frame.pose.position.y;
-    circle_center.z = 1.4;
+    circle_center.z = start_frame.pose.position.z-0.2;
     
     
     
@@ -1398,10 +1399,11 @@ void myfsm::ValveTurn::entry(const XBot::FSM::Message& msg){
     
     //compute last pose
     geometry_msgs::PoseStamped last_frame;
-    last_frame = *shared_data()._valve_pose;
-    last_frame.pose.position.y+=0.2;
-    last_frame.pose.position.z-=0.2;
-    last_frame.pose.orientation = end_frame.pose.orientation;
+//     last_frame = *shared_data()._valve_pose;
+//     last_frame.pose.position.y+=0.2;
+//     last_frame.pose.position.z-=0.2;
+//     last_frame.pose.orientation = end_frame.pose.orientation;
+    last_frame = end_frame;
     shared_data()._last_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(last_frame));
   
 

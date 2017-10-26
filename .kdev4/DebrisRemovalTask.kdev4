@@ -1,0 +1,23 @@
+[Buildset]
+BuildItems=@Variant(\x00\x00\x00\t\x00\x00\x00\x00\x01\x00\x00\x00\x0b\x00\x00\x00\x00\x01\x00\x00\x00"\x00D\x00e\x00b\x00r\x00i\x00s\x00R\x00e\x00m\x00o\x00v\x00a\x00l\x00T\x00a\x00s\x00k)
+
+[CMake]
+Build Directory Count=1
+Current Build Directory Index=0
+ProjectRootRelative=./
+
+[CMake][CMake Build Directory 0]
+Build Directory Path=file:///home/super/advr-superbuild/build/external/DebrisRemovalTask/
+Build Type=Release
+CMake Binary=file:///usr/bin/cmake
+Environment Profile=
+Extra Arguments=
+Install Directory=file:///home/super/advr-superbuild/build/install
+
+[Defines And Includes][Compiler]
+Name=GCC
+Path=gcc
+Type=GCC
+
+[Project]
+VersionControlSupport=kdevgit
