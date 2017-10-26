@@ -245,11 +245,12 @@ void myfsm::Reached::entry(const XBot::FSM::Message& msg){
     //in the future the position to reach the debris will be given by a ros message published on the rostopic "debris_pose"
     
     // blocking call: wait for a pose on topic debris_pose
-    ADVR_ROS::im_pose_msg::ConstPtr tmp;
+//     ADVR_ROS::im_pose_msg::ConstPtr tmp;
 //     tmp = ros::topic::waitForMessage<ADVR_ROS::im_pose_msg>("debris_pose");
-    tmp = ros::topic::waitForMessage<ADVR_ROS::im_pose_msg>("grasp_pose");
+//     tmp = ros::topic::waitForMessage<ADVR_ROS::im_pose_msg>("grasp_pose");
 
-    shared_data()._debris_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(tmp->pose_stamped));
+//     shared_data()._debris_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(tmp->pose_stamped));
+    shared_data()._debris_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>("grasp_pose");
     
 //     geometry_msgs::PoseStamped poseDebris1;
 //     poseDebris1.pose.position.x = 0.619;
