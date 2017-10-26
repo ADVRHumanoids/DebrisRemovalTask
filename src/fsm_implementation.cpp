@@ -252,8 +252,10 @@ void myfsm::Reached::entry(const XBot::FSM::Message& msg){
     // blocking call: wait for a pose on topic debris_pose
     ADVR_ROS::im_pose_msg::ConstPtr tmp;
     tmp = ros::topic::waitForMessage<ADVR_ROS::im_pose_msg>("debris_pose");
+//     tmp = ros::topic::waitForMessage<ADVR_ROS::im_pose_msg>("grasp_pose");
 
     shared_data()._debris_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(tmp->pose_stamped));
+//     shared_data()._debris_pose = ros::topic::waitForMessage<geometry_msgs::PoseStamped>("grasp_pose");
     
 //     geometry_msgs::PoseStamped poseDebris1;
 //     poseDebris1.pose.position.x = 0.619;
@@ -469,7 +471,8 @@ void myfsm::Picked::entry(const XBot::FSM::Message& msg){
     
     if(!selectedHand.compare("RSoftHand")){
       
-      end_frame.pose.position.x = 0.352;
+//       end_frame.pose.position.x = 0.352;
+      end_frame.pose.position.x = 0.5;
       end_frame.pose.position.y = -0.2;
       end_frame.pose.position.z = 1.00;   
       
@@ -482,7 +485,7 @@ void myfsm::Picked::entry(const XBot::FSM::Message& msg){
       
     }else if(!selectedHand.compare("LSoftHand")){
 
-      end_frame.pose.position.x = 0.352;
+      end_frame.pose.position.x = 0.5;
       end_frame.pose.position.y = 0.03;
       end_frame.pose.position.z = 1.00;   
 
@@ -617,8 +620,10 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
     
     poseHoldingHand_KDL.M.DoRotX(M_PI);
     poseHoldingHand_KDL.p.x(0.25);
+//     poseHoldingHand_KDL.p.y(0.10);
+//     poseHoldingHand_KDL.p.z(-0.05);
     poseHoldingHand_KDL.p.y(0.10);
-    poseHoldingHand_KDL.p.z(-0.05);
+    poseHoldingHand_KDL.p.z(0.05);
 
     tf::transformKDLToEigen(poseHoldingHand_KDL,poseHoldingHand_Affine);
     
@@ -677,7 +682,9 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
     
     poseHoldingHand_KDL_2.M.DoRotX(M_PI);
     poseHoldingHand_KDL_2.p.x(0.25);
-    poseHoldingHand_KDL_2.p.y(-0.05);
+//     poseHoldingHand_KDL_2.p.y(-0.05);
+//     poseHoldingHand_KDL_2.p.z(0.05);
+    poseHoldingHand_KDL_2.p.y(-0.01);
     poseHoldingHand_KDL_2.p.z(0.05);
     
     tf::transformKDLToEigen(poseHoldingHand_KDL_2,poseSecondHand_Affine);
