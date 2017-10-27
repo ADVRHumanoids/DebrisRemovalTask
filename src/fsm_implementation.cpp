@@ -386,14 +386,14 @@ void myfsm::Grasped::entry(const XBot::FSM::Message& msg){
 //           srv.request.right_grasp = 0.9;
 //           srv.request.left_grasp = 0.9;
           srv.request.right_grasp = 1.2;
-          srv.request.left_grasp = 1.0;
+          srv.request.left_grasp = 0.9;
           shared_data()._hand_over_phase = false;
       }
     }else if(!selectedHand.compare("LSoftHand")){
 //           srv.request.right_grasp = 0.0;
 //           srv.request.left_grasp = 0.9;
           srv.request.right_grasp = 0.0;
-          srv.request.left_grasp = 1.2;
+          srv.request.left_grasp = 0.9;
     }
     
     // call the service
