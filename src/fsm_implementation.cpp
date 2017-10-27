@@ -1362,7 +1362,7 @@ void myfsm::ValveTurn::entry(const XBot::FSM::Message& msg){
     geometry_msgs::Vector3 circle_center;
     circle_center.x = start_frame.pose.position.x;
     circle_center.y = start_frame.pose.position.y;
-    circle_center.z = 1.4;
+    circle_center.z = start_frame.pose.position.z-0.2;
     
     
     

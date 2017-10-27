@@ -80,9 +80,9 @@ pose_stamped:
     frame_id: ''
   pose:
     position:
-      x: 1.0
+      x: 0.8
       y: -0.35
-      z: 1.60
+      z: 1.40
     orientation:
       x: 0.0
       y: -0.7071070192004544
