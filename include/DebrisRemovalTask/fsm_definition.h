@@ -109,6 +109,9 @@ namespace myfsm{
       geometry_msgs::PoseStamped::ConstPtr _valve_pose;
       std_msgs::String::ConstPtr _debris_number;
       std_msgs::String::ConstPtr _hand_selection;
+      
+      bool no_hand_selection = true;
+      
       ros::ServiceClient _client;
       XBot::SubscriberRT<XBot::Command> command;
       XBot::Command current_command;

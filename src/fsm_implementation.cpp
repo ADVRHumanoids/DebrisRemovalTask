@@ -48,28 +48,85 @@ void myfsm::Homing::entry(const XBot::FSM::Message& msg){
     tf::poseEigenToMsg (poseRightHand, right_hand_pose);
     tf::poseEigenToMsg (poseLeftHand, left_hand_pose);
 
-    // define the start frame 
-    geometry_msgs::PoseStamped start_frame;
-    start_frame.pose = right_hand_pose;
+
     
     trajectory_utils::Cartesian start;
-    start.distal_frame = "RSoftHand";
+    geometry_msgs::PoseStamped start_frame;
+    geometry_msgs::PoseStamped end_frame;
+    std::string selectedHand;
+    
+    // start hacking ...
+    if (shared_data().no_hand_selection == true)
+    {
+      std::cout << "IN NO HAND SELECTION --> USE RH" << std:: endl;
+      selectedHand = "RSoftHand";
+      shared_data().no_hand_selection = false;
+      start_frame.pose = right_hand_pose;
+      
+      end_frame.pose.position.x = 0.306;
+      end_frame.pose.position.y = -0.393;
+      end_frame.pose.position.z = 0.978;     
+      
+      end_frame.pose.orientation.x = -0.068;
+      end_frame.pose.orientation.y = -0.534;
+      end_frame.pose.orientation.z = 0.067;
+      end_frame.pose.orientation.w = 0.840; 
+      
+    }
+    else    {   
+      
+      std_msgs::String message;
+      message = *shared_data()._hand_selection;    
+ 
+      selectedHand = message.data;
+      
+      // define the start frame 
+      if(!selectedHand.compare("RSoftHand")){
+	start_frame.pose = right_hand_pose;
+	
+	    // define the end frame - RIGHT HAND
+    
+          end_frame.pose.position.x = 0.306;
+      end_frame.pose.position.y = -0.393;
+      end_frame.pose.position.z = 0.978;     
+      
+      end_frame.pose.orientation.x = -0.068;
+      end_frame.pose.orientation.y = -0.534;
+      end_frame.pose.orientation.z = 0.067;
+      end_frame.pose.orientation.w = 0.840; 
+ 
+    
+      }
+      if(!selectedHand.compare("LSoftHand")){
+	start_frame.pose = left_hand_pose;
+	// define the end frame - RIGHT HAND
+      end_frame.pose.position.x = 0.306;
+      end_frame.pose.position.y = 0.393;
+      end_frame.pose.position.z = 0.978;     
+      
+      end_frame.pose.orientation.x = -0.068;
+      end_frame.pose.orientation.y = -0.534;
+      end_frame.pose.orientation.z = 0.067;
+      end_frame.pose.orientation.w = 0.840; 
+    
+      }
+      
+    
+    }
+    
+    // end hacking ...
+    //start.distal_frame = "RSoftHand";
+    start.distal_frame = selectedHand;
     start.frame = start_frame;
     
-    // define the end frame - RIGHT HAND
-    geometry_msgs::PoseStamped end_frame;
+ 
+    shared_data().no_hand_selection = false;
     
-    end_frame.pose.position.x = 0.306;
-    end_frame.pose.position.y = -0.393;
-    end_frame.pose.position.z = 0.978;     
-    
-    end_frame.pose.orientation.x = -0.068;
-    end_frame.pose.orientation.y = -0.534;
-    end_frame.pose.orientation.z = 0.067;
-    end_frame.pose.orientation.w = 0.840;   
+    std::cout << "SHARE DATA VALUE " << shared_data().no_hand_selection << std::endl;
     
     trajectory_utils::Cartesian end;
-    end.distal_frame = "RSoftHand";
+    //end.distal_frame = "RSoftHand";
+    start.distal_frame = selectedHand;
     end.frame = end_frame;
     
     //save the hand poses
@@ -1568,4 +1625,5 @@ void myfsm::ValveGoBack::exit (){
 }
 
 /****************************** END ValveGoBack *******************************/
+
 
