@@ -57,15 +57,25 @@ void myfsm::Homing::entry(const XBot::FSM::Message& msg){
     
     // define the end frame - RIGHT HAND
     geometry_msgs::PoseStamped end_frame;
+   
+//     OLD RIGHT HAND HOMING POSE
+//     end_frame.pose.position.x = 0.306;
+//     end_frame.pose.position.y = -0.393;
+//     end_frame.pose.position.z = 0.978;     
+//     
+//     end_frame.pose.orientation.x = -0.068;
+//     end_frame.pose.orientation.y = -0.534;
+//     end_frame.pose.orientation.z = 0.067;
+//     end_frame.pose.orientation.w = 0.840; 
     
-    end_frame.pose.position.x = 0.306;
-    end_frame.pose.position.y = -0.393;
-    end_frame.pose.position.z = 0.978;     
+    end_frame.pose.position.x = 0.248;
+    end_frame.pose.position.y = -0.471;
+    end_frame.pose.position.z = 0.969;     
     
-    end_frame.pose.orientation.x = -0.068;
-    end_frame.pose.orientation.y = -0.534;
-    end_frame.pose.orientation.z = 0.067;
-    end_frame.pose.orientation.w = 0.840;   
+    end_frame.pose.orientation.x = -0.091;
+    end_frame.pose.orientation.y = -0.456;
+    end_frame.pose.orientation.z = 0.19;
+    end_frame.pose.orientation.w = 0.864;     
     
     trajectory_utils::Cartesian end;
     end.distal_frame = "RSoftHand";
@@ -368,16 +378,22 @@ void myfsm::Grasped::entry(const XBot::FSM::Message& msg){
   
     if(!selectedHand.compare("RSoftHand")){
       if(!shared_data()._hand_over_phase){
-          srv.request.right_grasp = 0.9;
+//           srv.request.right_grasp = 0.9;
+//           srv.request.left_grasp = 0.0;
+          srv.request.right_grasp = 1.2;
           srv.request.left_grasp = 0.0;
       }else{
-          srv.request.right_grasp = 0.9;
-          srv.request.left_grasp = 0.9;
+//           srv.request.right_grasp = 0.9;
+//           srv.request.left_grasp = 0.9;
+          srv.request.right_grasp = 1.2;
+          srv.request.left_grasp = 1.0;
           shared_data()._hand_over_phase = false;
       }
     }else if(!selectedHand.compare("LSoftHand")){
+//           srv.request.right_grasp = 0.0;
+//           srv.request.left_grasp = 0.9;
           srv.request.right_grasp = 0.0;
-          srv.request.left_grasp = 0.9;
+          srv.request.left_grasp = 1.2;
     }
     
     // call the service
@@ -409,7 +425,9 @@ void myfsm::Grasped::run(double time, double period){
       if (!shared_data().current_command.str().compare("move_away_after_ho")){
         //Ungrasp left hand
         ADVR_ROS::advr_grasp_control_srv srv;
-        srv.request.right_grasp = 1.0;
+//         srv.request.right_grasp = 1.0;
+//         srv.request.left_grasp = 0.0;
+        srv.request.right_grasp = 1.2;
         srv.request.left_grasp = 0.0;
         // call the service
         shared_data()._grasp_client.call(srv);
