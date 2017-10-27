@@ -62,14 +62,12 @@ pose_stamped:
       z: 0.0
       w: 0.8290374303399975"
 
-----------------------------------------------------------------------------
-tested valve pose without causing elbow up configuration!
-      x: 1.0
-      y: -0.35
-      z: 1.60
+
+
 ----------------------------------------------------------------------------
 
-VALVE (FROM RIGHT)
+VALVE (for right hand)
+
 rostopic pub /valve_pose ADVR_ROS/im_pose_msg "name: ''
 pose_stamped:
   header:
@@ -80,8 +78,32 @@ pose_stamped:
     frame_id: ''
   pose:
     position:
-      x: 0.8
-      y: -0.35
+      x: 0.9
+      y: -0.4
+      z: 1.40
+    orientation:
+      x: 0.0
+      y: -0.7071070192004544
+      z: 0.0
+      w: 0.7071070192004544"
+
+
+----------------------------------------------------------------------------
+
+VALVE (For left hand)
+
+rostopic pub /valve_pose ADVR_ROS/im_pose_msg "name: ''
+pose_stamped:
+  header:
+    seq: 0
+    stamp:
+      secs: 0
+      nsecs: 0
+    frame_id: ''
+  pose:
+    position:
+      x: 0.9
+      y: 0.4
       z: 1.40
     orientation:
       x: 0.0
