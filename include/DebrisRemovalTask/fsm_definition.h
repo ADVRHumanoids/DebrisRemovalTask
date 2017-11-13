@@ -118,10 +118,10 @@ namespace myfsm{
 //       Eigen::Vector3d _RH_Rot_Z;
       bool _feedback;
       ros::Publisher _SoftHandPose_pub;
-      geometry_msgs::PoseStamped::ConstPtr _last_pose;
-      geometry_msgs::PoseStamped::ConstPtr _initial_pose_right_hand;
       geometry_msgs::PoseStamped::ConstPtr _initial_pose_left_hand;
+      geometry_msgs::PoseStamped::ConstPtr _initial_pose_right_hand;
       geometry_msgs::PoseStamped::ConstPtr _last_pose_left_hand;
+      geometry_msgs::PoseStamped::ConstPtr _last_pose_right_hand;
       ros::ServiceClient _grasp_client;
       
       bool _hand_over_phase;
@@ -141,9 +141,9 @@ namespace myfsm{
     };  
 
  
-    class Homing : public MacroState {
+    class Homing_init : public MacroState {
 
-      virtual std::string get_name() const { return "Homing"; }
+      virtual std::string get_name() const { return "Homing_init"; }
 
       virtual void run(double time, double period);
 
@@ -158,9 +158,9 @@ namespace myfsm{
 
      };
 
-    class LeftHoming : public MacroState {
+    class Homing_Ree : public MacroState {
 
-      virtual std::string get_name() const { return "LeftHoming"; }
+      virtual std::string get_name() const { return "Homing_Ree"; }
 
       virtual void run(double time, double period);
 
@@ -173,8 +173,41 @@ namespace myfsm{
       private:
 
 
-     };     
- 
+     };  
+     
+    class Homing_Lee : public MacroState {
+
+      virtual std::string get_name() const { return "Homing_Lee"; }
+
+      virtual void run(double time, double period);
+
+      virtual void entry(const XBot::FSM::Message& msg);
+
+      virtual void react(const XBot::FSM::Event& e);
+
+      virtual void exit ();
+
+      private:
+
+
+     };       
+
+    class HandSelection : public MacroState {
+
+      virtual std::string get_name() const { return "HandSelection"; }
+
+      virtual void run(double time, double period);
+
+      virtual void entry(const XBot::FSM::Message& msg);
+
+      virtual void react(const XBot::FSM::Event& e);
+
+      virtual void exit ();
+
+      private:
+
+
+     };
     class Reached : public MacroState {
 
       virtual std::string get_name() const { return "Reached"; }

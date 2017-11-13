@@ -70,8 +70,10 @@ bool DebrisRemovalTask::init_control_plugin(std::string path_to_config_file,
     fsm.shared_data()._robot= robot;
     
     /*Registers states*/
-    fsm.register_state(std::make_shared<myfsm::Homing>());
-    fsm.register_state(std::make_shared<myfsm::LeftHoming>());
+    fsm.register_state(std::make_shared<myfsm::Homing_init>());
+    fsm.register_state(std::make_shared<myfsm::Homing_Ree>());
+    fsm.register_state(std::make_shared<myfsm::Homing_Lee>());
+    fsm.register_state(std::make_shared<myfsm::HandSelection>());
     fsm.register_state(std::make_shared<myfsm::Reached>());
     fsm.register_state(std::make_shared<myfsm::Grasped>());
     fsm.register_state(std::make_shared<myfsm::Picked>());
@@ -110,7 +112,7 @@ void DebrisRemovalTask::on_start(double time)
     
         
     // Initialize the FSM with the initial state
-    fsm.init("Homing");
+    fsm.init("Homing_init");
 }
 
 void DebrisRemovalTask::on_stop(double time)
