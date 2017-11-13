@@ -27,6 +27,8 @@
 #include <std_msgs/Bool.h>
 #include <std_msgs/String.h>
 
+#include <tf/transform_listener.h>
+
 
 namespace XBotPlugin {
 
@@ -48,6 +50,8 @@ public:
     virtual void on_start(double time);
 
     virtual void on_stop(double time);
+    
+    void on_manipulation_status(const std_msgs::Bool::ConstPtr& msg);
 
 protected:
 
@@ -64,6 +68,9 @@ private:
     XBot::MatLogger::Ptr _logger;
     
     XBot::FSM::StateMachine< myfsm::MacroState , myfsm::SharedData > fsm;
+    
+    ros::Subscriber _feedBack;
+    bool manipulation_status;
 
 };
 

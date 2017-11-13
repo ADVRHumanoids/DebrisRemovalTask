@@ -53,27 +53,47 @@ bool DebrisRemovalTask::init_control_plugin(std::string path_to_config_file,
     fsm.shared_data()._nh =  std::make_shared<ros::NodeHandle>();
     fsm.shared_data().command = command;
     fsm.shared_data().current_command = current_command;
+    fsm.shared_data().plugin_status = _custom_status;
     
     fsm.shared_data()._client = fsm.shared_data()._nh->serviceClient<ADVR_ROS::advr_segment_control>("segment_control");    
-//     fsm.shared_data()._grasp_mag_pub = fsm.shared_data()._nh->advertise<std_msgs::Bool>("/grasp/RWrMot3",1);
-    fsm.shared_data()._grasp_mag_pub = fsm.shared_data()._nh->advertise<std_msgs::String>("/grasp/RWrMot3/goalGrasp",1);
+    fsm.shared_data()._grasp_mag_pub_RSoftHand = fsm.shared_data()._nh->advertise<std_msgs::String>("/grasp/RWrMot3/goalGrasp",1);
+    fsm.shared_data()._grasp_mag_pub_LSoftHand = fsm.shared_data()._nh->advertise<std_msgs::String>("/grasp/LWrMot3/goalGrasp",1);
+     _feedBack = fsm.shared_data()._nh->subscribe("Manipulation_status",1,&DebrisRemovalTask::on_manipulation_status,this);
+    manipulation_status = true;
+    fsm.shared_data()._SoftHandPose_pub = fsm.shared_data()._nh->advertise<geometry_msgs::PoseStamped>("/w_T_right_ee",1);
+    fsm.shared_data()._grasp_client = fsm.shared_data()._nh->serviceClient<ADVR_ROS::advr_grasp_control_srv>("grasp_control");
+    
+    fsm.shared_data()._hand_over_phase = false;
 
     
     /*Saves robot as shared variable between states*/
     fsm.shared_data()._robot= robot;
     
     /*Registers states*/
-    fsm.register_state(std::make_shared<myfsm::Homing>());
+    fsm.register_state(std::make_shared<myfsm::Homing_init>());
+    fsm.register_state(std::make_shared<myfsm::Homing_Ree>());
+    fsm.register_state(std::make_shared<myfsm::Homing_Lee>());
+    fsm.register_state(std::make_shared<myfsm::HandSelection>());
     fsm.register_state(std::make_shared<myfsm::Reached>());
     fsm.register_state(std::make_shared<myfsm::Grasped>());
     fsm.register_state(std::make_shared<myfsm::Picked>());
+    fsm.register_state(std::make_shared<myfsm::PickSecondHand>());
     fsm.register_state(std::make_shared<myfsm::MovedAway>());
     fsm.register_state(std::make_shared<myfsm::PlacedDown>());
     fsm.register_state(std::make_shared<myfsm::Ungrasped>());
+    
 
 
     return true;
 
+
+}
+
+void DebrisRemovalTask::on_manipulation_status(const std_msgs::Bool::ConstPtr& msg)
+{
+  
+  manipulation_status = msg->data;
+  fsm.shared_data()._feedback = manipulation_status;
 
 }
 
@@ -92,7 +112,7 @@ void DebrisRemovalTask::on_start(double time)
     
         
     // Initialize the FSM with the initial state
-    fsm.init("Homing");
+    fsm.init("Homing_init");
 }
 
 void DebrisRemovalTask::on_stop(double time)

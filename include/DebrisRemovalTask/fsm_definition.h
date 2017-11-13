@@ -24,6 +24,8 @@
 #include <std_msgs/String.h>
 
 #include <ADVR_ROS/advr_segment_control.h>
+#include <ADVR_ROS/advr_grasp_control_srv.h>
+#include <ADVR_ROS/im_pose_msg.h>
 #include<eigen_conversions/eigen_msg.h>
 
 #include <trajectory_utils/segment.h>
@@ -31,6 +33,11 @@
 
 #include <XBotCore-interfaces/XDomainCommunication.h>
 
+#include <tf/transform_listener.h>
+#include <Eigen/Dense>
+
+#include <geometry_msgs/WrenchStamped.h>
+#include <XCM/XBotPluginStatus.h>
 
 namespace myfsm{
 
@@ -56,32 +63,87 @@ namespace myfsm{
       int id;
 	
     };
-*/
+*/class tfHandler{
+    public:
+      tfHandler():
+      _listener(), _gm_transform(), _transform()
+      {
+	
+      }
+      
+      bool getTransformTf(const std::string& parent, const std::string& child, Eigen::Affine3d& world_T_bl )
+      {
+	try
+	{
+	  ros::Time now = ros::Time::now();
+	  //if(_listener.waitForTransform(child, parent, now, ros::Duration(5.0)))
+	  //{
+	    _listener.lookupTransform(child, parent,  ros::Time(0), _transform);
+	  
+	    tf::transformTFToMsg(_transform, _gm_transform);
+	    tf::transformMsgToEigen(_gm_transform, world_T_bl);
+	  
+	    return true;
+	  //}
+// 	  else
+// 	    return false;
+	}
+	catch (tf::TransformException ex)
+	{
+	  ROS_ERROR("%s",ex.what());
+	  return false;
+	}
+      }
+    private:
+     tf::TransformListener _listener; 
+      geometry_msgs::Transform _gm_transform; 
+      tf::StampedTransform _transform;
+      
+    };
+
     struct SharedData {
       
       XBot::RobotInterface::Ptr _robot;
       std::shared_ptr<ros::NodeHandle> _nh;
       geometry_msgs::PoseStamped::ConstPtr _debris_pose;
+      std_msgs::String::ConstPtr _debris_number;
+      std_msgs::String::ConstPtr _hand_selection;
       ros::ServiceClient _client;
       XBot::SubscriberRT<XBot::Command> command;
       XBot::Command current_command;
-      ros::Publisher _grasp_mag_pub;
+      ros::Publisher _grasp_mag_pub_LSoftHand;
+      ros::Publisher _grasp_mag_pub_RSoftHand;
+      geometry_msgs::WrenchStamped::ConstPtr _ft_r_arm;
+      double _w_F_ft_initial;
+//       Eigen::Vector3d _RH_Rot_Z;
+      bool _feedback;
+      ros::Publisher _SoftHandPose_pub;
+      geometry_msgs::PoseStamped::ConstPtr _initial_pose_left_hand;
+      geometry_msgs::PoseStamped::ConstPtr _initial_pose_right_hand;
+      geometry_msgs::PoseStamped::ConstPtr _last_pose_left_hand;
+      geometry_msgs::PoseStamped::ConstPtr _last_pose_right_hand;
+      ros::ServiceClient _grasp_client;
+      
+      bool _hand_over_phase;
+      std::shared_ptr<XBot::PluginStatus> plugin_status;
+
      
     };
     
     class MacroState : public  XBot::FSM::State< MacroState , SharedData > {
       
     public:
-	
-	virtual void entry(const XBot::FSM::Message& msg) {};
-	virtual void react(const XBot::FSM::Event& e){};
+
+        virtual void entry(const XBot::FSM::Message& msg) {};
+        virtual void react(const XBot::FSM::Event& e){};
+        tfHandler tf;
       
     };  
 
  
-    class Homing : public MacroState {
+    class Homing_init : public MacroState {
 
-      virtual std::string get_name() const { return "Homing"; }
+      virtual std::string get_name() const { return "Homing_init"; }
 
       virtual void run(double time, double period);
 
@@ -95,7 +157,57 @@ namespace myfsm{
 
 
      };
- 
+
+    class Homing_Ree : public MacroState {
+
+      virtual std::string get_name() const { return "Homing_Ree"; }
+
+      virtual void run(double time, double period);
+
+      virtual void entry(const XBot::FSM::Message& msg);
+
+      virtual void react(const XBot::FSM::Event& e);
+
+      virtual void exit ();
+
+      private:
+
+
+     };  
+     
+    class Homing_Lee : public MacroState {
+
+      virtual std::string get_name() const { return "Homing_Lee"; }
+
+      virtual void run(double time, double period);
+
+      virtual void entry(const XBot::FSM::Message& msg);
+
+      virtual void react(const XBot::FSM::Event& e);
+
+      virtual void exit ();
+
+      private:
+
+
+     };       
+
+    class HandSelection : public MacroState {
+
+      virtual std::string get_name() const { return "HandSelection"; }
+
+      virtual void run(double time, double period);
+
+      virtual void entry(const XBot::FSM::Message& msg);
+
+      virtual void react(const XBot::FSM::Event& e);
+
+      virtual void exit ();
+
+      private:
+
+
+     };
     class Reached : public MacroState {
 
       virtual std::string get_name() const { return "Reached"; }
@@ -146,6 +258,23 @@ namespace myfsm{
 
 
      };
+
+    class PickSecondHand : public MacroState {
+
+      virtual std::string get_name() const { return "PickSecondHand"; }
+
+      virtual void run(double time, double period);
+
+      virtual void entry(const XBot::FSM::Message& msg);
+
+      virtual void react(const XBot::FSM::Event& e);
+
+      virtual void exit ();
+
+      private:
+
+
+     }; 
  
     class MovedAway : public MacroState {
 
@@ -180,7 +309,7 @@ namespace myfsm{
 
 
      };
- 
+     
     class Ungrasped : public MacroState {
 
       virtual std::string get_name() const { return "Ungrasped"; }
