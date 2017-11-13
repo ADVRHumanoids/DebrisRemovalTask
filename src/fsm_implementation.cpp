@@ -332,29 +332,6 @@ void myfsm::Reached::entry(const XBot::FSM::Message& msg){
       
     std::cout << "Reached_entry" << std::endl;
     
-//     std::cout << "Select the End Effector you want to use." << std::endl;
-    
-    // blocking call: wait for a msg on topic hand_selection
-//     shared_data()._hand_selection = ros::topic::waitForMessage<std_msgs::String>("hand_selection");
-    
-//     std::cout << "Before blocking" << std::endl;
-//     std::string selectedHand;
-    // blocking reading: wait for a command
-//     while(shared_data().current_command.str().compare("RSoftHand"))
-//     {
-//       std::cout << "Command: " << shared_data().current_command.str() << std::endl;
-//       
-//       selectedHand = shared_data().current_command.str();
-//     }
-//     std::cout << "After blocking" << std::endl;
-  
-    
-//     std_msgs::String message;
-//     message = *shared_data()._hand_selection;
-//     message.data = selectedHand;
-//     shared_data()._hand_selection =  boost::shared_ptr<std_msgs::String>(new std_msgs::String(message));;
-//     std::string selectedHand;
-//     selectedHand = message.data;
     
     //HAND
     //Hand selection
@@ -469,6 +446,10 @@ void myfsm::Reached::run(double time, double period){
     // Reached succeeded
     if (!shared_data().current_command.str().compare("success"))
       transit("Grasped");
+    
+    // Adjust
+    if (!shared_data().current_command.str().compare("Adjust"))
+      transit("Adjust");
   } 
 
 }
@@ -1401,3 +1382,113 @@ void myfsm::Ungrasped::exit (){
 }
 
 /****************************** END Ungrasped *******************************/
+
+
+/******************************* BEGIN Adjust *******************************/
+
+///////////////////////////////////////////////////////////////////////////////
+void myfsm::Adjust::react(const XBot::FSM::Event& e) {
+
+}
+
+///////////////////////////////////////////////////////////////////////////////
+void myfsm::Adjust::entry(const XBot::FSM::Message& msg){
+
+    shared_data().plugin_status->setStatus("ADJUST");
+    
+    std::cout << "Adjust_entry" << std::endl;
+  
+    //CALL SERVICE TO MOVE
+
+    //HAND
+    //Hand selection
+    std_msgs::String message;
+    message = *shared_data()._hand_selection;    
+    std::string selectedHand;
+    selectedHand = message.data;
+    
+    std::cout << "SelectedHand: " << message.data << std::endl;
+
+    // define the start frame 
+    geometry_msgs::PoseStamped start_frame;
+    if(!selectedHand.compare("RSoftHand"))
+      start_frame = *shared_data()._last_pose_right_hand;
+    else if(!selectedHand.compare("LSoftHand"))
+      start_frame = *shared_data()._last_pose_left_hand;
+    
+    trajectory_utils::Cartesian start;
+    start.distal_frame = selectedHand;
+    start.frame = start_frame;
+    
+    // define the end frame
+    geometry_msgs::PoseStamped end_frame;
+    
+    end_frame = start_frame;
+    
+    if(!selectedHand.compare("RSoftHand")){
+      
+      end_frame.pose.position.y+=0.01;
+      
+      shared_data()._last_pose_right_hand = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(end_frame));
+      
+    }else if(!selectedHand.compare("LSoftHand")){
+
+      end_frame.pose.position.y-= 0.01;
+      
+      shared_data()._last_pose_left_hand = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(end_frame));
+      
+    }
+       
+
+    trajectory_utils::Cartesian end;
+    end.distal_frame = selectedHand;
+    end.frame = end_frame;
+    
+    // define the first segment
+    trajectory_utils::segment s1;
+    s1.type.data = 0;        // min jerk traj
+    s1.T.data = 3;         // traj duration 5 second      
+    s1.start = start;        // start pose
+    s1.end = end;            // end pose 
+    
+    // only one segment in this example
+    std::vector<trajectory_utils::segment> segments;
+    segments.push_back(s1);
+    
+    // prepare the advr_segment_control
+    ADVR_ROS::advr_segment_control srv;
+    srv.request.segment_trj.header.frame_id = "world_odom";
+    srv.request.segment_trj.header.stamp = ros::Time::now();
+    srv.request.segment_trj.segments = segments;
+    
+    // call the service
+    shared_data()._client.call(srv);
+    
+    std::cout << "Adjust run. 'fail'-> Adjust\t\t'success'->Grasped" << std::endl;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+void myfsm::Adjust::run(double time, double period){
+
+  // blocking reading: wait for a command
+  if(shared_data().command.read(shared_data().current_command))
+  {
+    std::cout << "Command: " << shared_data().current_command.str() << std::endl;
+
+    // Adjust failed
+    if (!shared_data().current_command.str().compare("fail"))
+      transit("Adjust");
+    
+    // Adjust Succeeded
+    if (!shared_data().current_command.str().compare("success"))
+      transit("Grasped");
+    
+  } 
+}
+
+///////////////////////////////////////////////////////////////////////////////
+void myfsm::Adjust::exit (){
+
+}
+
+/********************************* END Adjust *******************************/

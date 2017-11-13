@@ -81,6 +81,7 @@ bool DebrisRemovalTask::init_control_plugin(std::string path_to_config_file,
     fsm.register_state(std::make_shared<myfsm::MovedAway>());
     fsm.register_state(std::make_shared<myfsm::PlacedDown>());
     fsm.register_state(std::make_shared<myfsm::Ungrasped>());
+    fsm.register_state(std::make_shared<myfsm::Adjust>());
     
 
 
