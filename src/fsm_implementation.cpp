@@ -138,7 +138,7 @@ void myfsm::Homing_Ree::entry(const XBot::FSM::Message& msg){
     // call the service
     shared_data()._client.call(srv);    
     
-    std::cout << "Homing_Ree --> Homing_Lee" << std::endl;
+    std::cout << "Homing_Ree -----------------> Homing_Lee" << std::endl;
     
 }
 
@@ -234,21 +234,23 @@ void myfsm::Homing_Lee::entry(const XBot::FSM::Message& msg){
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::Homing_Lee::run(double time, double period){
   
+//   Logger::warning() << shared_data().current_command->str() << Logger::endl();
+    
   // blocking reading: wait for a command
-  if(shared_data().command.read(shared_data().current_command))
+  if(!shared_data().current_command->str().empty())
   {
-    std::cout << "Command: " << shared_data().current_command.str() << std::endl;
+    std::cout << "Command: " << shared_data().current_command->str() << std::endl;
 
     // Homing_Lee failed
-    if (!shared_data().current_command.str().compare("fail"))
+    if (!shared_data().current_command->str().compare("fail"))
       transit("Homing_Ree");
     
     // Homing_Lee succeeded
-    if (!shared_data().current_command.str().compare("success"))
+    if (!shared_data().current_command->str().compare("success"))
       transit("HandSelection");
     
     // Handover success
-    if (!shared_data().current_command.str().compare("Handover_success"))
+    if (!shared_data().current_command->str().compare("Handover_success"))
       transit("MovedAway");    
   }
 
@@ -288,21 +290,21 @@ void myfsm::HandSelection::run(double time, double period){
 
   std::string selectedHand;
   // blocking reading: wait for a command
-  if(shared_data().command.read(shared_data().current_command))
+  if(!shared_data().current_command->str().empty())
   {
-    std::cout << "Command: " << shared_data().current_command.str() << std::endl;
+    std::cout << "Command: " << shared_data().current_command->str() << std::endl;
 
     // LSoftHand selected
-    if (!shared_data().current_command.str().compare("LSoftHand")){
+    if (!shared_data().current_command->str().compare("LSoftHand")){
       std_msgs::String message;
-      message.data = shared_data().current_command.str();
+      message.data = shared_data().current_command->str();
       shared_data()._hand_selection =  boost::shared_ptr<std_msgs::String>(new std_msgs::String(message));;
       transit("Reached");
     }
     // RSoftHand selected
-    if (!shared_data().current_command.str().compare("RSoftHand")){
+    if (!shared_data().current_command->str().compare("RSoftHand")){
       std_msgs::String message;
-      message.data = shared_data().current_command.str();
+      message.data = shared_data().current_command->str();
       shared_data()._hand_selection =  boost::shared_ptr<std_msgs::String>(new std_msgs::String(message));;
       transit("Reached");
     }
@@ -435,20 +437,20 @@ void myfsm::Reached::entry(const XBot::FSM::Message& msg){
 void myfsm::Reached::run(double time, double period){
 
   // blocking reading: wait for a command
-  if(shared_data().command.read(shared_data().current_command))
+  if(!shared_data().current_command->str().empty())
   {
-    std::cout << "Command: " << shared_data().current_command.str() << std::endl;
+    std::cout << "Command: " << shared_data().current_command->str() << std::endl;
 
     // Reached failed
-    if (!shared_data().current_command.str().compare("fail"))
+    if (!shared_data().current_command->str().compare("fail"))
       transit("Homing_Ree");
     
     // Reached succeeded
-    if (!shared_data().current_command.str().compare("success"))
+    if (!shared_data().current_command->str().compare("success"))
       transit("Grasped");
     
     // Adjust
-    if (!shared_data().current_command.str().compare("Adjust"))
+    if (!shared_data().current_command->str().compare("Adjust"))
       transit("Adjust");
   } 
 
@@ -516,20 +518,20 @@ void myfsm::Grasped::entry(const XBot::FSM::Message& msg){
 void myfsm::Grasped::run(double time, double period){
 
     // blocking reading: wait for a command
-    if(shared_data().command.read(shared_data().current_command))
+    if(!shared_data().current_command->str().empty())
     {
-      std::cout << "Command: " << shared_data().current_command.str() << std::endl;
+      std::cout << "Command: " << shared_data().current_command->str() << std::endl;
 
       // Grasped failed
-      if (!shared_data().current_command.str().compare("fail") && !shared_data()._hand_over_phase)
+      if (!shared_data().current_command->str().compare("fail") && !shared_data()._hand_over_phase)
         transit("Grasped");
       
       // Grasped Succeeded
-      if (!shared_data().current_command.str().compare("success") && !shared_data()._hand_over_phase)
+      if (!shared_data().current_command->str().compare("success") && !shared_data()._hand_over_phase)
         transit("Picked");
       
       // Movedaway after handover
-      if (!shared_data().current_command.str().compare("After_handover") && shared_data()._hand_over_phase){
+      if (!shared_data().current_command->str().compare("After_handover") && shared_data()._hand_over_phase){
 
         shared_data()._hand_over_phase = false;
   
@@ -654,20 +656,20 @@ void myfsm::Picked::entry(const XBot::FSM::Message& msg){
 void myfsm::Picked::run(double time, double period){
 
   // blocking reading: wait for a command
-  if(shared_data().command.read(shared_data().current_command))
+  if(!shared_data().current_command->str().empty())
   {
-    std::cout << "Command: " << shared_data().current_command.str() << std::endl;
+    std::cout << "Command: " << shared_data().current_command->str() << std::endl;
 
     // Picked failed
-    if (!shared_data().current_command.str().compare("fail"))
+    if (!shared_data().current_command->str().compare("fail"))
       transit("Homing");
     
     // Picked Succeeded
-    if (!shared_data().current_command.str().compare("success"))
+    if (!shared_data().current_command->str().compare("success"))
       transit("MovedAway");
     
     // Pick second hand
-    if (!shared_data().current_command.str().compare("Handover"))
+    if (!shared_data().current_command->str().compare("Handover"))
       transit("PickSecondHand");
   } 
 }
@@ -896,16 +898,16 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
 void myfsm::PickSecondHand::run(double time, double period){
   
   // blocking reading: wait for a command
-  if(shared_data().command.read(shared_data().current_command))
+  if(!shared_data().current_command->str().empty())
   {
-    std::cout << "Command: " << shared_data().current_command.str() << std::endl;
+    std::cout << "Command: " << shared_data().current_command->str() << std::endl;
 
     // Picked failed
-    if (!shared_data().current_command.str().compare("fail"))
+    if (!shared_data().current_command->str().compare("fail"))
       transit("Homing");
     
     // Picked Succeeded
-    if (!shared_data().current_command.str().compare("success")){
+    if (!shared_data().current_command->str().compare("success")){
       
       std::cout << "Changing selected Hand" << std::endl;
 
@@ -1071,16 +1073,16 @@ void myfsm::MovedAway::entry(const XBot::FSM::Message& msg){
 void myfsm::MovedAway::run(double time, double period){
   
   // blocking reading: wait for a command
-  if(shared_data().command.read(shared_data().current_command))
+  if(!shared_data().current_command->str().empty())
   {
-    std::cout << "Command: " << shared_data().current_command.str() << std::endl;
+    std::cout << "Command: " << shared_data().current_command->str() << std::endl;
 
     // MovedAway failed
-    if (!shared_data().current_command.str().compare("fail"))
+    if (!shared_data().current_command->str().compare("fail"))
       transit("Homing");
     
     // MovedAway Succeeded
-    if (!shared_data().current_command.str().compare("success")){
+    if (!shared_data().current_command->str().compare("success")){
       
       //TEMPORARY
       transit("PlacedDown");
@@ -1210,16 +1212,16 @@ void myfsm::PlacedDown::entry(const XBot::FSM::Message& msg){
 void myfsm::PlacedDown::run(double time, double period){
 
   // blocking reading: wait for a command
-  if(shared_data().command.read(shared_data().current_command))
+  if(!shared_data().current_command->str().empty())
   {
-    std::cout << "Command: " << shared_data().current_command.str() << std::endl;
+    std::cout << "Command: " << shared_data().current_command->str() << std::endl;
 
     // Reached failed
-    if (!shared_data().current_command.str().compare("fail"))
+    if (!shared_data().current_command->str().compare("fail"))
       transit("Homing");
     
     // Reached succeeded
-    if (!shared_data().current_command.str().compare("success"))
+    if (!shared_data().current_command->str().compare("success"))
       transit("Ungrasped");
   } 
 
@@ -1312,14 +1314,14 @@ void myfsm::PlacedDown::run(double time, double period){
 //       // blocking reading: wait for a command
 //   if(shared_data().command.read(shared_data().current_command))
 //   {
-//     std::cout << "Command: " << shared_data().current_command.str() << std::endl;
+//     std::cout << "Command: " << shared_data().current_command->str() << std::endl;
 // 
 //     // Ungrasped failed
-//     if (!shared_data().current_command.str().compare("placeddown_success"))
+//     if (!shared_data().current_command->str().compare("placeddown_success"))
 //       transit("Ungrasped");
 //     
 //     // Ungrasped Succeeded
-//     if (!shared_data().current_command.str().compare("placeddown_failed"))
+//     if (!shared_data().current_command->str().compare("placeddown_failed"))
 //       transit("Homing");
 //   }
 //   
@@ -1362,16 +1364,16 @@ void myfsm::Ungrasped::entry(const XBot::FSM::Message& msg){
 void myfsm::Ungrasped::run(double time, double period){
   
   // blocking reading: wait for a command
-  if(shared_data().command.read(shared_data().current_command))
+  if(!shared_data().current_command->str().empty())
   {
-    std::cout << "Command: " << shared_data().current_command.str() << std::endl;
+    std::cout << "Command: " << shared_data().current_command->str() << std::endl;
 
     // Ungrasped failed
-    if (!shared_data().current_command.str().compare("fail"))
+    if (!shared_data().current_command->str().compare("fail"))
       transit("Ungrasped");
     
     // Ungrasped Succeeded
-    if (!shared_data().current_command.str().compare("success"))
+    if (!shared_data().current_command->str().compare("success"))
       transit("Homing");
   } 
 }
@@ -1471,16 +1473,16 @@ void myfsm::Adjust::entry(const XBot::FSM::Message& msg){
 void myfsm::Adjust::run(double time, double period){
 
   // blocking reading: wait for a command
-  if(shared_data().command.read(shared_data().current_command))
+  if(!shared_data().current_command->str().empty())
   {
-    std::cout << "Command: " << shared_data().current_command.str() << std::endl;
+    std::cout << "Command: " << shared_data().current_command->str() << std::endl;
 
     // Adjust failed
-    if (!shared_data().current_command.str().compare("fail"))
+    if (!shared_data().current_command->str().compare("fail"))
       transit("Adjust");
     
     // Adjust Succeeded
-    if (!shared_data().current_command.str().compare("success"))
+    if (!shared_data().current_command->str().compare("success"))
       transit("Grasped");
     
   } 

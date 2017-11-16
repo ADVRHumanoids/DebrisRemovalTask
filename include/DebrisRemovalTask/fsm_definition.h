@@ -109,8 +109,7 @@ namespace myfsm{
       std_msgs::String::ConstPtr _debris_number;
       std_msgs::String::ConstPtr _hand_selection;
       ros::ServiceClient _client;
-      XBot::SubscriberRT<XBot::Command> command;
-      XBot::Command current_command;
+      std::shared_ptr<XBot::Command> current_command;
       ros::Publisher _grasp_mag_pub_LSoftHand;
       ros::Publisher _grasp_mag_pub_RSoftHand;
       geometry_msgs::WrenchStamped::ConstPtr _ft_r_arm;

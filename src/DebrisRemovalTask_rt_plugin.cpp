@@ -25,9 +25,7 @@ REGISTER_XBOT_PLUGIN(DebrisRemovalTask, XBotPlugin::DebrisRemovalTask)
 
 namespace XBotPlugin {
 
-bool DebrisRemovalTask::init_control_plugin(std::string path_to_config_file,
-                                                    XBot::SharedMemory::Ptr shared_memory,
-                                                    XBot::RobotInterface::Ptr robot)
+bool DebrisRemovalTask::init_control_plugin(XBot::Handle::Ptr handle)
 {
     /* This function is called outside the real time loop, so we can
      * allocate memory on the heap, print stuff, ...
@@ -35,7 +33,7 @@ bool DebrisRemovalTask::init_control_plugin(std::string path_to_config_file,
 
 
     /* Save robot to a private member. */
-    _robot = robot;
+    _robot = handle->getRobotInterface();
 
     /* Initialize a logger which saves to the specified file. Remember that
      * the current date/time is always appended to the provided filename,
@@ -51,14 +49,13 @@ bool DebrisRemovalTask::init_control_plugin(std::string path_to_config_file,
     
     ros::init(argc, argv, "DebrisRemovalTask");
     fsm.shared_data()._nh =  std::make_shared<ros::NodeHandle>();
-    fsm.shared_data().command = command;
-    fsm.shared_data().current_command = current_command;
+    fsm.shared_data().current_command = std::shared_ptr<XBot::Command>(&current_command);
     fsm.shared_data().plugin_status = _custom_status;
     
     fsm.shared_data()._client = fsm.shared_data()._nh->serviceClient<ADVR_ROS::advr_segment_control>("segment_control");    
     fsm.shared_data()._grasp_mag_pub_RSoftHand = fsm.shared_data()._nh->advertise<std_msgs::String>("/grasp/RWrMot3/goalGrasp",1);
     fsm.shared_data()._grasp_mag_pub_LSoftHand = fsm.shared_data()._nh->advertise<std_msgs::String>("/grasp/LWrMot3/goalGrasp",1);
-     _feedBack = fsm.shared_data()._nh->subscribe("Manipulation_status",1,&DebrisRemovalTask::on_manipulation_status,this);
+    _feedBack = fsm.shared_data()._nh->subscribe("Manipulation_status",1,&DebrisRemovalTask::on_manipulation_status,this);
     manipulation_status = true;
     fsm.shared_data()._SoftHandPose_pub = fsm.shared_data()._nh->advertise<geometry_msgs::PoseStamped>("/w_T_right_ee",1);
     fsm.shared_data()._grasp_client = fsm.shared_data()._nh->serviceClient<ADVR_ROS::advr_grasp_control_srv>("grasp_control");
@@ -67,7 +64,7 @@ bool DebrisRemovalTask::init_control_plugin(std::string path_to_config_file,
 
     
     /*Saves robot as shared variable between states*/
-    fsm.shared_data()._robot= robot;
+    fsm.shared_data()._robot = handle->getRobotInterface();
     
     /*Registers states*/
     fsm.register_state(std::make_shared<myfsm::Homing_init>());
@@ -78,6 +75,7 @@ bool DebrisRemovalTask::init_control_plugin(std::string path_to_config_file,
     fsm.register_state(std::make_shared<myfsm::Grasped>());
     fsm.register_state(std::make_shared<myfsm::Picked>());
     fsm.register_state(std::make_shared<myfsm::PickSecondHand>());
+
     fsm.register_state(std::make_shared<myfsm::MovedAway>());
     fsm.register_state(std::make_shared<myfsm::PlacedDown>());
     fsm.register_state(std::make_shared<myfsm::Ungrasped>());
@@ -133,6 +131,7 @@ void DebrisRemovalTask::control_loop(double time, double period)
      * operations that are not rt-safe. */
 
 
+//      Logger::warning() << current_command.str() << Logger::endl();
      fsm.run(time, 0.01);
      
 }
