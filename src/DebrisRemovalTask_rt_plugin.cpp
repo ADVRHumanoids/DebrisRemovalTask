@@ -25,9 +25,7 @@ REGISTER_XBOT_PLUGIN(DebrisRemovalTask, XBotPlugin::DebrisRemovalTask)
 
 namespace XBotPlugin {
 
-bool DebrisRemovalTask::init_control_plugin(std::string path_to_config_file,
-                                                    XBot::SharedMemory::Ptr shared_memory,
-                                                    XBot::RobotInterface::Ptr robot)
+bool DebrisRemovalTask::init_control_plugin(XBot::Handle::Ptr handle)
 {
     /* This function is called outside the real time loop, so we can
      * allocate memory on the heap, print stuff, ...
@@ -35,7 +33,7 @@ bool DebrisRemovalTask::init_control_plugin(std::string path_to_config_file,
 
 
     /* Save robot to a private member. */
-    _robot = robot;
+    _robot = handle->getRobotInterface();
 
     /* Initialize a logger which saves to the specified file. Remember that
      * the current date/time is always appended to the provided filename,
@@ -51,8 +49,7 @@ bool DebrisRemovalTask::init_control_plugin(std::string path_to_config_file,
     
     ros::init(argc, argv, "DebrisRemovalTask");
     fsm.shared_data()._nh =  std::make_shared<ros::NodeHandle>();
-    fsm.shared_data().command = command;
-    fsm.shared_data().current_command = current_command;
+    fsm.shared_data().current_command =  std::shared_ptr<XBot::Command>(&current_command);
     fsm.shared_data().plugin_status = _custom_status;
     
     fsm.shared_data()._client = fsm.shared_data()._nh->serviceClient<ADVR_ROS::advr_segment_control>("segment_control");    
@@ -67,7 +64,7 @@ bool DebrisRemovalTask::init_control_plugin(std::string path_to_config_file,
 
     
     /*Saves robot as shared variable between states*/
-    fsm.shared_data()._robot= robot;
+    fsm.shared_data()._robot= _robot;
     
     /*Registers states*/
     fsm.register_state(std::make_shared<myfsm::Homing>());
