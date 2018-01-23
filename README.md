@@ -1,18 +1,24 @@
-To launch the module execute in different terminals:
+First make sure you set:
 
 ```cpp
-roslaunch bigman_gazebo bigman_debris_removal_task_with_door.launch
+set_xbot_config $ROBOTOLOGY_ROOT/configs/ADVR_shared/user_example/walkman_example.yaml
+```
+
+Then to launch the module execute in different terminals:
+
+```cpp
+roslaunch walkman_gazebo walkman_debris_removal_task.launch
 ```
 
 ```cpp
-CommunicationHandler $ROBOTOLOGY_ROOT/configs/ADVR_shared/bigman/configs/config_walkman_floating_base.yaml
+NRTDeployer
 ```
 
 ```cpp
-NRTDeployer $ROBOTOLOGY_ROOT/configs/ADVR_shared/bigman/configs/config_walkman_floating_base.yaml 
+NRTDeployer $ROBOTOLOGY_ROOT/configs/ADVR_shared/user_example/walkman_debris.yaml
 
 ```
 
 ```cpp
-XBotGUI $ROBOTOLOGY_ROOT/configs/ADVR_shared/bigman/configs/config_walkman_floating_base.yaml 
+XBotGUI $ROBOTOLOGY_ROOT/configs/ADVR_shared/user_example/walkman_debris_gui.yaml
 ```
