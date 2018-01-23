@@ -57,12 +57,16 @@ void myfsm::Homing::entry(const XBot::FSM::Message& msg){
     left_hand_pose_stamped.pose = left_hand_pose;
     right_hand_pose_stamped.pose = right_hand_pose;
 
-    geometry_msgs::PoseStamped right_hand_pose_stamped_global_home, left_hand_pose_stamped_global_home;
-    left_hand_pose_stamped_global_home = left_hand_pose_stamped;
-    right_hand_pose_stamped_global_home = right_hand_pose_stamped;
 
-    shared_data().left_hand_pose_stamped_global_home_ =  left_hand_pose_stamped_global_home;
-    shared_data().right_hand_pose_stamped_global_home_ = right_hand_pose_stamped_global_home;
+
+//    geometry_msgs::PoseStamped right_hand_pose_stamped_global_home, left_hand_pose_stamped_global_home;
+//    left_hand_pose_stamped_global_home = left_hand_pose_stamped;
+//    right_hand_pose_stamped_global_home = right_hand_pose_stamped;
+
+    shared_data().left_hand_pose_stamped_global_home_ =  left_hand_pose_stamped;
+    shared_data().right_hand_pose_stamped_global_home_ = right_hand_pose_stamped;
+
+
 
 
     // define task home pose for both hands
@@ -104,12 +108,12 @@ void myfsm::Homing::entry(const XBot::FSM::Message& msg){
     trajectory_utils::Cartesian start, end;
     if(selectedHand == "LSoftHand"){
         start.distal_frame = "LSoftHand";
-        start.frame = left_hand_pose_stamped_global_home;
+        start.frame = left_hand_pose_stamped;
         end.distal_frame = "LSoftHand";
         end.frame = left_hand_pose_stamped_task_home;
     }else if(selectedHand == "RSoftHand"){
         start.distal_frame = "RSoftHand";
-        start.frame = right_hand_pose_stamped_global_home;
+        start.frame = right_hand_pose_stamped;
         end.distal_frame = "RSoftHand";
         end.frame = right_hand_pose_stamped_task_home;
     }
@@ -136,6 +140,7 @@ void myfsm::Homing::entry(const XBot::FSM::Message& msg){
 
     std::cout << "Move "<< selectedHand << " to task home pose!" << std::endl;
 
+    std::cout << "State Machine Current State: Homing" << std::endl;
     std::cout << "State Machine Transition: success->ValveReach, fail->Homing" << std::endl;
 
 }
@@ -270,11 +275,14 @@ void myfsm::ValveReach::entry(const XBot::FSM::Message& msg){
     srv.request.segment_trj.segments = segments;
     
     // call the service
-    shared_data()._client.call(srv);  
-  
+    shared_data()._client.call(srv);
 
-  
-    std::cout << "ValveReach run. 'valvereach_fail'-> Homing\t\t'valvereach_success'->ValveTurn" << std::endl;
+
+
+    std::cout << "State Machine Current State: ValveReach" << std::endl;
+    std::cout << "State Machine Transition: success->ValveTurn, fail->Homing" << std::endl;
+
+
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -286,11 +294,11 @@ void myfsm::ValveReach::run(double time, double period){
     std::cout << "Command: " << shared_data().current_command->str() << std::endl;
 
     // ValveReach failed
-    if (!shared_data().current_command->str().compare("valvereach_fail"))
+    if (!shared_data().current_command->str().compare("fail"))
       transit("Homing");
     
     // ValveReach Succeeded
-    if (!shared_data().current_command->str().compare("valvereach_success"))
+    if (!shared_data().current_command->str().compare("success"))
       transit("ValveTurn");
   } 
 }
@@ -416,13 +424,18 @@ void myfsm::ValveTurn::entry(const XBot::FSM::Message& msg){
         last_frame.pose.position.y-=0.2;
 	last_frame.pose.position.z-=0.2;
     }
-   
+
     last_frame.pose.orientation = end_frame.pose.orientation;
+
+
     shared_data()._last_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(last_frame));
   
 
   
-  std::cout << "ValveTurn run. 'valveturn_fail'-> Homing\t\t'valveturn_success'->ValveGoBack" << std::endl;
+
+    std::cout << "State Machine Current State: ValveTurn" << std::endl;
+    std::cout << "State Machine Transition: success->ValveGoBack, fail->Homing" << std::endl;
+
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -434,11 +447,11 @@ void myfsm::ValveTurn::run(double time, double period){
     std::cout << "Command: " << shared_data().current_command->str() << std::endl;
 
     // ValveTurn failed
-    if (!shared_data().current_command->str().compare("valveturn_fail"))
+    if (!shared_data().current_command->str().compare("fail"))
       transit("Homing");
     
     // ValveTurn Succeeded
-    if (!shared_data().current_command->str().compare("valveturn_success"))
+    if (!shared_data().current_command->str().compare("success"))
       transit("ValveGoBack");
   } 
 }
@@ -539,10 +552,12 @@ void myfsm::ValveGoBack::entry(const XBot::FSM::Message& msg){
     srv.request.segment_trj.segments = segments;
     
     // call the service
-    shared_data()._client.call(srv);    
-  
-  
-    std::cout << "ValveGoBack run. 'valvegoback_fail'-> Homing\t\t'valvegoback_success'->Homing" << std::endl;
+    shared_data()._client.call(srv);
+
+
+
+    std::cout << "State Machine Current State: ValveGoBack" << std::endl;
+    std::cout << "State Machine Transition: success->Homing, fail->Homing" << std::endl;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -554,11 +569,11 @@ void myfsm::ValveGoBack::run(double time, double period){
     std::cout << "Command: " << shared_data().current_command->str() << std::endl;
 
     // ValveGoBack failed
-    if (!shared_data().current_command->str().compare("valvegoback_fail"))
+    if (!shared_data().current_command->str().compare("fail"))
       transit("Homing");
     
     // ValveGoBack Succeeded
-    if (!shared_data().current_command->str().compare("valvegoback_success"))
+    if (!shared_data().current_command->str().compare("success"))
       transit("Homing");
   } 
 }

@@ -152,6 +152,11 @@ namespace myfsm{
         geometry_msgs::PoseStamped left_hand_pose_stamped_task_home_;
         geometry_msgs::PoseStamped right_hand_pose_stamped_task_home_;
 
+        geometry_msgs::PoseStamped last_left_hand_pose_stamped_;
+        geometry_msgs::PoseStamped last_right_hand_pose_stamped_;
+
+
+
         std::string selectedHand_;
 
     };
