@@ -298,6 +298,23 @@ namespace myfsm{
 
      };
 
+
+    class HandSelection : public MacroState {
+
+        virtual std::string get_name() const { return "HandSelection"; }
+
+        virtual void run(double time, double period);
+
+        virtual void entry(const XBot::FSM::Message& msg);
+
+        virtual void react(const XBot::FSM::Event& e);
+
+        virtual void exit ();
+
+    private:
+
+
+    };
     class ValveReach : public MacroState {
 
       virtual std::string get_name() const { return "ValveReach"; }

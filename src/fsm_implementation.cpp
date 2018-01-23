@@ -170,11 +170,11 @@ void myfsm::Homing::run(double time, double period){
     std::cout << "Command: " << shared_data().current_command->str() << std::endl;
 
     // Homing failed
-    if (!shared_data().current_command->str().compare("homing_fail"))
+    if (!shared_data().current_command->str().compare("fail"))
       transit("Homing");
     
     // Homing Succeeded
-    if (!shared_data().current_command->str().compare("homing_success"))
+    if (!shared_data().current_command->str().compare("success"))
       transit("Reached");
     
     // Homing SucceededValve
@@ -191,6 +191,69 @@ void myfsm::Homing::exit (){
 }
 
 /********************************* END Homing ********************************/
+
+
+
+
+
+
+
+
+
+/******************************* BEGIN HandSelection *******************************/
+
+///////////////////////////////////////////////////////////////////////////////
+void myfsm::HandSelection::react(const XBot::FSM::Event& e) {
+
+}
+
+///////////////////////////////////////////////////////////////////////////////
+void myfsm::HandSelection::entry(const XBot::FSM::Message& msg){
+
+    shared_data().plugin_status->setStatus("HANDSELECTION");
+
+    std::cout << "HandSelection_entry" << std::endl;
+
+    std::cout << "Select the End Effector you want to use." << std::endl;
+
+
+}
+
+///////////////////////////////////////////////////////////////////////////////
+void myfsm::HandSelection::run(double time, double period){
+
+    std::string selectedHand;
+    // blocking reading: wait for a command
+    if(!shared_data().current_command->str().empty())
+    {
+        std::cout << "Command: " << shared_data().current_command->str() << std::endl;
+
+        // LSoftHand selected
+        if (!shared_data().current_command->str().compare("LSoftHand")){
+            std_msgs::String message;
+            message.data = shared_data().current_command->str();
+            shared_data()._hand_selection =  boost::shared_ptr<std_msgs::String>(new std_msgs::String(message));;
+            transit("Reached");
+        }
+        // RSoftHand selected
+        if (!shared_data().current_command->str().compare("RSoftHand")){
+            std_msgs::String message;
+
+            shared_data()._hand_selection =  boost::shared_ptr<std_msgs::String>(new std_msgs::String(message));;
+            transit("Reached");
+        }
+    }
+
+}
+
+///////////////////////////////////////////////////////////////////////////////
+void myfsm::HandSelection::exit (){
+
+}
+
+/******************************** END HandSelection ********************************/
+
+
 
 
 /****************************** BEGIN LeftHoming *****************************/

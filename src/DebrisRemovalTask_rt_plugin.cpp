@@ -78,6 +78,7 @@ bool DebrisRemovalTask::init_control_plugin(XBot::Handle::Ptr handle)
     fsm.register_state(std::make_shared<myfsm::Ungrasped>());
     
     //For valve turning
+    fsm.register_state(std::make_shared<myfsm::HandSelection>());
     fsm.register_state(std::make_shared<myfsm::ValveReach>());
     fsm.register_state(std::make_shared<myfsm::ValveTurn>());
     fsm.register_state(std::make_shared<myfsm::ValveGoBack>());
