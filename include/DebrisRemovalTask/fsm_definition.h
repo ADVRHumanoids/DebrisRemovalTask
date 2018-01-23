@@ -41,6 +41,20 @@
 
 namespace myfsm{
 
+    inline double RADTODEG(double x) { return x * 180.0 / M_PI;};
+    inline double DEGTORAD(double x) { return x * M_PI / 180.0;};
+
+
+    inline Eigen::Quaterniond zyx2quat(double x, double y, double z)
+    {
+        Eigen::Matrix3d rot;
+        rot =
+                Eigen::AngleAxisd(z, Eigen::Vector3d::UnitZ()) *
+                Eigen::AngleAxisd(y, Eigen::Vector3d::UnitY()) *
+                Eigen::AngleAxisd(x, Eigen::Vector3d::UnitX());
+        return Eigen::Quaterniond(rot).normalized();
+    }
+
 /*Example how to define a custom Event*/
 /*  class MyEvent : public XBot::FSM::Event {
 
@@ -131,7 +145,15 @@ namespace myfsm{
       bool _hand_over_phase;
       std::shared_ptr<XBot::PluginStatus> plugin_status;
 
-     
+
+        geometry_msgs::PoseStamped left_hand_pose_stamped_global_home_;
+        geometry_msgs::PoseStamped right_hand_pose_stamped_global_home_;
+
+        geometry_msgs::PoseStamped left_hand_pose_stamped_task_home_;
+        geometry_msgs::PoseStamped right_hand_pose_stamped_task_home_;
+
+        std::string selectedHand_;
+
     };
     
     class MacroState : public  XBot::FSM::State< MacroState , SharedData > {
@@ -162,159 +184,160 @@ namespace myfsm{
 
      };
 
-    class LeftHoming : public MacroState {
+//    class LeftHoming : public MacroState {
+//
+//      virtual std::string get_name() const { return "LeftHoming"; }
+//
+//      virtual void run(double time, double period);
+//
+//      virtual void entry(const XBot::FSM::Message& msg);
+//
+//      virtual void react(const XBot::FSM::Event& e);
+//
+//      virtual void exit ();
+//
+//      private:
+//
+//
+//     };
+//
+//    class Reached : public MacroState {
+//
+//      virtual std::string get_name() const { return "Reached"; }
+//
+//      virtual void run(double time, double period);
+//
+//      virtual void entry(const XBot::FSM::Message& msg);
+//
+//      virtual void react(const XBot::FSM::Event& e);
+//
+//      virtual void exit ();
+//
+//      private:
+//
+//
+//     };
+//
+//    class Grasped : public MacroState {
+//
+//      virtual std::string get_name() const { return "Grasped"; }
+//
+//      virtual void run(double time, double period);
+//
+//      virtual void entry(const XBot::FSM::Message& msg);
+//
+//      virtual void react(const XBot::FSM::Event& e);
+//
+//      virtual void exit ();
+//
+//      private:
+//
+//
+//     };
+//
+//    class Picked : public MacroState {
+//
+//      virtual std::string get_name() const { return "Picked"; }
+//
+//      virtual void run(double time, double period);
+//
+//      virtual void entry(const XBot::FSM::Message& msg);
+//
+//      virtual void react(const XBot::FSM::Event& e);
+//
+//      virtual void exit ();
+//
+//      private:
+//
+//
+//     };
+//
+//    class PickSecondHand : public MacroState {
+//
+//      virtual std::string get_name() const { return "PickSecondHand"; }
+//
+//      virtual void run(double time, double period);
+//
+//      virtual void entry(const XBot::FSM::Message& msg);
+//
+//      virtual void react(const XBot::FSM::Event& e);
+//
+//      virtual void exit ();
+//
+//      private:
+//
+//
+//     };
+//
+//    class MovedAway : public MacroState {
+//
+//      virtual std::string get_name() const { return "MovedAway"; }
+//
+//      virtual void run(double time, double period);
+//
+//      virtual void entry(const XBot::FSM::Message& msg);
+//
+//      virtual void react(const XBot::FSM::Event& e);
+//
+//      virtual void exit ();
+//
+//      private:
+//
+//
+//     };
+//
+//    class PlacedDown : public MacroState {
+//
+//      virtual std::string get_name() const { return "PlacedDown"; }
+//
+//      virtual void run(double time, double period);
+//
+//      virtual void entry(const XBot::FSM::Message& msg);
+//
+//      virtual void react(const XBot::FSM::Event& e);
+//
+//      virtual void exit ();
+//
+//      private:
+//
+//
+//     };
+//
+//    class Ungrasped : public MacroState {
+//
+//      virtual std::string get_name() const { return "Ungrasped"; }
+//
+//      virtual void run(double time, double period);
+//
+//      virtual void entry(const XBot::FSM::Message& msg);
+//
+//      virtual void react(const XBot::FSM::Event& e);
+//
+//      virtual void exit ();
+//
+//      private:
+//
+//
+//     };
+//
+//    class HandSelection : public MacroState {
+//
+//        virtual std::string get_name() const { return "HandSelection"; }
+//
+//        virtual void run(double time, double period);
+//
+//        virtual void entry(const XBot::FSM::Message& msg);
+//
+//        virtual void react(const XBot::FSM::Event& e);
+//
+//        virtual void exit ();
+//
+//    private:
+//
+//
+//    };
 
-      virtual std::string get_name() const { return "LeftHoming"; }
 
-      virtual void run(double time, double period);
-
-      virtual void entry(const XBot::FSM::Message& msg);
-
-      virtual void react(const XBot::FSM::Event& e);
-
-      virtual void exit ();
-
-      private:
-
-
-     };     
- 
-    class Reached : public MacroState {
-
-      virtual std::string get_name() const { return "Reached"; }
-
-      virtual void run(double time, double period);
-
-      virtual void entry(const XBot::FSM::Message& msg);
-
-      virtual void react(const XBot::FSM::Event& e);
-
-      virtual void exit ();
-
-      private:
-
-
-     };
- 
-    class Grasped : public MacroState {
-
-      virtual std::string get_name() const { return "Grasped"; }
-
-      virtual void run(double time, double period);
-
-      virtual void entry(const XBot::FSM::Message& msg);
-
-      virtual void react(const XBot::FSM::Event& e);
-
-      virtual void exit ();
-
-      private:
-
-
-     };
- 
-    class Picked : public MacroState {
-
-      virtual std::string get_name() const { return "Picked"; }
-
-      virtual void run(double time, double period);
-
-      virtual void entry(const XBot::FSM::Message& msg);
-
-      virtual void react(const XBot::FSM::Event& e);
-
-      virtual void exit ();
-
-      private:
-
-
-     };
-
-    class PickSecondHand : public MacroState {
-
-      virtual std::string get_name() const { return "PickSecondHand"; }
-
-      virtual void run(double time, double period);
-
-      virtual void entry(const XBot::FSM::Message& msg);
-
-      virtual void react(const XBot::FSM::Event& e);
-
-      virtual void exit ();
-
-      private:
-
-
-     }; 
- 
-    class MovedAway : public MacroState {
-
-      virtual std::string get_name() const { return "MovedAway"; }
-
-      virtual void run(double time, double period);
-
-      virtual void entry(const XBot::FSM::Message& msg);
-
-      virtual void react(const XBot::FSM::Event& e);
-
-      virtual void exit ();
-
-      private:
-
-
-     };
- 
-    class PlacedDown : public MacroState {
-
-      virtual std::string get_name() const { return "PlacedDown"; }
-
-      virtual void run(double time, double period);
-
-      virtual void entry(const XBot::FSM::Message& msg);
-
-      virtual void react(const XBot::FSM::Event& e);
-
-      virtual void exit ();
-
-      private:
-
-
-     };
-     
-    class Ungrasped : public MacroState {
-
-      virtual std::string get_name() const { return "Ungrasped"; }
-
-      virtual void run(double time, double period);
-
-      virtual void entry(const XBot::FSM::Message& msg);
-
-      virtual void react(const XBot::FSM::Event& e);
-
-      virtual void exit ();
-
-      private:
-
-
-     };
-
-
-    class HandSelection : public MacroState {
-
-        virtual std::string get_name() const { return "HandSelection"; }
-
-        virtual void run(double time, double period);
-
-        virtual void entry(const XBot::FSM::Message& msg);
-
-        virtual void react(const XBot::FSM::Event& e);
-
-        virtual void exit ();
-
-    private:
-
-
-    };
     class ValveReach : public MacroState {
 
       virtual std::string get_name() const { return "ValveReach"; }

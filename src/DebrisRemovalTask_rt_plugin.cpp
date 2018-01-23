@@ -66,19 +66,20 @@ bool DebrisRemovalTask::init_control_plugin(XBot::Handle::Ptr handle)
     /*Saves robot as shared variable between states*/
     fsm.shared_data()._robot= _robot;
     
+
+//    fsm.register_state(std::make_shared<myfsm::HandSelection>());
+//    fsm.register_state(std::make_shared<myfsm::LeftHoming>());
+//    fsm.register_state(std::make_shared<myfsm::Reached>());
+//    fsm.register_state(std::make_shared<myfsm::Grasped>());
+//    fsm.register_state(std::make_shared<myfsm::Picked>());
+//    fsm.register_state(std::make_shared<myfsm::PickSecondHand>());
+//    fsm.register_state(std::make_shared<myfsm::MovedAway>());
+//    fsm.register_state(std::make_shared<myfsm::PlacedDown>());
+//    fsm.register_state(std::make_shared<myfsm::Ungrasped>());
+
+
     /*Registers states*/
     fsm.register_state(std::make_shared<myfsm::Homing>());
-    fsm.register_state(std::make_shared<myfsm::LeftHoming>());
-    fsm.register_state(std::make_shared<myfsm::Reached>());
-    fsm.register_state(std::make_shared<myfsm::Grasped>());
-    fsm.register_state(std::make_shared<myfsm::Picked>());
-    fsm.register_state(std::make_shared<myfsm::PickSecondHand>());
-    fsm.register_state(std::make_shared<myfsm::MovedAway>());
-    fsm.register_state(std::make_shared<myfsm::PlacedDown>());
-    fsm.register_state(std::make_shared<myfsm::Ungrasped>());
-    
-    //For valve turning
-    fsm.register_state(std::make_shared<myfsm::HandSelection>());
     fsm.register_state(std::make_shared<myfsm::ValveReach>());
     fsm.register_state(std::make_shared<myfsm::ValveTurn>());
     fsm.register_state(std::make_shared<myfsm::ValveGoBack>());
