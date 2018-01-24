@@ -7,7 +7,9 @@
 #include <kdl_conversions/kdl_msg.h>
 
 #define TRAJ_DURATION 5
-
+#define APPROCHING_SHIFT 0.1
+#define RETREAT_SHIFT 0.1
+#define VALVE_RADIUSE 0.2
 
 /******************************** BEGIN Homing *******************************/
 ///////////////////////////////////////////////////////////////////////////////
@@ -45,71 +47,83 @@ void myfsm::Homing::entry(const XBot::FSM::Message& msg){
 
     shared_data().updateRobotStates();
 
-    
-    // get current hand poses as global home
-    Eigen::Affine3d right_hand_pose_eigen, left_hand_pose_eigen;
-    shared_data()._robot->model().getPose("LSoftHand", left_hand_pose_eigen);
-    shared_data()._robot->model().getPose("RSoftHand", right_hand_pose_eigen);
-//    std::cout << "left_hand_pose_eigen: " << left_hand_pose_eigen.translation().transpose() << std::endl;
-//    std::cout << "right_hand_pose_eigen: " << right_hand_pose_eigen.translation().transpose() << std::endl;
+
+    if (!shared_data().home_recoreded_){
+        shared_data().recordHome();
+    }
 
 
+//    // get current hand poses as global home
+//    Eigen::Affine3d right_hand_pose_eigen, left_hand_pose_eigen;
+//    shared_data()._robot->model().getPose("LSoftHand", left_hand_pose_eigen);
+//    shared_data()._robot->model().getPose("RSoftHand", right_hand_pose_eigen);
+////    std::cout << "left_hand_pose_eigen: " << left_hand_pose_eigen.translation().transpose() << std::endl;
+////    std::cout << "right_hand_pose_eigen: " << right_hand_pose_eigen.translation().transpose() << std::endl;
+//
+//
+//
+//    geometry_msgs::Pose right_hand_pose,left_hand_pose;
+//    tf::poseEigenToMsg (left_hand_pose_eigen, left_hand_pose);
+//    tf::poseEigenToMsg (right_hand_pose_eigen, right_hand_pose);
+//
+//    geometry_msgs::PoseStamped right_hand_pose_stamped, left_hand_pose_stamped;
+//    left_hand_pose_stamped.pose = left_hand_pose;
+//    right_hand_pose_stamped.pose = right_hand_pose;
+//
+//
+//
+////    geometry_msgs::PoseStamped right_hand_pose_stamped_global_home, left_hand_pose_stamped_global_home;
+////    left_hand_pose_stamped_global_home = left_hand_pose_stamped;
+////    right_hand_pose_stamped_global_home = right_hand_pose_stamped;
+//
+//    shared_data().left_hand_pose_stamped_global_home_ =  left_hand_pose_stamped;
+//    shared_data().right_hand_pose_stamped_global_home_ = right_hand_pose_stamped;
+//
+//
+////    std::cout << "left_hand_pose_stamped: " << left_hand_pose_stamped.pose.position << std::endl;
+////    std::cout << "right_hand_pose_stamped: " << right_hand_pose_stamped.pose.position << std::endl;
 
-    geometry_msgs::Pose right_hand_pose,left_hand_pose;
-    tf::poseEigenToMsg (left_hand_pose_eigen, left_hand_pose);
-    tf::poseEigenToMsg (right_hand_pose_eigen, right_hand_pose);
 
-    geometry_msgs::PoseStamped right_hand_pose_stamped, left_hand_pose_stamped;
-    left_hand_pose_stamped.pose = left_hand_pose;
-    right_hand_pose_stamped.pose = right_hand_pose;
+//    // define task home pose for both hands
+//    Eigen::Vector3d left_hand_task_home_position, right_hand_task_home_position;
+//    Eigen::Quaterniond left_hand_task_home_quaternion, right_hand_task_home_quaternion;
+//    left_hand_task_home_position = Eigen::Vector3d(0.3, 0.4, 1.0);
+//    left_hand_task_home_quaternion = zyx2quat(0.0, DEGTORAD(-45), 0.0);
+//    right_hand_task_home_position = Eigen::Vector3d(0.3, -0.4, 1.0);
+//    right_hand_task_home_quaternion = zyx2quat(0.0, DEGTORAD(-45), 0.0);
+//
+//
+//
+//
+//    geometry_msgs::PoseStamped left_hand_pose_stamped_task_home, right_hand_pose_stamped_task_home;
+//    left_hand_pose_stamped_task_home.pose.position.x =    left_hand_task_home_position[0];
+//    left_hand_pose_stamped_task_home.pose.position.y =    left_hand_task_home_position[1];
+//    left_hand_pose_stamped_task_home.pose.position.z =    left_hand_task_home_position[2];
+//    left_hand_pose_stamped_task_home.pose.orientation.x = left_hand_task_home_quaternion.x();
+//    left_hand_pose_stamped_task_home.pose.orientation.y = left_hand_task_home_quaternion.y();
+//    left_hand_pose_stamped_task_home.pose.orientation.z = left_hand_task_home_quaternion.z();
+//    left_hand_pose_stamped_task_home.pose.orientation.w = left_hand_task_home_quaternion.w();
+//
+//    right_hand_pose_stamped_task_home.pose.position.x =    right_hand_task_home_position[0];
+//    right_hand_pose_stamped_task_home.pose.position.y =    right_hand_task_home_position[1];
+//    right_hand_pose_stamped_task_home.pose.position.z =    right_hand_task_home_position[2];
+//    right_hand_pose_stamped_task_home.pose.orientation.x = right_hand_task_home_quaternion.x();
+//    right_hand_pose_stamped_task_home.pose.orientation.y = right_hand_task_home_quaternion.y();
+//    right_hand_pose_stamped_task_home.pose.orientation.z = right_hand_task_home_quaternion.z();
+//    right_hand_pose_stamped_task_home.pose.orientation.w = right_hand_task_home_quaternion.w();
+//
+//    shared_data().left_hand_pose_stamped_task_home_ = left_hand_pose_stamped_task_home;
+//    shared_data().right_hand_pose_stamped_task_home_ = right_hand_pose_stamped_task_home;
+
+//    std::cout << "left_hand_pose_stamped_task_home: " << left_hand_pose_stamped_task_home.pose.position << std::endl;
+//    std::cout << "right_hand_pose_stamped_task_home: " << right_hand_pose_stamped_task_home.pose.position << std::endl;
 
 
-
-//    geometry_msgs::PoseStamped right_hand_pose_stamped_global_home, left_hand_pose_stamped_global_home;
-//    left_hand_pose_stamped_global_home = left_hand_pose_stamped;
-//    right_hand_pose_stamped_global_home = right_hand_pose_stamped;
-
-    shared_data().left_hand_pose_stamped_global_home_ =  left_hand_pose_stamped;
-    shared_data().right_hand_pose_stamped_global_home_ = right_hand_pose_stamped;
-
-
-//    std::cout << "left_hand_pose_stamped: " << left_hand_pose_stamped.pose.position << std::endl;
-//    std::cout << "right_hand_pose_stamped: " << right_hand_pose_stamped.pose.position << std::endl;
-
-
-    // define task home pose for both hands
-    Eigen::Vector3d left_hand_task_home_position, right_hand_task_home_position;
-    Eigen::Quaterniond left_hand_task_home_quaternion, right_hand_task_home_quaternion;
-    left_hand_task_home_position = Eigen::Vector3d(0.3, 0.4, 1.0);
-    left_hand_task_home_quaternion = zyx2quat(0.0, DEGTORAD(-45), 0.0);
-    right_hand_task_home_position = Eigen::Vector3d(0.3, -0.4, 1.0);
-    right_hand_task_home_quaternion = zyx2quat(0.0, DEGTORAD(-45), 0.0);
-
-    geometry_msgs::PoseStamped left_hand_pose_stamped_task_home, right_hand_pose_stamped_task_home;
-    left_hand_pose_stamped_task_home.pose.position.x =    left_hand_task_home_position[0];
-    left_hand_pose_stamped_task_home.pose.position.y =    left_hand_task_home_position[1];
-    left_hand_pose_stamped_task_home.pose.position.z =    left_hand_task_home_position[2];
-    left_hand_pose_stamped_task_home.pose.orientation.x = left_hand_task_home_quaternion.x();
-    left_hand_pose_stamped_task_home.pose.orientation.y = left_hand_task_home_quaternion.y();
-    left_hand_pose_stamped_task_home.pose.orientation.z = left_hand_task_home_quaternion.z();
-    left_hand_pose_stamped_task_home.pose.orientation.w = left_hand_task_home_quaternion.w();
-
-    right_hand_pose_stamped_task_home.pose.position.x =    right_hand_task_home_position[0];
-    right_hand_pose_stamped_task_home.pose.position.y =    right_hand_task_home_position[1];
-    right_hand_pose_stamped_task_home.pose.position.z =    right_hand_task_home_position[2];
-    right_hand_pose_stamped_task_home.pose.orientation.x = right_hand_task_home_quaternion.x();
-    right_hand_pose_stamped_task_home.pose.orientation.y = right_hand_task_home_quaternion.y();
-    right_hand_pose_stamped_task_home.pose.orientation.z = right_hand_task_home_quaternion.z();
-    right_hand_pose_stamped_task_home.pose.orientation.w = right_hand_task_home_quaternion.w();
-
-    shared_data().left_hand_pose_stamped_task_home_ = left_hand_pose_stamped_task_home;
-    shared_data().right_hand_pose_stamped_task_home_ = right_hand_pose_stamped_task_home;
-
-    std::cout << "left_hand_pose_stamped_task_home: " << left_hand_pose_stamped_task_home.pose.position << std::endl;
-    std::cout << "right_hand_pose_stamped_task_home: " << right_hand_pose_stamped_task_home.pose.position << std::endl;
 
 
     // select the hand to use
+    std::cout << "Please select the hand you want to move!" << std::endl;
+
     std::string selectedHand;
     selectedHand = "LSoftHand";
     selectedHand = "RSoftHand";
@@ -119,20 +133,20 @@ void myfsm::Homing::entry(const XBot::FSM::Message& msg){
     trajectory_utils::Cartesian start, end;
     if(selectedHand == "LSoftHand"){
         start.distal_frame = "LSoftHand";
-        start.frame = left_hand_pose_stamped;
+        start.frame = shared_data().left_hand_pose_PoseStamped_;
         end.distal_frame = "LSoftHand";
-        end.frame = left_hand_pose_stamped_task_home;
+        end.frame = shared_data().left_hand_pose_home_PoseStamped_;
     }else if(selectedHand == "RSoftHand"){
         start.distal_frame = "RSoftHand";
-        start.frame = right_hand_pose_stamped;
+        start.frame = shared_data().right_hand_pose_PoseStamped_;
         end.distal_frame = "RSoftHand";
-        end.frame = right_hand_pose_stamped_task_home;
+        end.frame = shared_data().right_hand_pose_home_PoseStamped_;
     }
 
     // define one segment
     trajectory_utils::segment segment;
     segment.type.data = 0;        // min jerk traj
-    segment.T.data = 5;         // traj duration 5 second
+    segment.T.data = TRAJ_DURATION;         // traj duration 5 second
     segment.start = start;        // start pose
     segment.end = end;            // end pose
 
@@ -148,36 +162,26 @@ void myfsm::Homing::entry(const XBot::FSM::Message& msg){
 
     // call the service
     shared_data()._client.call(srv);
+    std::cout << "Move to home pose!" << std::endl;
 
-    std::cout << "Move "<< selectedHand << " to task home pose!" << std::endl;
 
-    std::cout << "State Machine Current State: Homing" << std::endl;
-    std::cout << "State Machine Transition: success->ValveReach, fail->Homing" << std::endl;
+    // blocking call: wait for a pose on topic debris_pose
+    std::cout << "Please define the pose of the valve!" << std::endl;
+    ADVR_ROS::im_pose_msg::ConstPtr tmp;
+    tmp = ros::topic::waitForMessage<ADVR_ROS::im_pose_msg>("valve_pose");
+    shared_data()._valve_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(tmp->pose_stamped));
+
+
+    std::cout << "----------State Machine----------" << std::endl;
+    std::cout << "Current State:   Homing"        << std::endl;
+    std::cout << "* success   ->   ValveReach"    << std::endl;
+    std::cout << "* fail      ->   Homing"        << std::endl;
+    std::cout << "---------------------------------" << std::endl;
 
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::Homing::run(double time, double period){
-
-    // checking hand pose
-    shared_data()._robot->sense();
-    std::string floating_base_link_name;
-    shared_data()._robot->model().getFloatingBaseLink(floating_base_link_name);
-    Eigen::Affine3d world_T_floating_base;
-    tf.getTransformTf(floating_base_link_name, "world_odom", world_T_floating_base);
-    shared_data()._robot->model().setFloatingBasePose(world_T_floating_base);
-    shared_data()._robot->model().update();
-
-    // get current hand poses as global home
-    Eigen::Affine3d right_hand_pose_eigen, left_hand_pose_eigen;
-    shared_data()._robot->model().getPose("LSoftHand", left_hand_pose_eigen);
-    shared_data()._robot->model().getPose("RSoftHand", right_hand_pose_eigen);
-
-    std::cout << "left_hand_pose_eigen: " << left_hand_pose_eigen.translation().transpose() << std::endl;
-    std::cout << "right_hand_pose_eigen: " << right_hand_pose_eigen.translation().transpose() << std::endl;
-
-
-
 
 
     // blocking reading: wait for a command
@@ -221,51 +225,50 @@ void myfsm::ValveReach::entry(const XBot::FSM::Message& msg){
     shared_data().plugin_status->setStatus("VALVEREACH");
       
 
-    std::cout << "Select the End Effector you want to use." << std::endl;
+//    std::cout << "Select the End Effector you want to use." << std::endl;
     
     // blocking call: wait for a msg on topic hand_selection
     //    shared_data()._hand_selection = ros::topic::waitForMessage<std_msgs::String>("hand_selection");
     
 
-    std::string selectedHand = shared_data().selectedHand_;
-    std::cout << "Hand selected: " << selectedHand << std::endl;
+//    std::string selectedHand = shared_data().selectedHand_;
+//    std::cout << "Hand selected: " << selectedHand << std::endl;
 
 
-    // blocking call: wait for a pose on topic debris_pose
-    ADVR_ROS::im_pose_msg::ConstPtr tmp;
-    tmp = ros::topic::waitForMessage<ADVR_ROS::im_pose_msg>("valve_pose");
-
-    shared_data()._valve_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(tmp->pose_stamped));
-
-    std::cout << "_valve_pose: " << shared_data()._valve_pose << std::endl;
+//    // blocking call: wait for a pose on topic debris_pose
+//    ADVR_ROS::im_pose_msg::ConstPtr tmp;
+//    tmp = ros::topic::waitForMessage<ADVR_ROS::im_pose_msg>("valve_pose");
+//    shared_data()._valve_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(tmp->pose_stamped));
+//
+//    std::cout << "_valve_pose: " << shared_data()._valve_pose << std::endl;
 
 
     //CALL SERVICE TO MOVE
 
     // define the start frame 
     geometry_msgs::PoseStamped start_frame;
-    if(selectedHand == "RSoftHand")
-      start_frame = shared_data().right_hand_pose_stamped_task_home_;
-    else if(selectedHand == "LSoftHand")
-      start_frame = shared_data().left_hand_pose_stamped_task_home_;
+    if(shared_data().selectedHand_ == "RSoftHand")
+      start_frame = shared_data().right_hand_pose_home_PoseStamped_;
+    else if(shared_data().selectedHand_ == "LSoftHand")
+      start_frame = shared_data().left_hand_pose_home_PoseStamped_;
 
     trajectory_utils::Cartesian start;
-    start.distal_frame = selectedHand;
+    start.distal_frame = shared_data().selectedHand_;
     start.frame = start_frame;    
     
     // define the intermediate frame
     geometry_msgs::PoseStamped intermediate_frame;
     intermediate_frame = *shared_data()._valve_pose;
 
-    if(selectedHand == "RSoftHand"){
-    intermediate_frame.pose.position.y-= 0.2; 
+    if(shared_data().selectedHand_ == "RSoftHand"){
+    intermediate_frame.pose.position.y-= APPROCHING_SHIFT;
     }
-    if(selectedHand == "LSoftHand"){
-    intermediate_frame.pose.position.y+= 0.2; 
+    if(shared_data().selectedHand_ == "LSoftHand"){
+    intermediate_frame.pose.position.y+= APPROCHING_SHIFT;
     }
     
     trajectory_utils::Cartesian intermediate;
-    intermediate.distal_frame = selectedHand;
+    intermediate.distal_frame = shared_data().selectedHand_;
     intermediate.frame = intermediate_frame;
     
     // define the first segment
@@ -282,7 +285,7 @@ void myfsm::ValveReach::entry(const XBot::FSM::Message& msg){
     
     
     trajectory_utils::Cartesian end;
-    end.distal_frame = selectedHand;
+    end.distal_frame = shared_data().selectedHand_;
     end.frame = end_frame;    
 
     shared_data()._last_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(end_frame));
@@ -368,7 +371,7 @@ void myfsm::ValveTurn::entry(const XBot::FSM::Message& msg){
 
     // define the start frame 
     geometry_msgs::PoseStamped start_frame;
-    start_frame = *shared_data()._last_pose;
+    start_frame = *shared_data()._valve_pose;
 
     trajectory_utils::Cartesian start;
     start.distal_frame = selectedHand;
@@ -409,7 +412,7 @@ void myfsm::ValveTurn::entry(const XBot::FSM::Message& msg){
     geometry_msgs::Vector3 circle_center;
     circle_center.x = start_frame.pose.position.x;
     circle_center.y = start_frame.pose.position.y;
-    circle_center.z = start_frame.pose.position.z-0.2;
+    circle_center.z = start_frame.pose.position.z-VALVE_RADIUSE;
     
     
     
@@ -448,12 +451,12 @@ void myfsm::ValveTurn::entry(const XBot::FSM::Message& msg){
     last_frame = *shared_data()._valve_pose;
     
     if(selectedHand == "RSoftHand"){
-        last_frame.pose.position.y+=0.2;
-	last_frame.pose.position.z-=0.2;
+        last_frame.pose.position.y+=VALVE_RADIUSE;
+	last_frame.pose.position.z-=VALVE_RADIUSE;
     }
     if(selectedHand == "LSoftHand"){
-        last_frame.pose.position.y-=0.2;
-	last_frame.pose.position.z-=0.2;
+        last_frame.pose.position.y-=VALVE_RADIUSE;
+	last_frame.pose.position.z-=VALVE_RADIUSE;
     }
 
     last_frame.pose.orientation = end_frame.pose.orientation;
@@ -552,10 +555,10 @@ void myfsm::ValveGoBack::entry(const XBot::FSM::Message& msg){
     end_frame = *shared_data()._valve_pose;
     
     if(selectedHand == "RSoftHand"){
-    end_frame.pose.position.y-= 0.2;
+    end_frame.pose.position.y-= RETREAT_SHIFT;
     }
     if(selectedHand == "LSoftHand"){
-    end_frame.pose.position.y+= 0.2;
+    end_frame.pose.position.y+= RETREAT_SHIFT;
     }
     
     trajectory_utils::Cartesian end;

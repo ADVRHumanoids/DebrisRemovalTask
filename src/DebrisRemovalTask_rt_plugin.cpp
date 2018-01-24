@@ -65,7 +65,7 @@ bool DebrisRemovalTask::init_control_plugin(XBot::Handle::Ptr handle)
     
     /*Saves robot as shared variable between states*/
     fsm.shared_data()._robot= _robot;
-    
+    fsm.shared_data().robot_ = _robot;
 
 //    fsm.register_state(std::make_shared<myfsm::HandSelection>());
 //    fsm.register_state(std::make_shared<myfsm::LeftHoming>());

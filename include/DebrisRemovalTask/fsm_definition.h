@@ -145,33 +145,80 @@ namespace myfsm{
       std::shared_ptr<XBot::PluginStatus> plugin_status;
 
 
-        geometry_msgs::PoseStamped left_hand_pose_stamped_global_home_;
-        geometry_msgs::PoseStamped right_hand_pose_stamped_global_home_;
+//        geometry_msgs::PoseStamped left_hand_pose_stamped_global_home_;
+//        geometry_msgs::PoseStamped right_hand_pose_stamped_global_home_;
+//
+//        geometry_msgs::PoseStamped left_hand_pose_stamped_task_home_;
+//        geometry_msgs::PoseStamped right_hand_pose_stamped_task_home_;
+//
+//        geometry_msgs::PoseStamped last_left_hand_pose_stamped_;
+//        geometry_msgs::PoseStamped last_right_hand_pose_stamped_;
 
-        geometry_msgs::PoseStamped left_hand_pose_stamped_task_home_;
-        geometry_msgs::PoseStamped right_hand_pose_stamped_task_home_;
 
-        geometry_msgs::PoseStamped last_left_hand_pose_stamped_;
-        geometry_msgs::PoseStamped last_right_hand_pose_stamped_;
+        //////////////////////////////////////////////////////////////////////////////////////////////////////
+        //// valve task
+        //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
+        XBot::RobotInterface::Ptr robot_;
         tfHandler tf_;
         std::string selectedHand_;
 
         std::string floating_base_link_name_;
         Eigen::Affine3d world_T_floating_base_;
 
+
+        Eigen::Affine3d             left_hand_pose_Affine_,         right_hand_pose_Affine_;
+        geometry_msgs::Pose         left_hand_pose_Pose_,           right_hand_pose_Pose_;
+        geometry_msgs::PoseStamped  left_hand_pose_PoseStamped_,    right_hand_pose_PoseStamped_;
+
+
+
+
+        Eigen::Affine3d             left_hand_pose_home_Affine_,            right_hand_pose_home_Affine_;
+        geometry_msgs::Pose         left_hand_pose_home_Pose_,              right_hand_pose_home_Pose_;
+        geometry_msgs::PoseStamped  left_hand_pose_home_PoseStamped_,       right_hand_pose_home_PoseStamped_;
+
+
+
+
         void updateRobotStates(){
             // update robot states
-            _robot->sense();
-            _robot->model().getFloatingBaseLink(floating_base_link_name_);
+            robot_->sense();
+            robot_->model().getFloatingBaseLink(floating_base_link_name_);
             tf_.getTransformTf(floating_base_link_name_, "world_odom", world_T_floating_base_);
-            _robot->model().setFloatingBasePose(world_T_floating_base_);
-            _robot->model().update();
+            robot_->model().setFloatingBasePose(world_T_floating_base_);
+            robot_->model().update();
 
             // calculate needed information
+            robot_->model().getPose("LSoftHand", left_hand_pose_Affine_);
+            robot_->model().getPose("RSoftHand", right_hand_pose_Affine_);
+
+            tf::poseEigenToMsg (left_hand_pose_Affine_, left_hand_pose_Pose_);
+            tf::poseEigenToMsg (right_hand_pose_Affine_, right_hand_pose_Pose_);
+
+            left_hand_pose_PoseStamped_.pose = left_hand_pose_Pose_;
+            right_hand_pose_PoseStamped_.pose = right_hand_pose_Pose_;
 
         }
+
+
+        bool home_recoreded_ = false;
+
+        void recordHome(){
+
+                left_hand_pose_home_Affine_ = left_hand_pose_Affine_;
+                right_hand_pose_home_Affine_ = right_hand_pose_Affine_;
+
+                left_hand_pose_home_Pose_ = left_hand_pose_Pose_;
+                right_hand_pose_home_Pose_ = right_hand_pose_Pose_;
+
+                left_hand_pose_home_PoseStamped_ = left_hand_pose_PoseStamped_;
+                right_hand_pose_home_PoseStamped_ = right_hand_pose_PoseStamped_;
+
+                home_recoreded_ = true;
+
+        }
+
 
     };
     
