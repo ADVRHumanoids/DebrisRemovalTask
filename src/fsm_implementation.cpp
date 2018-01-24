@@ -5,7 +5,7 @@
 
 #include <eigen_conversions/eigen_msg.h>
 
-#define TRAJ_DURATION 25
+#define TRAJ_DURATION 10
 
 
 /******************************** BEGIN Homing_init *******************************/
@@ -19,20 +19,13 @@ void myfsm::Homing_init::react(const XBot::FSM::Event& e) {
 void myfsm::Homing_init::entry(const XBot::FSM::Message& msg){
 
     shared_data().plugin_status->setStatus("HOMING");
-    
     std::cout << "Homing_init_entry" << std::endl;
-  
-    //CALL SERVICE TO MOVE
-    // send a trajectory for the end effector as a segment
-    
     shared_data()._robot->sense(); 
     
     Eigen::Affine3d world_T_bl;
     std::string fb;  
-    
     shared_data()._robot->model().getFloatingBaseLink(fb);
     tf.getTransformTf(fb, "world_odom", world_T_bl);
-   
     shared_data()._robot->model().setFloatingBasePose(world_T_bl);
     shared_data()._robot->model().update();  
     
@@ -225,9 +218,7 @@ void myfsm::Homing_Lee::entry(const XBot::FSM::Message& msg){
     // call the service
     shared_data()._client.call(srv);    
     
-    std::cout << "Homing_Lee --> Homing_Lee" << std::endl;
-    
-    std::cout << "Homing_Lee run. 'fail'-> Homing_Ree\t\t'sucess'->HandSelection\t\t'Handover_success'->MovedAway"<< std::endl;
+    std::cout << "Homing_Lee run. 'fail'-> Homing_Ree\t\t'success'->HandSelection\t\t'Handover_success'->MovedAway"<< std::endl;
     
 }
 
@@ -430,7 +421,7 @@ void myfsm::Reached::entry(const XBot::FSM::Message& msg){
     // call the service
     shared_data()._client.call(srv);
 
-    std::cout << "Reached run. 'fail'-> Homing_Ree\t\t'sucess'->Grasped"<< std::endl;
+    std::cout << "Reached run. 'fail'-> Homing_Ree\t\t'success'->Grasped"<< std::endl;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -491,21 +482,15 @@ void myfsm::Grasped::entry(const XBot::FSM::Message& msg){
   
     if(!selectedHand.compare("RSoftHand")){
       if(!shared_data()._hand_over_phase){
-//           srv.request.right_grasp = 0.9;
-//           srv.request.left_grasp = 0.0;
-          srv.request.right_grasp = 1.2;
+          srv.request.right_grasp = 1.0;
           srv.request.left_grasp = 0.0;
       }else{
-//           srv.request.right_grasp = 0.9;
-//           srv.request.left_grasp = 0.9;
-          srv.request.right_grasp = 1.2;
-          srv.request.left_grasp = 0.9;
+          srv.request.right_grasp = 1.0;
+          srv.request.left_grasp = 1.0;
       }
     }else if(!selectedHand.compare("LSoftHand")){
-//           srv.request.right_grasp = 0.0;
-//           srv.request.left_grasp = 0.9;
           srv.request.right_grasp = 0.0;
-          srv.request.left_grasp = 0.9;
+          srv.request.left_grasp = 1.0;
     }
     
     // call the service
@@ -1204,7 +1189,7 @@ void myfsm::PlacedDown::entry(const XBot::FSM::Message& msg){
     // call the service
     shared_data()._client.call(srv);
 
-    std::cout << "PlacedDown run. 'fail'-> Homing\t\t'sucess'->Ungrasped"<< std::endl;
+    std::cout << "PlacedDown run. 'fail'-> Homing\t\t'success'->Ungrasped"<< std::endl;
     
 }
 

@@ -53,8 +53,6 @@ bool DebrisRemovalTask::init_control_plugin(XBot::Handle::Ptr handle)
     fsm.shared_data().plugin_status = _custom_status;
     
     fsm.shared_data()._client = fsm.shared_data()._nh->serviceClient<ADVR_ROS::advr_segment_control>("segment_control");    
-    fsm.shared_data()._grasp_mag_pub_RSoftHand = fsm.shared_data()._nh->advertise<std_msgs::String>("/grasp/RWrMot3/goalGrasp",1);
-    fsm.shared_data()._grasp_mag_pub_LSoftHand = fsm.shared_data()._nh->advertise<std_msgs::String>("/grasp/LWrMot3/goalGrasp",1);
     _feedBack = fsm.shared_data()._nh->subscribe("Manipulation_status",1,&DebrisRemovalTask::on_manipulation_status,this);
     manipulation_status = true;
     fsm.shared_data()._SoftHandPose_pub = fsm.shared_data()._nh->advertise<geometry_msgs::PoseStamped>("/w_T_right_ee",1);
