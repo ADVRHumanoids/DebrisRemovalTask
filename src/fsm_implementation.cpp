@@ -25,39 +25,33 @@ void myfsm::Homing::entry(const XBot::FSM::Message& msg){
     
 
   
-    //CALL SERVICE TO MOVE
-    // send a trajectory for the end effector as a segment
+//    //CALL SERVICE TO MOVE
+//    // send a trajectory for the end effector as a segment
+//
+//
+//    // get floating base information and update model
+//    shared_data()._robot->sense();
+//    std::string floating_base_link_name;
+//    shared_data()._robot->model().getFloatingBaseLink(floating_base_link_name);
+////    std::cout << "floating_base_link_name" << floating_base_link_name << std::endl;
+//
+//    Eigen::Affine3d world_T_floating_base;
+//    tf.getTransformTf(floating_base_link_name, "world_odom", world_T_floating_base);
+////    std::cout << "floating_base_link position: \n" << world_T_floating_base.translation().transpose() << std::endl;
+////    std::cout << "floating_base_link orientation: \n" << world_T_floating_base.rotation().eulerAngles(2, 1, 0).transpose() << std::endl;
+//
+//    shared_data()._robot->model().setFloatingBasePose(world_T_floating_base);
+//    shared_data()._robot->model().update();
 
+    shared_data().updateRobotStates();
 
-    // get floating base information and update model
-    shared_data()._robot->sense();
-    std::string floating_base_link_name;
-    shared_data()._robot->model().getFloatingBaseLink(floating_base_link_name);
-    std::cout << "floating_base_link_name" << floating_base_link_name << std::endl;
-
-    Eigen::Affine3d world_T_floating_base;
-    tf.getTransformTf(floating_base_link_name, "world_odom", world_T_floating_base);
-    std::cout << "floating_base_link position: \n" << world_T_floating_base.translation().transpose() << std::endl;
-    std::cout << "floating_base_link orientation: \n" << world_T_floating_base.rotation().eulerAngles(2, 1, 0).transpose() << std::endl;
-
-    shared_data()._robot->model().setFloatingBasePose(world_T_floating_base);
-    shared_data()._robot->model().update();  
-    
     
     // get current hand poses as global home
     Eigen::Affine3d right_hand_pose_eigen, left_hand_pose_eigen;
     shared_data()._robot->model().getPose("LSoftHand", left_hand_pose_eigen);
     shared_data()._robot->model().getPose("RSoftHand", right_hand_pose_eigen);
-
-    std::cout << "left_hand_pose_eigen: " << left_hand_pose_eigen.translation().transpose() << std::endl;
-    std::cout << "right_hand_pose_eigen: " << right_hand_pose_eigen.translation().transpose() << std::endl;
-
-
-    Eigen::Affine3d LWrMot3_pose, RWrMot3_pose;
-    shared_data()._robot->model().getPose("LWrMot3", LWrMot3_pose);
-    shared_data()._robot->model().getPose("RWrMot3", RWrMot3_pose);
-    std::cout << "LWrMot3_pose: " << LWrMot3_pose.translation().transpose() << std::endl;
-    std::cout << "RWrMot3_pose: " << RWrMot3_pose.translation().transpose() << std::endl;
+//    std::cout << "left_hand_pose_eigen: " << left_hand_pose_eigen.translation().transpose() << std::endl;
+//    std::cout << "right_hand_pose_eigen: " << right_hand_pose_eigen.translation().transpose() << std::endl;
 
 
 
@@ -79,8 +73,8 @@ void myfsm::Homing::entry(const XBot::FSM::Message& msg){
     shared_data().right_hand_pose_stamped_global_home_ = right_hand_pose_stamped;
 
 
-    std::cout << "left_hand_pose_stamped: " << left_hand_pose_stamped.pose.position << std::endl;
-    std::cout << "right_hand_pose_stamped: " << right_hand_pose_stamped.pose.position << std::endl;
+//    std::cout << "left_hand_pose_stamped: " << left_hand_pose_stamped.pose.position << std::endl;
+//    std::cout << "right_hand_pose_stamped: " << right_hand_pose_stamped.pose.position << std::endl;
 
 
     // define task home pose for both hands
