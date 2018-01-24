@@ -1,13 +1,13 @@
-#Valve Task
+**Valve Task**
 
-##Set xbot config
+**Set xbot config**
 ```
 set_xbot_config /home/super/advr-superbuild/configs/ADVR_shared/user_example/walkman_valve_task.yaml
 
 ```
 
 
-##Launch
+**Launch**
 ```
 roslaunch walkman_gazebo walkman_valve_task.launch
 ```
@@ -21,7 +21,7 @@ XBotGUI
 ```
 
 
-##GUI
+**GUI**
 1) HomingExample->Start->Stop
 2) DebrisRemovalTask -> Start
 3) Pub valve pose(for right hand):
