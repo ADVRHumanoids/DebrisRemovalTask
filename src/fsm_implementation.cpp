@@ -218,7 +218,7 @@ void myfsm::Homing_Lee::entry(const XBot::FSM::Message& msg){
     // call the service
     shared_data()._client.call(srv);    
     
-    std::cout << "Homing_Lee run. 'fail'-> Homing_Ree\t\t'success'->HandSelection\t\t'Handover_success'->MovedAway"<< std::endl;
+    std::cout << "Homing_Lee run. 'success'->HandSelection\t\t'fail'-> Homing_Ree\t\t'Handover_success'->MovedAway"<< std::endl;
     
 }
 
@@ -421,7 +421,7 @@ void myfsm::Reached::entry(const XBot::FSM::Message& msg){
     // call the service
     shared_data()._client.call(srv);
 
-    std::cout << "Reached run. 'fail'-> Homing_Ree\t\t'success'->Grasped"<< std::endl;
+    std::cout << "Reached run. 'success'->Grasped\t\t'fail'-> Homing_Ree" << std::endl;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -496,7 +496,7 @@ void myfsm::Grasped::entry(const XBot::FSM::Message& msg){
     // call the service
     shared_data()._grasp_client.call(srv);    
       
-    std::cout << "Grasped run. 'fail'-> Grasped\t\t'success'->Picked\t\t'After_handover'->Left homing" << std::endl;
+    std::cout << "Grasped run. 'success'->Picked\t\t'fail'-> Grasped\t\t'After_handover'->Left homing" << std::endl;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -634,7 +634,7 @@ void myfsm::Picked::entry(const XBot::FSM::Message& msg){
     // call the service
     shared_data()._client.call(srv);
     
-    std::cout << "Picked run. 'fail'-> Homing\t\t'success'->MovedAway\t\t'Handover'->PickSecondHand" << std::endl;
+    std::cout << "Picked run. 'success'->MovedAway\t\t'fail'-> Homing\t\t'Handover'->PickSecondHand" << std::endl;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -876,7 +876,7 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
     // call the service
     shared_data()._client.call(srv);
     
-    std::cout << "PickSecondHand run. 'fail'-> Homing_Ree\t\t'success'->Grasped" << std::endl;
+    std::cout << "PickSecondHand run. 'success'->Grasped\t\t'fail'-> Homing_Ree" << std::endl;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1050,7 +1050,7 @@ void myfsm::MovedAway::entry(const XBot::FSM::Message& msg){
     // call the service
     shared_data()._client.call(srv);     
 
-    std::cout << "MovedAway run. 'fail'-> Homing\t\t'success'->PlacedDown" << std::endl;
+    std::cout << "MovedAway run. 'success'->PlacedDown\t\t'fail'-> Homing" << std::endl;
 
 }
 
@@ -1189,7 +1189,7 @@ void myfsm::PlacedDown::entry(const XBot::FSM::Message& msg){
     // call the service
     shared_data()._client.call(srv);
 
-    std::cout << "PlacedDown run. 'fail'-> Homing\t\t'success'->Ungrasped"<< std::endl;
+    std::cout << "PlacedDown run. 'success'->Ungrasped\t\t'fail'-> Homing"<< std::endl;
     
 }
 
@@ -1342,7 +1342,7 @@ void myfsm::Ungrasped::entry(const XBot::FSM::Message& msg){
   // call the service
   shared_data()._grasp_client.call(srv);
   
-  std::cout << "Ungrasped run. 'fail'-> Ungrasped\t\t'success'->Homing" << std::endl;
+  std::cout << "Ungrasped run. 'success'->Homing\t\t'fail'-> Ungrasped" << std::endl;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1451,7 +1451,7 @@ void myfsm::Adjust::entry(const XBot::FSM::Message& msg){
     // call the service
     shared_data()._client.call(srv);
     
-    std::cout << "Adjust run. 'fail'-> Adjust\t\t'success'->Grasped" << std::endl;
+    std::cout << "Adjust run. 'success'->Grasped\t\t'fail'-> Adjust" << std::endl;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
