@@ -47,4 +47,4 @@ rostopic pub /valve_pose ADVR_ROS/im_pose_msg "name: ''
 ```
    
            
-4) press on button _success_ or _fail_ to make finite state machine transits to next step.
+4) press on button _success_ or _fail_ to make finite state machine transits to next state.
