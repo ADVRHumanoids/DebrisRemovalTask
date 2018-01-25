@@ -94,15 +94,15 @@ void myfsm::Homing_Ree::entry(const XBot::FSM::Message& msg){
     
     // define the end frame
     geometry_msgs::PoseStamped end_frame;
-   
-    end_frame.pose.position.x = 0.248;
-    end_frame.pose.position.y = -0.471;
-    end_frame.pose.position.z = 0.969;     
-    
-    end_frame.pose.orientation.x = -0.091;
-    end_frame.pose.orientation.y = -0.456;
-    end_frame.pose.orientation.z = 0.19;
-    end_frame.pose.orientation.w = 0.864;     
+    end_frame = *shared_data()._initial_pose_right_hand;
+//     end_frame.pose.position.x = 0.248;
+//     end_frame.pose.position.y = -0.471;
+//     end_frame.pose.position.z = 0.969;     
+//     
+//     end_frame.pose.orientation.x = -0.091;
+//     end_frame.pose.orientation.y = -0.456;
+//     end_frame.pose.orientation.z = 0.19;
+//     end_frame.pose.orientation.w = 0.864;
     
     trajectory_utils::Cartesian end;
     end.distal_frame = "RSoftHand";
@@ -181,15 +181,15 @@ void myfsm::Homing_Lee::entry(const XBot::FSM::Message& msg){
     
     // define the end frame
     geometry_msgs::PoseStamped end_frame;
-   
-    end_frame.pose.position.x = 0.248;
-    end_frame.pose.position.y = 0.471;
-    end_frame.pose.position.z = 0.969;     
-    
-    end_frame.pose.orientation.x = 0.091;
-    end_frame.pose.orientation.y = -0.456;
-    end_frame.pose.orientation.z = -0.19;
-    end_frame.pose.orientation.w = 0.864;     
+    end_frame = *shared_data()._initial_pose_left_hand;
+//     end_frame.pose.position.x = 0.248;
+//     end_frame.pose.position.y = 0.471;
+//     end_frame.pose.position.z = 0.969;     
+//     
+//     end_frame.pose.orientation.x = 0.091;
+//     end_frame.pose.orientation.y = -0.456;
+//     end_frame.pose.orientation.z = -0.19;
+//     end_frame.pose.orientation.w = 0.864;     
     
     trajectory_utils::Cartesian end;
     end.distal_frame = "LSoftHand";
@@ -421,7 +421,7 @@ void myfsm::Reached::entry(const XBot::FSM::Message& msg){
     // call the service
     shared_data()._client.call(srv);
 
-    std::cout << "Reached run. 'success'->Grasped\t\t'fail'-> Homing_Ree" << std::endl;
+    std::cout << "Reached run. 'success'->Grasped\t\t'fail'->Homing_Ree\t\t'adjust'->Adjust" << std::endl;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -997,8 +997,8 @@ void myfsm::MovedAway::entry(const XBot::FSM::Message& msg){
     
     if(!selectedHand.compare("RSoftHand")){
       
-      end_frame.pose.position.x = 0.451;
-      end_frame.pose.position.y = -0.940;
+      end_frame.pose.position.x = 0.4;
+      end_frame.pose.position.y = -0.68;
       end_frame.pose.position.z = 1.05;
     
       end_frame.pose.orientation.x = -0.386;
@@ -1008,18 +1008,7 @@ void myfsm::MovedAway::entry(const XBot::FSM::Message& msg){
       
     }
     else if(!selectedHand.compare("LSoftHand")){
-      
-      end_frame.pose.position.x = 0.451;
-      end_frame.pose.position.y = 0.940;
-      end_frame.pose.position.z = 1.05;
-      
-      //to be implemented
-    
-//       end_frame.pose.orientation.x = -0.386;
-//       end_frame.pose.orientation.y = -0.429;
-//       end_frame.pose.orientation.z = -0.452;
-//       end_frame.pose.orientation.w = 0.678;
-      
+      //to be implemented if needed
     }
  
     
@@ -1189,7 +1178,7 @@ void myfsm::PlacedDown::entry(const XBot::FSM::Message& msg){
     // call the service
     shared_data()._client.call(srv);
 
-    std::cout << "PlacedDown run. 'success'->Ungrasped\t\t'fail'-> Homing"<< std::endl;
+    std::cout << "PlacedDown run. 'success'->Ungrasped\t\t'fail'->PlacedDown"<< std::endl;
     
 }
 
@@ -1203,7 +1192,7 @@ void myfsm::PlacedDown::run(double time, double period){
 
     // Reached failed
     if (!shared_data().current_command->str().compare("fail"))
-      transit("Homing");
+      transit("PlacedDown");
     
     // Reached succeeded
     if (!shared_data().current_command->str().compare("success"))
