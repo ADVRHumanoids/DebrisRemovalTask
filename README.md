@@ -26,24 +26,24 @@ XBotGUI
 2) DebrisRemovalTask -> Start
 3) Pub valve pose(for right hand):
 ```
-rostopic pub /valve_pose ADVR_ROS/im_pose_msg "name: ''
-     pose_stamped:
-       header:
-         seq: 0
-         stamp:
-           secs: 0
-           nsecs: 0
-         frame_id: ''
-       pose:
-         position:
-           x: 0.8
-           y: -0.4
-           z: 1.40
-         orientation:
-           x: 0.0
-           y: -0.7071070192004544
-           z: 0.0
-           w: 0.7071070192004544"
+rostopic pub /valve_center_pose ADVR_ROS/im_pose_msg "name: ''
+pose_stamped:
+  header:
+    seq: 0
+    stamp:
+      secs: 0
+      nsecs: 0
+    frame_id: ''
+  pose:
+    position:
+      x: 0.8
+      y: -0.4
+      z: 1.2
+    orientation:
+      x: 0.0
+      y: -0.7071070192004544
+      z: 0.0
+      w: 0.7071070192004544"
 ```
    
            

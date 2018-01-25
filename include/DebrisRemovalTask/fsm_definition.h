@@ -39,6 +39,15 @@
 #include <geometry_msgs/WrenchStamped.h>
 #include <XCM/XBotPluginStatus.h>
 
+
+#define TRAJ_DURATION 5
+#define APPROCHING_SHIFT 0.1
+#define RETREAT_SHIFT 0.1
+#define VALVE_RADIUSE 0.2
+
+#define CENTER_SHIFT 0.2
+
+
 namespace myfsm{
 
     inline double RADTODEG(double x) { return x * 180.0 / M_PI;};
@@ -120,7 +129,7 @@ namespace myfsm{
       XBot::RobotInterface::Ptr _robot;
       std::shared_ptr<ros::NodeHandle> _nh;
       geometry_msgs::PoseStamped::ConstPtr _debris_pose;
-      geometry_msgs::PoseStamped::ConstPtr _valve_pose;
+      geometry_msgs::PoseStamped::Ptr _valve_pose;
       std_msgs::String::ConstPtr _debris_number;
       std_msgs::String::ConstPtr _hand_selection;
       
@@ -216,6 +225,65 @@ namespace myfsm{
                 right_hand_pose_home_PoseStamped_ = right_hand_pose_PoseStamped_;
 
                 home_recoreded_ = true;
+
+        }
+
+
+        // define a bunch of key poses based on valve model pose
+        geometry_msgs::PoseStamped::ConstPtr valve_center_pose_PoseStamped_ConstPtr_;
+
+
+        geometry_msgs::PoseStamped valve_center_pose_PoseStamped_;
+        geometry_msgs::PoseStamped valve_up_pose_PoseStamped_;
+        geometry_msgs::PoseStamped valve_down_pose_PoseStamped_;
+        geometry_msgs::PoseStamped valve_left_pose_PoseStamped_;
+        geometry_msgs::PoseStamped valve_right_pose_PoseStamped_;
+
+        // valve model parameters needed to calculate those key poses
+        double handel_length_ = 0.3;
+        Eigen::Vector3d valve_center_position_wrt_base_ = Eigen::Vector3d(0.1, 0.0, 1.2);
+
+
+
+        void calcValveKeyPoses(){
+            valve_center_pose_PoseStamped_ = *valve_center_pose_PoseStamped_ConstPtr_;
+
+            Eigen::Affine3d valve_center_pose_Affine;
+            tf::poseMsgToEigen(valve_center_pose_PoseStamped_.pose, valve_center_pose_Affine);
+            std::cout << "valve_center_pose_Affine: " << valve_center_pose_Affine.translation().transpose() << std::endl;
+
+
+            Eigen::Affine3d valve_up_pose_Affine   ;
+            Eigen::Affine3d valve_down_pose_Affine ;
+            Eigen::Affine3d valve_left_pose_Affine ;
+            Eigen::Affine3d valve_right_pose_Affine;
+
+            Eigen::Affine3d center_T_up_Affine      = Eigen::Affine3d::Identity();
+            Eigen::Affine3d center_T_down_Affine    = Eigen::Affine3d::Identity();
+            Eigen::Affine3d center_T_left_Affine    = Eigen::Affine3d::Identity();
+            Eigen::Affine3d center_T_right_Affine   = Eigen::Affine3d::Identity();
+
+            center_T_up_Affine.translation()    = Eigen::Vector3d(0.0, 0.0, CENTER_SHIFT);
+            center_T_down_Affine.translation()  = Eigen::Vector3d(0.0, 0.0, -CENTER_SHIFT);
+            center_T_left_Affine.translation()  = Eigen::Vector3d(0.0, -CENTER_SHIFT, 0.0);
+            center_T_right_Affine.translation() = Eigen::Vector3d(0.0, CENTER_SHIFT, 0.0);
+
+            valve_up_pose_Affine    = valve_center_pose_Affine*center_T_up_Affine;
+            valve_down_pose_Affine  = valve_center_pose_Affine*center_T_down_Affine;
+            valve_left_pose_Affine  = valve_center_pose_Affine*center_T_left_Affine;
+            valve_right_pose_Affine = valve_center_pose_Affine*center_T_right_Affine;
+
+            std::cout << "valve_up_pose_Affine: " << valve_up_pose_Affine.translation().transpose() << std::endl;
+            std::cout << "valve_down_pose_Affine: " << valve_down_pose_Affine.translation().transpose() << std::endl;
+            std::cout << "valve_left_pose_Affine: " << valve_left_pose_Affine.translation().transpose() << std::endl;
+            std::cout << "valve_right_pose_Affine: " << valve_right_pose_Affine.translation().transpose() << std::endl;
+
+
+            // transfer datatype
+            tf::poseEigenToMsg(valve_up_pose_Affine, valve_up_pose_PoseStamped_.pose);
+            tf::poseEigenToMsg(valve_down_pose_Affine, valve_down_pose_PoseStamped_.pose);
+            tf::poseEigenToMsg(valve_left_pose_Affine, valve_left_pose_PoseStamped_.pose);
+            tf::poseEigenToMsg(valve_right_pose_Affine, valve_right_pose_PoseStamped_.pose);
 
         }
 

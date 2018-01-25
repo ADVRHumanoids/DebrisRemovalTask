@@ -6,10 +6,6 @@
 #include <eigen_conversions/eigen_msg.h>
 #include <kdl_conversions/kdl_msg.h>
 
-#define TRAJ_DURATION 5
-#define APPROCHING_SHIFT 0.1
-#define RETREAT_SHIFT 0.1
-#define VALVE_RADIUSE 0.2
 
 /******************************** BEGIN Homing *******************************/
 ///////////////////////////////////////////////////////////////////////////////
@@ -165,11 +161,21 @@ void myfsm::Homing::entry(const XBot::FSM::Message& msg){
     std::cout << "Move to home pose!" << std::endl;
 
 
-    // blocking call: wait for a pose on topic debris_pose
-    std::cout << "Please define the pose of the valve!" << std::endl;
-    ADVR_ROS::im_pose_msg::ConstPtr tmp;
-    tmp = ros::topic::waitForMessage<ADVR_ROS::im_pose_msg>("valve_pose");
-    shared_data()._valve_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(tmp->pose_stamped));
+//    // blocking call: wait for a pose on topic debris_pose
+//    std::cout << "Please define the pose of the valve!" << std::endl;
+//    ADVR_ROS::im_pose_msg::ConstPtr tmp;
+//    tmp = ros::topic::waitForMessage<ADVR_ROS::im_pose_msg>("valve_pose");
+//    shared_data()._valve_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(tmp->pose_stamped));
+
+    std::cout << "Please define the pose of the valve center!" << std::endl;
+    ADVR_ROS::im_pose_msg::ConstPtr valve_center_pose_msg;
+    valve_center_pose_msg = ros::topic::waitForMessage<ADVR_ROS::im_pose_msg>("valve_center_pose");
+    shared_data().valve_center_pose_PoseStamped_ConstPtr_ = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(valve_center_pose_msg->pose_stamped));
+
+    shared_data()._valve_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(valve_center_pose_msg->pose_stamped));
+    shared_data()._valve_pose->pose.position.z = shared_data()._valve_pose->pose.position.z + CENTER_SHIFT;
+
+    shared_data().calcValveKeyPoses();
 
 
     std::cout << "----------State Machine----------" << std::endl;
