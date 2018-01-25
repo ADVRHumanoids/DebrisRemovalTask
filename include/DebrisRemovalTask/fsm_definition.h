@@ -248,6 +248,8 @@ namespace myfsm{
         void calcValveKeyPoses(){
             valve_center_pose_PoseStamped_ = *valve_center_pose_PoseStamped_ConstPtr_;
 
+            // use robot
+
             Eigen::Affine3d valve_center_pose_Affine;
             tf::poseMsgToEigen(valve_center_pose_PoseStamped_.pose, valve_center_pose_Affine);
             std::cout << "valve_center_pose_Affine: " << valve_center_pose_Affine.translation().transpose() << std::endl;
@@ -265,8 +267,8 @@ namespace myfsm{
 
             center_T_up_Affine.translation()    = Eigen::Vector3d(0.0, 0.0, CENTER_SHIFT);
             center_T_down_Affine.translation()  = Eigen::Vector3d(0.0, 0.0, -CENTER_SHIFT);
-            center_T_left_Affine.translation()  = Eigen::Vector3d(0.0, -CENTER_SHIFT, 0.0);
-            center_T_right_Affine.translation() = Eigen::Vector3d(0.0, CENTER_SHIFT, 0.0);
+            center_T_left_Affine.translation()  = Eigen::Vector3d(0.0, CENTER_SHIFT, 0.0);
+            center_T_right_Affine.translation() = Eigen::Vector3d(0.0, -CENTER_SHIFT, 0.0);
 
             valve_up_pose_Affine    = valve_center_pose_Affine*center_T_up_Affine;
             valve_down_pose_Affine  = valve_center_pose_Affine*center_T_down_Affine;
