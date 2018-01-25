@@ -130,6 +130,7 @@ namespace myfsm{
       std::shared_ptr<ros::NodeHandle> _nh;
       geometry_msgs::PoseStamped::ConstPtr _debris_pose;
       geometry_msgs::PoseStamped::Ptr _valve_pose;
+
       std_msgs::String::ConstPtr _debris_number;
       std_msgs::String::ConstPtr _hand_selection;
       
@@ -167,6 +168,9 @@ namespace myfsm{
         //////////////////////////////////////////////////////////////////////////////////////////////////////
         //// valve task
         //////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        geometry_msgs::PoseStamped valve_pose_;
+
 
         XBot::RobotInterface::Ptr robot_;
         tfHandler tf_;

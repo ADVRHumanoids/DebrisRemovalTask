@@ -163,9 +163,15 @@ void myfsm::Homing::entry(const XBot::FSM::Message& msg){
 
     // blocking call: wait for a pose on topic debris_pose
     std::cout << "Please define the pose of the valve!" << std::endl;
-    ADVR_ROS::im_pose_msg::ConstPtr tmp;
-    tmp = ros::topic::waitForMessage<ADVR_ROS::im_pose_msg>("valve_pose");
-    shared_data()._valve_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(tmp->pose_stamped));
+//    ADVR_ROS::im_pose_msg::ConstPtr tmp;
+//    tmp = ros::topic::waitForMessage<ADVR_ROS::im_pose_msg>("valve_pose");
+//    shared_data()._valve_pose = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(tmp->pose_stamped));
+
+    geometry_msgs::PoseStampedConstPtr temp;
+    temp = ros::topic::waitForMessage<geometry_msgs::PoseStamped>("valve_pose");
+    shared_data().valve_pose_ = *temp;
+//    shared_data()._valve_pose = &shared_data().valve_pose_;
+
 
 //    std::cout << "Please define the pose of the valve center!" << std::endl;
 //    ADVR_ROS::im_pose_msg::ConstPtr valve_center_pose_msg;
@@ -264,7 +270,7 @@ void myfsm::ValveReach::entry(const XBot::FSM::Message& msg){
     
     // define the intermediate frame
     geometry_msgs::PoseStamped intermediate_frame;
-    intermediate_frame = *shared_data()._valve_pose;
+    intermediate_frame = shared_data().valve_pose_;
 //    intermediate_frame = shared_data().valve_left_pose_PoseStamped_;
 
     if(shared_data().selectedHand_ == "RSoftHand"){
@@ -288,7 +294,7 @@ void myfsm::ValveReach::entry(const XBot::FSM::Message& msg){
     
     // define the end frame
     geometry_msgs::PoseStamped end_frame;
-    end_frame = *shared_data()._valve_pose;
+    end_frame = shared_data().valve_pose_;
     
     
     trajectory_utils::Cartesian end;
@@ -378,7 +384,7 @@ void myfsm::ValveTurn::entry(const XBot::FSM::Message& msg){
 
     // define the start frame 
     geometry_msgs::PoseStamped start_frame;
-    start_frame = *shared_data()._valve_pose;
+    start_frame = shared_data().valve_pose_;
 
     trajectory_utils::Cartesian start;
     start.distal_frame = selectedHand;
@@ -406,12 +412,40 @@ void myfsm::ValveTurn::entry(const XBot::FSM::Message& msg){
     end_frame.pose.orientation.y = qy;
     end_frame.pose.orientation.z = qz;
     end_frame.pose.orientation.w = qw;
-    
+
+    // define new end frame
+    Eigen::Affine3d start_frame_Affine;
+    tf::poseMsgToEigen(start_frame.pose, start_frame_Affine);
+
+                       
+//    Eigen::Matrix3d R_positive90_about_z;
+//    Eigen::Matrix3d R_negative90_about_z;
+//    R_positive90_about_z = Eigen::AngleAxisd(M_PI_2, Eigen::Vector3d::UnitZ());
+//    R_negative90_about_z = Eigen::AngleAxisd(-M_PI_2, Eigen::Vector3d::UnitZ());
+
+
+    Eigen::Affine3d T_positive90_about_z = Eigen::Affine3d::Identity();
+    Eigen::Affine3d T_negative90_about_z = Eigen::Affine3d::Identity();
+    T_positive90_about_z.rotate(Eigen::AngleAxisd(M_PI_2, Eigen::Vector3d::UnitZ()));
+    T_negative90_about_z.rotate(Eigen::AngleAxisd(-M_PI_2, Eigen::Vector3d::UnitZ()));
+
+    Eigen::Affine3d end_frame_Affine;
+    end_frame_Affine = start_frame_Affine*T_positive90_about_z;
+
+
+    // todo: this is not general
+    Eigen::Vector3d plane_normal_Vector;
+    plane_normal_Vector[0] = start_frame_Affine.rotation()(0,2);
+    plane_normal_Vector[1] = start_frame_Affine.rotation()(1,2);
+    plane_normal_Vector[2] = start_frame_Affine.rotation()(2,2);
 
     geometry_msgs::Vector3 plane_normal;
-    plane_normal.x = -1;
-    plane_normal.y = 0;
-    plane_normal.z = 0;
+    plane_normal.x = plane_normal_Vector[0];
+    plane_normal.y = plane_normal_Vector[1];
+    plane_normal.z = plane_normal_Vector[2];
+
+
+
 //     if(selectedHand == "LSoftHand"){
 //            plane_normal.x = 1;
 //     }
@@ -455,7 +489,7 @@ void myfsm::ValveTurn::entry(const XBot::FSM::Message& msg){
     
     //compute last pose
     geometry_msgs::PoseStamped last_frame;
-    last_frame = *shared_data()._valve_pose;
+    last_frame = shared_data().valve_pose_;
     
     if(selectedHand == "RSoftHand"){
         last_frame.pose.position.y+=VALVE_RADIUSE;
@@ -541,7 +575,7 @@ void myfsm::ValveGoBack::entry(const XBot::FSM::Message& msg){
     
     // define the intermediate frame
     geometry_msgs::PoseStamped intermediate_frame;
-    intermediate_frame = *shared_data()._valve_pose;
+    intermediate_frame = shared_data().valve_pose_;
 //     intermediate_frame.pose.position.z += 0.2;
     
     
@@ -559,7 +593,7 @@ void myfsm::ValveGoBack::entry(const XBot::FSM::Message& msg){
     
     // define the end frame
     geometry_msgs::PoseStamped end_frame;
-    end_frame = *shared_data()._valve_pose;
+    end_frame = shared_data().valve_pose_;
     
     if(selectedHand == "RSoftHand"){
     end_frame.pose.position.y-= RETREAT_SHIFT;
