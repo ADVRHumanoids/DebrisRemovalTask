@@ -46,24 +46,10 @@ pose_stamped:
       w: 0.7071068"
 ```
    
-   
+or
+
 ```
-rostopic pub /valve_pose geometry_msgs/PoseStamped "header:
-  seq: 0
-  stamp:
-    secs: 0
-    nsecs: 0
-  frame_id: ''
-pose:
-  position:
-    x: 0.8
-    y: -0.4
-    z: 1.4
-  orientation:
-    x: 0.0
-    y: -0.7071068
-    z: 0.0
-    w: 0.7071068" 
+./pubValvePoseWrtWorldOdom.py
 ```
            
 4) press on button _success_ or _fail_ to make finite state machine transits to next state.
