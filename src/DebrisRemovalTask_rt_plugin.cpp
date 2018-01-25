@@ -59,7 +59,6 @@ bool DebrisRemovalTask::init_control_plugin(XBot::Handle::Ptr handle)
     fsm.shared_data()._grasp_client = fsm.shared_data()._nh->serviceClient<ADVR_ROS::advr_grasp_control_srv>("grasp_control");
     
     fsm.shared_data()._hand_over_phase = false;
-
     
     /*Saves robot as shared variable between states*/
     fsm.shared_data()._robot = handle->getRobotInterface();
@@ -69,21 +68,16 @@ bool DebrisRemovalTask::init_control_plugin(XBot::Handle::Ptr handle)
     fsm.register_state(std::make_shared<myfsm::Homing_Ree>());
     fsm.register_state(std::make_shared<myfsm::Homing_Lee>());
     fsm.register_state(std::make_shared<myfsm::HandSelection>());
-    fsm.register_state(std::make_shared<myfsm::Reached>());
-    fsm.register_state(std::make_shared<myfsm::Grasped>());
-    fsm.register_state(std::make_shared<myfsm::Picked>());
+    fsm.register_state(std::make_shared<myfsm::Reach>());
+    fsm.register_state(std::make_shared<myfsm::Grasp>());
+    fsm.register_state(std::make_shared<myfsm::Pick>());
     fsm.register_state(std::make_shared<myfsm::PickSecondHand>());
-
-    fsm.register_state(std::make_shared<myfsm::MovedAway>());
-    fsm.register_state(std::make_shared<myfsm::PlacedDown>());
-    fsm.register_state(std::make_shared<myfsm::Ungrasped>());
+    fsm.register_state(std::make_shared<myfsm::MoveAway>());
+    fsm.register_state(std::make_shared<myfsm::PlaceDown>());
+    fsm.register_state(std::make_shared<myfsm::Ungrasp>());
     fsm.register_state(std::make_shared<myfsm::Adjust>());
-    
-
 
     return true;
-
-
 }
 
 void DebrisRemovalTask::on_manipulation_status(const std_msgs::Bool::ConstPtr& msg)

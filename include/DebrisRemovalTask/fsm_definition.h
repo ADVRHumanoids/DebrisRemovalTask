@@ -110,11 +110,8 @@ namespace myfsm{
       std_msgs::String::ConstPtr _hand_selection;
       ros::ServiceClient _client;
       std::shared_ptr<XBot::Command> current_command;
-      ros::Publisher _grasp_mag_pub_LSoftHand;
-      ros::Publisher _grasp_mag_pub_RSoftHand;
       geometry_msgs::WrenchStamped::ConstPtr _ft_r_arm;
       double _w_F_ft_initial;
-//       Eigen::Vector3d _RH_Rot_Z;
       bool _feedback;
       ros::Publisher _SoftHandPose_pub;
       geometry_msgs::PoseStamped::ConstPtr _initial_pose_left_hand;
@@ -207,26 +204,9 @@ namespace myfsm{
 
 
      };
-    class Reached : public MacroState {
+    class Reach : public MacroState {
 
-      virtual std::string get_name() const { return "Reached"; }
-
-      virtual void run(double time, double period);
-
-      virtual void entry(const XBot::FSM::Message& msg);
-
-      virtual void react(const XBot::FSM::Event& e);
-
-      virtual void exit ();
-
-      private:
-
-
-     };
- 
-    class Grasped : public MacroState {
-
-      virtual std::string get_name() const { return "Grasped"; }
+      virtual std::string get_name() const { return "Reach"; }
 
       virtual void run(double time, double period);
 
@@ -241,9 +221,26 @@ namespace myfsm{
 
      };
  
-    class Picked : public MacroState {
+    class Grasp : public MacroState {
 
-      virtual std::string get_name() const { return "Picked"; }
+      virtual std::string get_name() const { return "Grasp"; }
+
+      virtual void run(double time, double period);
+
+      virtual void entry(const XBot::FSM::Message& msg);
+
+      virtual void react(const XBot::FSM::Event& e);
+
+      virtual void exit ();
+
+      private:
+
+
+     };
+ 
+    class Pick : public MacroState {
+
+      virtual std::string get_name() const { return "Pick"; }
 
       virtual void run(double time, double period);
 
@@ -275,9 +272,9 @@ namespace myfsm{
 
      }; 
  
-    class MovedAway : public MacroState {
+    class MoveAway : public MacroState {
 
-      virtual std::string get_name() const { return "MovedAway"; }
+      virtual std::string get_name() const { return "MoveAway"; }
 
       virtual void run(double time, double period);
 
@@ -292,9 +289,9 @@ namespace myfsm{
 
      };
  
-    class PlacedDown : public MacroState {
+    class PlaceDown : public MacroState {
 
-      virtual std::string get_name() const { return "PlacedDown"; }
+      virtual std::string get_name() const { return "PlaceDown"; }
 
       virtual void run(double time, double period);
 
@@ -309,9 +306,9 @@ namespace myfsm{
 
      };
      
-    class Ungrasped : public MacroState {
+    class Ungrasp : public MacroState {
 
-      virtual std::string get_name() const { return "Ungrasped"; }
+      virtual std::string get_name() const { return "Ungrasp"; }
 
       virtual void run(double time, double period);
 
