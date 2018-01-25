@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 
 """
-This script return the pose of specified model wrt gazebo world frame
+This script pub a valve pose topic wrt world odom (feet center of walkman robot)
 
 usage:
-./getModelPose.py valve
-./getModelPose.py walkman
+./pubValvePoseWrtWorldOdom.py
 """
+
+
+# this program is used to publish the pose of valve, walkman in gound frame and also valve wrt walkman
 
 import sys
 import rospy
@@ -29,12 +31,9 @@ def usage():
 
 
 if __name__ == "__main__":
-    if len(sys.argv) == 2:
-        model_name = sys.argv[1]
-        # relative_entity_name = sys.argv[2]
-        relative_entity_name = "world"
-    else:
-        print(usage())
-        sys.exit(1)
-    res = gms_client(model_name,relative_entity_name)
-    print("res", res)
+
+    valve_pose_msg = gms_client('valve','world')
+    walkman_pose_msg = gms_client('walkman','world')
+
+    print("valve_pose_msg", valve_pose_msg)
+    print("walkman_pose_msg", walkman_pose_msg)
