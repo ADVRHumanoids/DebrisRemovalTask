@@ -22,3 +22,12 @@ NRTDeployer $ROBOTOLOGY_ROOT/configs/ADVR_shared/user_example/walkman_debris.yam
 ```cpp
 XBotGUI $ROBOTOLOGY_ROOT/configs/ADVR_shared/user_example/walkman_debris_gui.yaml
 ```
+
+To retrieve the pose of the end effectors from the terminal run:
+```cpp
+rosrun robot_state_publisher robot_state_publisher
+```
+
+```cpp
+rosrun tf tf_echo /world_odom /RSoftHand
+```
