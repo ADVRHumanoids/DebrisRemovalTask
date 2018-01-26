@@ -111,7 +111,7 @@ void myfsm::Homing_Ree::entry(const XBot::FSM::Message& msg){
     // define the first segment
     trajectory_utils::segment s1;
     s1.type.data = 0;        // min jerk traj
-    s1.T.data = TRAJ_DURATION/5;         // traj duration 5 second      
+    s1.T.data = TRAJ_DURATION;         // traj duration 5 second      
     s1.start = start;        // start pose
     s1.end = end;            // end pose 
     
@@ -126,7 +126,9 @@ void myfsm::Homing_Ree::entry(const XBot::FSM::Message& msg){
     srv.request.segment_trj.segments = segments;
     
     // call the service
-    shared_data()._client.call(srv);    
+    shared_data()._client.call(srv);
+    
+    std::cout << "Homing_Ree run. Homing_Ree--->Homing_Lee"<< std::endl;
     
 }
 
@@ -172,6 +174,18 @@ void myfsm::Homing_Lee::entry(const XBot::FSM::Message& msg){
     start.distal_frame = "LSoftHand";
     start.frame = start_frame;
     
+    // define the potential intermediate frame
+    trajectory_utils::Cartesian intermediate;
+    if(shared_data()._hand_over_phase){
+      geometry_msgs::PoseStamped intermediate_frame;
+      intermediate_frame = *shared_data()._last_pose_left_hand;
+      intermediate_frame.pose.position.x+= 0.08;
+      intermediate_frame.pose.position.y+= 0.08;
+      
+      intermediate.distal_frame = "LSoftHand";
+      intermediate.frame = intermediate_frame;
+    }
+    
     // define the end frame
     geometry_msgs::PoseStamped end_frame;
     end_frame = *shared_data()._initial_pose_left_hand;
@@ -192,15 +206,23 @@ void myfsm::Homing_Lee::entry(const XBot::FSM::Message& msg){
     shared_data()._last_pose_left_hand = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(end_frame));
 
     // define the first segment
-    trajectory_utils::segment s1;
+    trajectory_utils::segment s1,s2;
     s1.type.data = 0;        // min jerk traj
-    s1.T.data = TRAJ_DURATION/5;         // traj duration 5 second      
+    s1.T.data = TRAJ_DURATION;         // traj duration 5 second      
     s1.start = start;        // start pose
-    s1.end = end;            // end pose 
+    if(shared_data()._hand_over_phase){
+      s1.end = intermediate;
+      s2.type.data = 0;        // min jerk traj
+      s2.T.data = TRAJ_DURATION;         // traj duration 5 second      
+      s2.start = intermediate;        // start pose
+      s2.end = end;            // end pose 
+    }else
+      s1.end = end;            // end pose 
     
-    // only one segment in this example
     std::vector<trajectory_utils::segment> segments;
     segments.push_back(s1);
+    if(shared_data()._hand_over_phase)
+      segments.push_back(s2);
     
     // prepare the advr_segment_control
     ADVR_ROS::advr_segment_control srv;
@@ -211,7 +233,7 @@ void myfsm::Homing_Lee::entry(const XBot::FSM::Message& msg){
     // call the service
     shared_data()._client.call(srv);    
     
-    std::cout << "Homing_Lee run. 'success'->HandSelection\t'fail'-> Homing\t'Handover_success'->MoveAway"<< std::endl;
+    std::cout << "Homing_Lee run. 'success'->HandSelection\t'fail'->Homing\t'Handover_success'->MoveAway"<< std::endl;
     
 }
 
@@ -509,7 +531,7 @@ void myfsm::Grasp::run(double time, double period){
       // Movedaway after handover
       if (!shared_data().current_command->str().compare("After_handover") && shared_data()._hand_over_phase){
 
-        shared_data()._hand_over_phase = false;
+//         shared_data()._hand_over_phase = false;
   
         //Ungrasp left hand
         ADVR_ROS::advr_grasp_control_srv srv;
@@ -585,14 +607,23 @@ void myfsm::Pick::entry(const XBot::FSM::Message& msg){
       
     }else if(!selectedHand.compare("LSoftHand")){
 
-      end_frame.pose.position.x = 0.5;
-      end_frame.pose.position.y = 0.03;
+//       end_frame.pose.position.x = 0.5;
+//       end_frame.pose.position.y = 0.03;
+//       end_frame.pose.position.z = 1.00;   
+// 
+//       end_frame.pose.orientation.x = -0.225;
+//       end_frame.pose.orientation.y = -0.592;
+//       end_frame.pose.orientation.z = -0.432;
+//       end_frame.pose.orientation.w = 0.641;
+      
+      end_frame.pose.position.x = 0.4;
+      end_frame.pose.position.y = 0.0;
       end_frame.pose.position.z = 1.00;   
 
-      end_frame.pose.orientation.x = -0.225;
-      end_frame.pose.orientation.y = -0.592;
-      end_frame.pose.orientation.z = -0.432;
-      end_frame.pose.orientation.w = 0.641;
+      end_frame.pose.orientation.x = -0.5;
+      end_frame.pose.orientation.y = -0.5;
+      end_frame.pose.orientation.z = -0.5;
+      end_frame.pose.orientation.w = 0.5;
       
       shared_data()._last_pose_left_hand = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(end_frame));
       
@@ -808,8 +839,8 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
     poseHoldingHand_KDL_2.p.x(0.25);
 //     poseHoldingHand_KDL_2.p.y(-0.05);
 //     poseHoldingHand_KDL_2.p.z(0.05);
-    poseHoldingHand_KDL_2.p.y(-0.01);
-    poseHoldingHand_KDL_2.p.z(0.05);
+    poseHoldingHand_KDL_2.p.y(-0.02);
+    poseHoldingHand_KDL_2.p.z(0.0); //0.05
     
     tf::transformKDLToEigen(poseHoldingHand_KDL_2,poseSecondHand_Affine);
     
@@ -960,7 +991,9 @@ void myfsm::MoveAway::entry(const XBot::FSM::Message& msg){
     else if(!selectedHand.compare("LSoftHand"))
       intermediate_frame.pose.position.y = 0.393;
     
-    intermediate_frame.pose.position.z = 1.09;     
+    intermediate_frame.pose.position.z = 1.09;
+    if(shared_data()._hand_over_phase)
+      intermediate_frame.pose.position.z+= 0.15;
     
     intermediate_frame.pose.orientation.x = 0.0;
     intermediate_frame.pose.orientation.y = -0.7071070192004544;
@@ -986,9 +1019,14 @@ void myfsm::MoveAway::entry(const XBot::FSM::Message& msg){
     
     if(!selectedHand.compare("RSoftHand")){
       
-      end_frame.pose.position.x = 0.4;
-      end_frame.pose.position.y = -0.68;
+      end_frame.pose.position.x = 0.3; //0.4
+      end_frame.pose.position.y = -0.75; //-0.68
       end_frame.pose.position.z = 1.05;
+      
+      if(shared_data()._hand_over_phase){
+        end_frame.pose.position.z+= 0.15;
+        shared_data()._hand_over_phase = false;
+      }
     
       end_frame.pose.orientation.x = -0.386;
       end_frame.pose.orientation.y = -0.429;
@@ -1137,7 +1175,7 @@ void myfsm::PlaceDown::entry(const XBot::FSM::Message& msg){
     geometry_msgs::PoseStamped end_frame;
     end_frame = start_frame;
     
-    end_frame.pose.position.z-= 0.10;
+    end_frame.pose.position.z-= 0.13;
     
     
     trajectory_utils::Cartesian end;

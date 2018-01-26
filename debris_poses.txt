@@ -1,5 +1,5 @@
 DEBRIS 1 (RIGHT)
-rostopic pub /debris_pose ADVR_ROS/im_pose_msg "name: ''
+rostopic pub --once /debris_pose ADVR_ROS/im_pose_msg "name: ''
 pose_stamped:
   header:
     seq: 0
@@ -9,9 +9,9 @@ pose_stamped:
     frame_id: ''
   pose:
     position:
-      x: 0.619
+      x: 0.6
       y: -0.29
-      z: 0.873
+      z: 0.95
     orientation:
       x: 0.0
       y: -0.5591931143131625
@@ -21,7 +21,7 @@ pose_stamped:
 ----------------------------------------------------------------------------
 
 DEBRIS 2 (CENTER)
-rostopic pub /debris_pose ADVR_ROS/im_pose_msg "name: ''
+rostopic pub --once /debris_pose ADVR_ROS/im_pose_msg "name: ''
 pose_stamped:
   header:
     seq: 0
@@ -31,9 +31,9 @@ pose_stamped:
     frame_id: ''
   pose:
     position:
-      x: 0.619
+      x: 0.6
       y: -0.09
-      z: 0.873
+      z: 0.95
     orientation:
       x: 0.0
       y: -0.5591931143131625
@@ -43,7 +43,7 @@ pose_stamped:
 ----------------------------------------------------------------------------
 
 DEBRIS 3 (LEFT)
-rostopic pub /debris_pose ADVR_ROS/im_pose_msg "name: ''
+rostopic pub --once /debris_pose ADVR_ROS/im_pose_msg "name: ''
 pose_stamped:
   header:
     seq: 0
