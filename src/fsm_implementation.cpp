@@ -91,15 +91,15 @@ void myfsm::Homing_Ree::entry(const XBot::FSM::Message& msg){
     
     // define the end frame
     geometry_msgs::PoseStamped end_frame;
-    end_frame = *shared_data()._initial_pose_right_hand;
-//     end_frame.pose.position.x = 0.248;
-//     end_frame.pose.position.y = -0.471;
-//     end_frame.pose.position.z = 0.969;     
-//     
-//     end_frame.pose.orientation.x = -0.091;
-//     end_frame.pose.orientation.y = -0.456;
-//     end_frame.pose.orientation.z = 0.19;
-//     end_frame.pose.orientation.w = 0.864;
+//     end_frame = *shared_data()._initial_pose_right_hand;
+    end_frame.pose.position.x = 0.248;
+    end_frame.pose.position.y = -0.471;
+    end_frame.pose.position.z = 0.969;     
+    
+    end_frame.pose.orientation.x = -0.091;
+    end_frame.pose.orientation.y = -0.456;
+    end_frame.pose.orientation.z = 0.19;
+    end_frame.pose.orientation.w = 0.864;
     
     trajectory_utils::Cartesian end;
     end.distal_frame = "RSoftHand";
@@ -188,15 +188,15 @@ void myfsm::Homing_Lee::entry(const XBot::FSM::Message& msg){
     
     // define the end frame
     geometry_msgs::PoseStamped end_frame;
-    end_frame = *shared_data()._initial_pose_left_hand;
-//     end_frame.pose.position.x = 0.248;
-//     end_frame.pose.position.y = 0.471;
-//     end_frame.pose.position.z = 0.969;     
-//     
-//     end_frame.pose.orientation.x = 0.091;
-//     end_frame.pose.orientation.y = -0.456;
-//     end_frame.pose.orientation.z = -0.19;
-//     end_frame.pose.orientation.w = 0.864;     
+//     end_frame = *shared_data()._initial_pose_left_hand;
+    end_frame.pose.position.x = 0.248;
+    end_frame.pose.position.y = 0.471;
+    end_frame.pose.position.z = 0.969;     
+    
+    end_frame.pose.orientation.x = 0.091;
+    end_frame.pose.orientation.y = -0.456;
+    end_frame.pose.orientation.z = -0.19;
+    end_frame.pose.orientation.w = 0.864;     
     
     trajectory_utils::Cartesian end;
     end.distal_frame = "LSoftHand";
