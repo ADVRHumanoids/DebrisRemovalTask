@@ -128,16 +128,32 @@ void myfsm::Homing_Ree::entry(const XBot::FSM::Message& msg){
     // call the service
     shared_data()._client.call(srv);
     
-    std::cout << "Homing_Ree run. Homing_Ree--->Homing_Lee"<< std::endl;
-    
+//     std::cout << "Homing_Ree run. Homing_Ree--->Homing_Lee"<< std::endl;
+    std::cout << "Homing_Ree run. 'success'->Homing_Lee\t'fail'->Homing_Ree"<< std::endl;
+
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::Homing_Ree::run(double time, double period){
   
-  //Wait for the trajectory to be completed
-  if(!shared_data()._feedback)
-    transit("Homing_Lee");
+//   //Wait for the trajectory to be completed
+//   if(!shared_data()._feedback)
+//     transit("Homing_Lee");
+  
+  // blocking reading: wait for a command
+  if(!shared_data().current_command->str().empty())
+  {
+    std::cout << "Command: " << shared_data().current_command->str() << std::endl;
+
+    // Homing_Ree failed
+    if (!shared_data().current_command->str().compare("fail"))
+      transit("Homing_Ree");
+    
+    // Homing_Ree succeeded
+    if (!shared_data().current_command->str().compare("success"))
+      transit("Homing_Lee");
+   
+  }
 
 }
 
