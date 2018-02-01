@@ -20,29 +20,7 @@ pose_stamped:
 
 ----------------------------------------------------------------------------
 
-DEBRIS 2 (CENTER)
-rostopic pub --once /debris_pose ADVR_ROS/im_pose_msg "name: ''
-pose_stamped:
-  header:
-    seq: 0
-    stamp:
-      secs: 0
-      nsecs: 0
-    frame_id: ''
-  pose:
-    position:
-      x: 0.68
-      y: -0.08
-      z: 0.95
-    orientation:
-      x: 0.0
-      y: -0.5591931143131625
-      z: 0.0
-      w: 0.8290374303399975"
-
-----------------------------------------------------------------------------
-
-DEBRIS 3 (LEFT)
+DEBRIS 2 (LEFT)
 rostopic pub --once /debris_pose ADVR_ROS/im_pose_msg "name: ''
 pose_stamped:
   header:

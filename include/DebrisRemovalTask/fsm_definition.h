@@ -323,9 +323,9 @@ namespace myfsm{
 
      };
 
-    class Adjust : public MacroState {
+    class AdjustLaterally : public MacroState {
 
-      virtual std::string get_name() const { return "Adjust"; }
+      virtual std::string get_name() const { return "AdjustLaterally"; }
 
       virtual void run(double time, double period);
 
@@ -338,6 +338,23 @@ namespace myfsm{
       private:
 
 
-     };     
+     };
+     
+    class AdjustForward : public MacroState {
+
+      virtual std::string get_name() const { return "AdjustForward"; }
+
+      virtual void run(double time, double period);
+
+      virtual void entry(const XBot::FSM::Message& msg);
+
+      virtual void react(const XBot::FSM::Event& e);
+
+      virtual void exit ();
+
+      private:
+
+
+     }; 
       
 }

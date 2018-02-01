@@ -75,7 +75,8 @@ bool DebrisRemovalTask::init_control_plugin(XBot::Handle::Ptr handle)
     fsm.register_state(std::make_shared<myfsm::MoveAway>());
     fsm.register_state(std::make_shared<myfsm::PlaceDown>());
     fsm.register_state(std::make_shared<myfsm::Ungrasp>());
-    fsm.register_state(std::make_shared<myfsm::Adjust>());
+    fsm.register_state(std::make_shared<myfsm::AdjustLaterally>());
+    fsm.register_state(std::make_shared<myfsm::AdjustForward>());
 
     return true;
 }

@@ -377,7 +377,7 @@ void myfsm::Reach::entry(const XBot::FSM::Message& msg){
     
     if(selectedHand.compare("RSoftHand") || selectedHand.compare("LSoftHand")){
         std::cout << "\n\n" << 
-              "\033[1m************Reach state*************\033[0m\n" <<
+              "\033[1m**************Reach state***************\033[0m\n" <<
               "\033[1mSelect the pose where the debris is. \033[0m" << std::endl;
     }else
       std::cout << "Incorrect input, you need to publish a different message" << std::endl;
@@ -410,7 +410,7 @@ void myfsm::Reach::entry(const XBot::FSM::Message& msg){
 
     if(!selectedHand.compare("RSoftHand")){
       intermediate_frame.pose.position.x-= 0.2;
-      intermediate_frame.pose.position.y-= 0.2;
+//       intermediate_frame.pose.position.y-= 0.2;
     }else if(!selectedHand.compare("LSoftHand")){
       intermediate_frame.pose.position.x-= 0.2;
       intermediate_frame.pose.position.y+= 0.2;
@@ -464,10 +464,11 @@ void myfsm::Reach::entry(const XBot::FSM::Message& msg){
     shared_data()._client.call(srv);
 
     std::cout <<  "\033[1mPose selected.\033[0m\n" <<
-                 "\033[92m 'success' ---> Grasp \033[0m\n" <<
-                 "\033[91m   'fail'  ---> Homing_Ree \033[0m\n" <<
-                 "\033[93m  'adjust' ---> Adjust \033[0m\n" <<
-                  "\033[1m************************************\033[0m\n" << std::endl;
+                 "\033[92m     'success'     ---> Grasp \033[0m\n" <<
+                 "\033[91m       'fail'      ---> Homing_Ree \033[0m\n" <<
+                 "\033[93m 'AdjustLaterally' ---> AdjustLaterally \033[0m\n" <<
+                 "\033[93m  'AdjustForward'  ---> AdjustForward \033[0m\n" <<
+                  "\033[1m****************************************\033[0m\n" << std::endl;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -486,9 +487,13 @@ void myfsm::Reach::run(double time, double period){
     if (!shared_data().current_command->str().compare("success"))
       transit("Grasp");
     
-    // Adjust
-    if (!shared_data().current_command->str().compare("Adjust"))
-      transit("Adjust");
+    // AdjustLaterally
+    if (!shared_data().current_command->str().compare("AdjustLaterally"))
+      transit("AdjustLaterally");
+    
+    // AdjustForward
+    if (!shared_data().current_command->str().compare("AdjustForward"))
+      transit("AdjustForward");    
   } 
 
 }
@@ -1218,7 +1223,7 @@ void myfsm::PlaceDown::entry(const XBot::FSM::Message& msg){
     geometry_msgs::PoseStamped end_frame;
     end_frame = start_frame;
     
-    end_frame.pose.position.z-= 0.13;
+    end_frame.pose.position.z-= 0.08;
     
     
     trajectory_utils::Cartesian end;
@@ -1438,17 +1443,17 @@ void myfsm::Ungrasp::exit (){
 /****************************** END Ungrasp *******************************/
 
 
-/******************************* BEGIN Adjust *******************************/
+/******************************* BEGIN AdjustLaterally *******************************/
 
 ///////////////////////////////////////////////////////////////////////////////
-void myfsm::Adjust::react(const XBot::FSM::Event& e) {
+void myfsm::AdjustLaterally::react(const XBot::FSM::Event& e) {
 
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-void myfsm::Adjust::entry(const XBot::FSM::Message& msg){
+void myfsm::AdjustLaterally::entry(const XBot::FSM::Message& msg){
 
-    shared_data().plugin_status->setStatus("ADJUST");
+    shared_data().plugin_status->setStatus("ADJUSTLATERALLY");
     
     //CALL SERVICE TO MOVE
 
@@ -1516,27 +1521,31 @@ void myfsm::Adjust::entry(const XBot::FSM::Message& msg){
     // call the service
     shared_data()._client.call(srv);
     
-    std::cout << "Adjust run. 'success'->Grasp\t'fail'-> Adjust" << std::endl;
     std::cout << "\n\n" << 
-              "\033[1m*****Adjust state******\033[0m\n" <<
-             "\033[92m 'success' ---> Grasp \033[0m\n" <<
-             "\033[91m   'fail'  ---> Adjust \033[0m\n" <<
-              "\033[1m***********************\033[0m\n" << std::endl;
+              "\033[1m*********AdjustLaterally state**********\033[0m\n" <<
+             "\033[92m      'success'    ---> Grasp \033[0m\n" <<
+             "\033[91m 'AdjustLaterally' ---> AdjustLaterally \033[0m\n" <<
+             "\033[91m  'AdjustForward'  ---> AdjustForward \033[0m\n" <<
+              "\033[1m****************************************\033[0m\n" << std::endl;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-void myfsm::Adjust::run(double time, double period){
+void myfsm::AdjustLaterally::run(double time, double period){
 
   // blocking reading: wait for a command
   if(!shared_data().current_command->str().empty())
   {
     std::cout << "Command: " << shared_data().current_command->str() << std::endl;
 
-    // Adjust failed
-    if (!shared_data().current_command->str().compare("fail"))
-      transit("Adjust");
+    // AdjustLaterally
+    if (!shared_data().current_command->str().compare("AdjustLaterally"))
+      transit("AdjustLaterally");
     
-    // Adjust Succeeded
+    // AdjustForward
+    if (!shared_data().current_command->str().compare("AdjustForward"))
+      transit("AdjustForward");
+    
+    // AdjustLaterally Succeeded
     if (!shared_data().current_command->str().compare("success"))
       transit("Grasp");
     
@@ -1544,8 +1553,117 @@ void myfsm::Adjust::run(double time, double period){
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-void myfsm::Adjust::exit (){
+void myfsm::AdjustLaterally::exit (){
 
 }
 
-/********************************* END Adjust *******************************/
+/********************************* END AdjustLaterally *******************************/
+
+
+/******************************* BEGIN AdjustForward *******************************/
+
+///////////////////////////////////////////////////////////////////////////////
+void myfsm::AdjustForward::react(const XBot::FSM::Event& e) {
+
+}
+
+///////////////////////////////////////////////////////////////////////////////
+void myfsm::AdjustForward::entry(const XBot::FSM::Message& msg){
+
+    shared_data().plugin_status->setStatus("ADJUSTFORWARD");
+    
+    //CALL SERVICE TO MOVE
+
+    //HAND
+    //Hand selection
+    std_msgs::String message;
+    message = *shared_data()._hand_selection;    
+    std::string selectedHand;
+    selectedHand = message.data;
+    
+//     std::cout << "SelectedHand: " << message.data << std::endl;
+
+    // define the start frame 
+    geometry_msgs::PoseStamped start_frame;
+    if(!selectedHand.compare("RSoftHand"))
+      start_frame = *shared_data()._last_pose_right_hand;
+    else if(!selectedHand.compare("LSoftHand"))
+      start_frame = *shared_data()._last_pose_left_hand;
+    
+    trajectory_utils::Cartesian start;
+    start.distal_frame = selectedHand;
+    start.frame = start_frame;
+    
+    // define the end frame
+    geometry_msgs::PoseStamped end_frame;
+    
+    end_frame = start_frame;
+    end_frame.pose.position.x+=0.01;
+    
+    if(!selectedHand.compare("RSoftHand"))
+      shared_data()._last_pose_right_hand = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(end_frame));
+    else if(!selectedHand.compare("LSoftHand"))
+      shared_data()._last_pose_left_hand = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(end_frame));
+       
+
+    trajectory_utils::Cartesian end;
+    end.distal_frame = selectedHand;
+    end.frame = end_frame;
+    
+    // define the first segment
+    trajectory_utils::segment s1;
+    s1.type.data = 0;        // min jerk traj
+    s1.T.data = 3;         // traj duration 5 second      
+    s1.start = start;        // start pose
+    s1.end = end;            // end pose 
+    
+    // only one segment in this example
+    std::vector<trajectory_utils::segment> segments;
+    segments.push_back(s1);
+    
+    // prepare the advr_segment_control
+    ADVR_ROS::advr_segment_control srv;
+    srv.request.segment_trj.header.frame_id = "world_odom";
+    srv.request.segment_trj.header.stamp = ros::Time::now();
+    srv.request.segment_trj.segments = segments;
+    
+    // call the service
+    shared_data()._client.call(srv);
+    
+    std::cout << "\n\n" << 
+              "\033[1m**********AdjustForward state***********\033[0m\n" <<
+             "\033[92m      'success'    ---> Grasp \033[0m\n" <<
+             "\033[91m 'AdjustLaterally' ---> AdjustLaterally \033[0m\n" <<
+             "\033[91m  'AdjustForward'  ---> AdjustForward \033[0m\n" <<
+              "\033[1m****************************************\033[0m\n" << std::endl;              
+}
+
+///////////////////////////////////////////////////////////////////////////////
+void myfsm::AdjustForward::run(double time, double period){
+
+  // blocking reading: wait for a command
+  if(!shared_data().current_command->str().empty())
+  {
+    std::cout << "Command: " << shared_data().current_command->str() << std::endl;
+
+    // AdjustLaterally
+    if (!shared_data().current_command->str().compare("AdjustLaterally"))
+      transit("AdjustLaterally");
+    
+    // AdjustForward
+    if (!shared_data().current_command->str().compare("AdjustForward"))
+      transit("AdjustForward");
+    
+    // AdjustForward Succeeded
+    if (!shared_data().current_command->str().compare("success"))
+      transit("Grasp");
+    
+  } 
+}
+
+///////////////////////////////////////////////////////////////////////////////
+void myfsm::AdjustForward::exit (){
+
+}
+
+/********************************* END AdjustForward *******************************/
