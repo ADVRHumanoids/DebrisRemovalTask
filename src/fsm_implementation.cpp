@@ -92,9 +92,9 @@ void myfsm::Homing_Ree::entry(const XBot::FSM::Message& msg){
     // define the end frame
     geometry_msgs::PoseStamped end_frame;
 //     end_frame = *shared_data()._initial_pose_right_hand;
-    end_frame.pose.position.x = 0.248;
+    end_frame.pose.position.x = 0.1; //0.248;
     end_frame.pose.position.y = -0.471;
-    end_frame.pose.position.z = 0.969;     
+    end_frame.pose.position.z = 1.15; //0.969;     
     
     end_frame.pose.orientation.x = -0.091;
     end_frame.pose.orientation.y = -0.456;
@@ -127,9 +127,11 @@ void myfsm::Homing_Ree::entry(const XBot::FSM::Message& msg){
     
     // call the service
     shared_data()._client.call(srv);
-    
-//     std::cout << "Homing_Ree run. Homing_Ree--->Homing_Lee"<< std::endl;
-    std::cout << "Homing_Ree run. 'success'->Homing_Lee\t'fail'->Homing_Ree"<< std::endl;
+    std::cout << "\n\n" << 
+                  "\033[1m*****Homing_Ree state******\033[0m\n" <<
+                 "\033[92m 'success' ---> Homing_Lee \033[0m\n" <<
+                 "\033[91m   'fail'  ---> Homing_Ree \033[0m\n" <<
+                  "\033[1m***************************\033[0m\n" << std::endl;
 
 }
 
@@ -205,9 +207,9 @@ void myfsm::Homing_Lee::entry(const XBot::FSM::Message& msg){
     // define the end frame
     geometry_msgs::PoseStamped end_frame;
 //     end_frame = *shared_data()._initial_pose_left_hand;
-    end_frame.pose.position.x = 0.248;
+    end_frame.pose.position.x = 0.1; //0.248;
     end_frame.pose.position.y = 0.471;
-    end_frame.pose.position.z = 0.969;     
+    end_frame.pose.position.z = 1.15; //0.969;     
     
     end_frame.pose.orientation.x = 0.091;
     end_frame.pose.orientation.y = -0.456;
@@ -249,7 +251,12 @@ void myfsm::Homing_Lee::entry(const XBot::FSM::Message& msg){
     // call the service
     shared_data()._client.call(srv);    
     
-    std::cout << "Homing_Lee run. 'success'->HandSelection\t'fail'->Homing\t'Handover_success'->MoveAway"<< std::endl;
+    std::cout << "\n\n" << 
+                  "\033[1m***********Homing_Lee state************\033[0m\n" <<
+                 "\033[92m    'success'       ---> HandSelection \033[0m\n" <<
+                 "\033[91m      'fail'        ---> Homing_Ree \033[0m\n" <<
+                 "\033[93m 'Handover_success' ---> MoveAway \033[0m\n" <<
+                  "\033[1m***************************************\033[0m\n" << std::endl;
     
 }
 
@@ -298,9 +305,13 @@ void myfsm::HandSelection::entry(const XBot::FSM::Message& msg){
 
     shared_data().plugin_status->setStatus("HANDSELECTION");
       
-    std::cout << "HandSelection_entry" << std::endl;
+    std::cout << "\n\n" << 
+                 "\033[1m**********HandSelection state***********\033[0m\n" <<
+                 "\033[1mSelect the End Effector you want to use.\033[0m\n" <<
+                 "\033[1m   'RSoftHand'  ---> Right Hand\033[0m\n" <<
+                 "\033[1m   'LSoftHand'  ---> Left Hand\033[0m\n" <<
+                 "\033[1m****************************************\033[0m\n" << std::endl;
     
-    std::cout << "Select the End Effector you want to use." << std::endl;
 
 
 }
@@ -364,9 +375,11 @@ void myfsm::Reach::entry(const XBot::FSM::Message& msg){
     
     std::cout << "SelectedHand: " << message.data << std::endl;
     
-    if(selectedHand.compare("RSoftHand") || selectedHand.compare("LSoftHand"))
-      std::cout << "Select the pose where the debris is." << std::endl;
-    else
+    if(selectedHand.compare("RSoftHand") || selectedHand.compare("LSoftHand")){
+        std::cout << "\n\n" << 
+              "\033[1m************Reach state*************\033[0m\n" <<
+              "\033[1mSelect the pose where the debris is. \033[0m" << std::endl;
+    }else
       std::cout << "Incorrect input, you need to publish a different message" << std::endl;
       
     // blocking call: wait for a pose on topic debris_pose
@@ -450,7 +463,11 @@ void myfsm::Reach::entry(const XBot::FSM::Message& msg){
     // call the service
     shared_data()._client.call(srv);
 
-    std::cout << "Reach run. 'success'->Grasp\t'fail'->Homing_Ree\t'adjust'->Adjust" << std::endl;
+    std::cout <<  "\033[1mPose selected.\033[0m\n" <<
+                 "\033[92m 'success' ---> Grasp \033[0m\n" <<
+                 "\033[91m   'fail'  ---> Homing_Ree \033[0m\n" <<
+                 "\033[93m  'adjust' ---> Adjust \033[0m\n" <<
+                  "\033[1m************************************\033[0m\n" << std::endl;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -495,8 +512,6 @@ void myfsm::Grasp::react(const XBot::FSM::Event& e) {
 void myfsm::Grasp::entry(const XBot::FSM::Message& msg){
 
     shared_data().plugin_status->setStatus("GRASP");
-      
-    std::cout << "Grasp_entry" << std::endl;
     
     //HAND
     //Hand selection
@@ -525,7 +540,12 @@ void myfsm::Grasp::entry(const XBot::FSM::Message& msg){
     // call the service
     shared_data()._grasp_client.call(srv);    
       
-    std::cout << "Grasp run. 'success'->Pick\t'fail'-> Grasp\t'After_handover'->Left homing" << std::endl;
+    std::cout << "\n\n" << 
+                "\033[1m************Grasp state************\033[0m\n" <<
+                "\033[92m      'success'   ---> Pick \033[0m\n" <<
+                "\033[91m       'fail'     ---> Grasp \033[0m\n" <<
+                "\033[93m 'After_handover' ---> Homing_Lee \033[0m\n" <<
+                "\033[1m***********************************\033[0m\n" << std::endl;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -580,8 +600,6 @@ void myfsm::Pick::react(const XBot::FSM::Event& e) {
 void myfsm::Pick::entry(const XBot::FSM::Message& msg){
 
     shared_data().plugin_status->setStatus("PICK");
-    
-    std::cout << "Pick_entry" << std::endl;
   
     //CALL SERVICE TO MOVE
 
@@ -670,7 +688,12 @@ void myfsm::Pick::entry(const XBot::FSM::Message& msg){
     // call the service
     shared_data()._client.call(srv);
     
-    std::cout << "Pick run. 'success'->MoveAway\t'fail'->Homing\t'Handover'->PickSecondHand" << std::endl;
+    std::cout << "\n\n" << 
+              "\033[1m***********Pick state************\033[0m\n" <<
+             "\033[92m 'success'  ---> MoveAway \033[0m\n" <<
+             "\033[91m  'fail'    ---> Homing_Ree \033[0m\n" <<
+             "\033[93m 'Handover' ---> PickSecondHand \033[0m\n" <<
+              "\033[1m*********************************\033[0m\n" << std::endl;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -714,8 +737,6 @@ void myfsm::PickSecondHand::react(const XBot::FSM::Event& e) {
 void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
 
     shared_data().plugin_status->setStatus("PICKSECONDHAND");
-    
-    std::cout << "PickSecondHand entry" << std::endl;
   
     //CALL SERVICE TO MOVE
 
@@ -733,8 +754,8 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
     else if(!holdingHand.compare("LSoftHand"))
       secondHand = "RSoftHand";
     
-    std::cout << "holdingHand: " << holdingHand << std::endl;
-    std::cout << "secondHand: " << secondHand << std::endl;
+//     std::cout << "holdingHand: " << holdingHand << std::endl;
+//     std::cout << "secondHand: " << secondHand << std::endl;
 
     
     Eigen::Affine3d poseSecondHand;
@@ -912,7 +933,11 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
     // call the service
     shared_data()._client.call(srv);
     
-    std::cout << "PickSecondHand run. 'success'->Grasp\t'fail'-> Homing" << std::endl;
+    std::cout << "\n\n" << 
+              "\033[1m***PickSecondHand state****\033[0m\n" <<
+             "\033[92m 'success' ---> Grasp \033[0m\n" <<
+             "\033[91m   'fail'  ---> Homing_Ree \033[0m\n" <<
+              "\033[1m***************************\033[0m\n" << std::endl;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -973,8 +998,6 @@ void myfsm::MoveAway::entry(const XBot::FSM::Message& msg){
 
     shared_data().plugin_status->setStatus("MOVEAWAY");
     
-    std::cout << "MoveAway_entry" << std::endl;
-  
     //CALL SERVICE TO MOVE
     
     //Hand selection
@@ -1084,7 +1107,11 @@ void myfsm::MoveAway::entry(const XBot::FSM::Message& msg){
     // call the service
     shared_data()._client.call(srv);     
 
-    std::cout << "MoveAway run. 'success'->PlaceDown\t'fail'-> Homing" << std::endl;
+    std::cout << "\n\n" << 
+              "\033[1m******MoveAway state*******\033[0m\n" <<
+             "\033[92m 'success' ---> PlaceDown \033[0m\n" <<
+             "\033[91m   'fail'  ---> Homing_Ree \033[0m\n" <<
+              "\033[1m***************************\033[0m\n" << std::endl;
 
 }
 
@@ -1223,7 +1250,11 @@ void myfsm::PlaceDown::entry(const XBot::FSM::Message& msg){
     // call the service
     shared_data()._client.call(srv);
 
-    std::cout << "PlaceDown run. 'success'->Ungrasp\t'fail'->PlaceDown"<< std::endl;
+    std::cout << "\n\n" << 
+              "\033[1m*****PlaceDown state******\033[0m\n" <<
+             "\033[92m 'success' ---> Ungrasp \033[0m\n" <<
+             "\033[91m   'fail'  ---> PlaceDown \033[0m\n" <<
+              "\033[1m**************************\033[0m\n" << std::endl;
     
 }
 
@@ -1365,8 +1396,6 @@ void myfsm::Ungrasp::react(const XBot::FSM::Event& e) {
 void myfsm::Ungrasp::entry(const XBot::FSM::Message& msg){
 
   shared_data().plugin_status->setStatus("UNGRASP");
-      
-  std::cout << "Ungrasp_entry" << std::endl;
   
   //CALL SERVICE TO UNGRASP  
 
@@ -1376,7 +1405,11 @@ void myfsm::Ungrasp::entry(const XBot::FSM::Message& msg){
   // call the service
   shared_data()._grasp_client.call(srv);
   
-  std::cout << "Ungrasp run. 'success'->Homing\t'fail'->Ungrasp" << std::endl;
+  std::cout << "\n\n" << 
+              "\033[1m*******Ungrasp state*******\033[0m\n" <<
+             "\033[92m 'success' ---> Homing_Ree \033[0m\n" <<
+             "\033[91m   'fail'  ---> Ungrasp \033[0m\n" <<
+              "\033[1m***************************\033[0m\n" << std::endl;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1417,8 +1450,6 @@ void myfsm::Adjust::entry(const XBot::FSM::Message& msg){
 
     shared_data().plugin_status->setStatus("ADJUST");
     
-    std::cout << "Adjust_entry" << std::endl;
-  
     //CALL SERVICE TO MOVE
 
     //HAND
@@ -1428,7 +1459,7 @@ void myfsm::Adjust::entry(const XBot::FSM::Message& msg){
     std::string selectedHand;
     selectedHand = message.data;
     
-    std::cout << "SelectedHand: " << message.data << std::endl;
+//     std::cout << "SelectedHand: " << message.data << std::endl;
 
     // define the start frame 
     geometry_msgs::PoseStamped start_frame;
@@ -1486,6 +1517,11 @@ void myfsm::Adjust::entry(const XBot::FSM::Message& msg){
     shared_data()._client.call(srv);
     
     std::cout << "Adjust run. 'success'->Grasp\t'fail'-> Adjust" << std::endl;
+    std::cout << "\n\n" << 
+              "\033[1m*****Adjust state******\033[0m\n" <<
+             "\033[92m 'success' ---> Grasp \033[0m\n" <<
+             "\033[91m   'fail'  ---> Adjust \033[0m\n" <<
+              "\033[1m***********************\033[0m\n" << std::endl;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

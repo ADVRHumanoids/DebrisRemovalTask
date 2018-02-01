@@ -31,3 +31,8 @@ rosrun robot_state_publisher robot_state_publisher
 ```cpp
 rosrun tf tf_echo /world_odom /RSoftHand
 ```
+
+To send a pose to be reached by the locomotion
+```cpp
+./advr-superbuild/external/chengxu_walking/python/walkTo.py -3.13 1.24 90
+```
