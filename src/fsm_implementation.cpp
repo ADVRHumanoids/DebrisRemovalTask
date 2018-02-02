@@ -659,10 +659,10 @@ void myfsm::Pick::entry(const XBot::FSM::Message& msg){
       end_frame.pose.position.y = 0.0;
       end_frame.pose.position.z = 1.00;   
 
-      end_frame.pose.orientation.x = -0.5;
-      end_frame.pose.orientation.y = -0.5;
-      end_frame.pose.orientation.z = -0.5;
-      end_frame.pose.orientation.w = 0.5;
+      end_frame.pose.orientation.x = -0.5416757248593479;
+      end_frame.pose.orientation.y = -0.5416757248593479;
+      end_frame.pose.orientation.z = -0.4545195557190167;
+      end_frame.pose.orientation.w = 0.4545195557190167;
       
       shared_data()._last_pose_left_hand = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(end_frame));
       
