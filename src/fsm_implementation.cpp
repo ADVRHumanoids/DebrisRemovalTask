@@ -535,11 +535,11 @@ void myfsm::Grasp::entry(const XBot::FSM::Message& msg){
           srv.request.left_grasp = 0.0;
       }else{
           srv.request.right_grasp = 1.0;
-          srv.request.left_grasp = 1.0;
+          srv.request.left_grasp = 1.2;
       }
     }else if(!selectedHand.compare("LSoftHand")){
           srv.request.right_grasp = 0.0;
-          srv.request.left_grasp = 1.0;
+          srv.request.left_grasp = 1.2;
     }
     
     // call the service
@@ -659,10 +659,10 @@ void myfsm::Pick::entry(const XBot::FSM::Message& msg){
       end_frame.pose.position.y = 0.0;
       end_frame.pose.position.z = 1.00;   
 
-      end_frame.pose.orientation.x = -0.5416757248593479;
-      end_frame.pose.orientation.y = -0.5416757248593479;
-      end_frame.pose.orientation.z = -0.4545195557190167;
-      end_frame.pose.orientation.w = 0.4545195557190167;
+      end_frame.pose.orientation.x = -0.560986042210475;
+      end_frame.pose.orientation.y = -0.560986042210475;
+      end_frame.pose.orientation.z = -0.4304593800557022;
+      end_frame.pose.orientation.w = 0.4304593800557022;
       
       shared_data()._last_pose_left_hand = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(end_frame));
       
