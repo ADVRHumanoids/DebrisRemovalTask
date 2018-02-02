@@ -413,7 +413,7 @@ void myfsm::Reach::entry(const XBot::FSM::Message& msg){
 //       intermediate_frame.pose.position.y-= 0.2;
     }else if(!selectedHand.compare("LSoftHand")){
       intermediate_frame.pose.position.x-= 0.2;
-      intermediate_frame.pose.position.y+= 0.2;
+//       intermediate_frame.pose.position.y+= 0.2;
     }
     
     trajectory_utils::Cartesian intermediate;
@@ -818,10 +818,8 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
     
     poseHoldingHand_KDL.M.DoRotX(M_PI);
     poseHoldingHand_KDL.p.x(0.25);
-//     poseHoldingHand_KDL.p.y(0.10);
-//     poseHoldingHand_KDL.p.z(-0.05);
     poseHoldingHand_KDL.p.y(0.10);
-    poseHoldingHand_KDL.p.z(0.05);
+    poseHoldingHand_KDL.p.z(-0.10);
 
     tf::transformKDLToEigen(poseHoldingHand_KDL,poseHoldingHand_Affine);
     
@@ -879,10 +877,8 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
     
     poseHoldingHand_KDL_2.M.DoRotX(M_PI);
     poseHoldingHand_KDL_2.p.x(0.25);
-//     poseHoldingHand_KDL_2.p.y(-0.05);
-//     poseHoldingHand_KDL_2.p.z(0.05);
-    poseHoldingHand_KDL_2.p.y(-0.02);
-    poseHoldingHand_KDL_2.p.z(0.0); //0.05
+    poseHoldingHand_KDL_2.p.y(0.0);
+    poseHoldingHand_KDL_2.p.z(-0.10);
     
     tf::transformKDLToEigen(poseHoldingHand_KDL_2,poseSecondHand_Affine);
     
@@ -1080,7 +1076,19 @@ void myfsm::MoveAway::entry(const XBot::FSM::Message& msg){
     }
     else if(!selectedHand.compare("LSoftHand")){
       
-      //TO BE IMPLEMENTED, IF NEEDED
+      end_frame.pose.position.x = 0.3;
+      end_frame.pose.position.y = 0.75;
+      end_frame.pose.position.z = 1.05;
+      
+      if(shared_data()._hand_over_phase){
+        end_frame.pose.position.z+= 0.15;
+        shared_data()._hand_over_phase = false;
+      }
+    
+      end_frame.pose.orientation.x = 0.386;
+      end_frame.pose.orientation.y = -0.429;
+      end_frame.pose.orientation.z = 0.452;
+      end_frame.pose.orientation.w = 0.678;
       
     }
  
