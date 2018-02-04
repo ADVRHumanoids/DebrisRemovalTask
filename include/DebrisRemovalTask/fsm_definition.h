@@ -122,6 +122,8 @@ namespace myfsm{
       
       bool _hand_over_phase;
       std::shared_ptr<XBot::PluginStatus> plugin_status;
+      double _time = 0;
+      bool _first = true;
 
      
     };

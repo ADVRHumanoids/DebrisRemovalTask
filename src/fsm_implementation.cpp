@@ -6,6 +6,7 @@
 #include <eigen_conversions/eigen_msg.h>
 
 #define TRAJ_DURATION 10
+#define WAITING_TIME 5
 
 
 /******************************** BEGIN Homing_init *******************************/
@@ -138,9 +139,10 @@ void myfsm::Homing_Ree::entry(const XBot::FSM::Message& msg){
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::Homing_Ree::run(double time, double period){
   
-//   //Wait for the trajectory to be completed
-//   if(!shared_data()._feedback)
-//     transit("Homing_Lee");
+  //Wait for the trajectory to be completed
+  if(!shared_data()._feedback)
+    transit("Homing_Lee");
+//   std::cout << "feedback: " << shared_data()._feedback << std::endl; //test on real robot
   
   // blocking reading: wait for a command
   if(!shared_data().current_command->str().empty())
@@ -262,31 +264,39 @@ void myfsm::Homing_Lee::entry(const XBot::FSM::Message& msg){
 
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::Homing_Lee::run(double time, double period){
-  
-  // blocking reading: wait for a command
-  if(!shared_data().current_command->str().empty())
-  {
-    std::cout << "Command: " << shared_data().current_command->str() << std::endl;
+  //Wait for the trajectory to be completed
+  if(!shared_data()._feedback){
+    // blocking reading: wait for a command
+    if(!shared_data().current_command->str().empty())
+    {
+      std::cout << "Command: " << shared_data().current_command->str() << std::endl;
 
-    // Homing_Lee failed
-    if (!shared_data().current_command->str().compare("fail"))
-      transit("Homing_Ree");
-    
-    // Homing_Lee succeeded
-    if (!shared_data().current_command->str().compare("success"))
-      transit("HandSelection");
-    
-    // Handover success
-    if (!shared_data().current_command->str().compare("Handover_success"))
-      transit("MoveAway");    
+      // Homing_Lee failed
+      if (!shared_data().current_command->str().compare("fail"))
+        transit("Homing_Ree");
+      
+      // Homing_Lee succeeded
+      if (!shared_data().current_command->str().compare("success"))
+        transit("HandSelection");
+      
+      // Handover success
+      if (!shared_data().current_command->str().compare("Handover_success"))
+        transit("MoveAway");    
+    }else{
+      shared_data()._time+= period;
+      if(shared_data()._time > WAITING_TIME && shared_data()._first){
+        transit("HandSelection");
+    //     shared_data().current_command = std::shared_ptr<XBot::Command>(new XBot::Command("HandSelection"));
+        shared_data()._first = false;
+      }     
+    }
   }
-
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::Homing_Lee::exit (){
-
+  shared_data()._time = 0;
 }
 
 /********************************* END Homing_Lee ********************************/
@@ -319,7 +329,6 @@ void myfsm::HandSelection::entry(const XBot::FSM::Message& msg){
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::HandSelection::run(double time, double period){
 
-  std::string selectedHand;
   // blocking reading: wait for a command
   if(!shared_data().current_command->str().empty())
   {
@@ -339,7 +348,16 @@ void myfsm::HandSelection::run(double time, double period){
       shared_data()._hand_selection =  boost::shared_ptr<std_msgs::String>(new std_msgs::String(message));;
       transit("Reach");
     }
-  } 
+  }else{
+      shared_data()._time+= period;
+      if(shared_data()._time > WAITING_TIME){
+        std_msgs::String message;
+        message.data = "RSoftHand";
+        shared_data()._hand_selection =  boost::shared_ptr<std_msgs::String>(new std_msgs::String(message));;
+        transit("Reach");
+    //     shared_data().current_command = std::shared_ptr<XBot::Command>(new XBot::Command("RSoftHand"));
+      }     
+  }
 
 }
 
@@ -460,6 +478,8 @@ void myfsm::Reach::entry(const XBot::FSM::Message& msg){
     srv.request.segment_trj.header.stamp = ros::Time::now();
     srv.request.segment_trj.segments = segments;
     
+//     std::cout << "forces: " << ros::topic::waitForMessage<geometry_msgs::WrenchStamped>("/xbotcore/walkman/ft/r_arm_ft/wrench") << std::endl;
+
     // call the service
     shared_data()._client.call(srv);
 
@@ -473,34 +493,41 @@ void myfsm::Reach::entry(const XBot::FSM::Message& msg){
 
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::Reach::run(double time, double period){
+  //Wait for the trajectory to be completed
+  if(!shared_data()._feedback){
+    // blocking reading: wait for a command
+    if(!shared_data().current_command->str().empty())
+    {
+      std::cout << "Command: " << shared_data().current_command->str() << std::endl;
 
-  // blocking reading: wait for a command
-  if(!shared_data().current_command->str().empty())
-  {
-    std::cout << "Command: " << shared_data().current_command->str() << std::endl;
-
-    // Reach failed
-    if (!shared_data().current_command->str().compare("fail"))
-      transit("Homing_Ree");
-    
-    // Reach succeeded
-    if (!shared_data().current_command->str().compare("success"))
-      transit("Grasp");
-    
-    // AdjustLaterally
-    if (!shared_data().current_command->str().compare("AdjustLaterally"))
-      transit("AdjustLaterally");
-    
-    // AdjustForward
-    if (!shared_data().current_command->str().compare("AdjustForward"))
-      transit("AdjustForward");    
-  } 
-
+      // Reach failed
+      if (!shared_data().current_command->str().compare("fail"))
+        transit("Homing_Ree");
+      
+      // Reach succeeded
+      if (!shared_data().current_command->str().compare("success"))
+        transit("Grasp");
+      
+      // AdjustLaterally
+      if (!shared_data().current_command->str().compare("AdjustLaterally"))
+        transit("AdjustLaterally");
+      
+      // AdjustForward
+      if (!shared_data().current_command->str().compare("AdjustForward"))
+        transit("AdjustForward");    
+    }else{
+      shared_data()._time+= period;
+      if(shared_data()._time > WAITING_TIME/3){
+        transit("AdjustLaterally");
+    //     shared_data().current_command = std::shared_ptr<XBot::Command>(new XBot::Command("AdjustLaterally"));
+      }     
+    }
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::Reach::exit (){
-
+  shared_data()._time = 0;
 }
 
 /******************************** END Reach ********************************/
@@ -583,12 +610,18 @@ void myfsm::Grasp::run(double time, double period){
         
         transit("Homing_Lee");    
       }
-    } 
+    }else{
+      shared_data()._time+= period;
+      if(shared_data()._time > WAITING_TIME){
+        transit("Pick");
+    //     shared_data().current_command = std::shared_ptr<XBot::Command>(new XBot::Command("success"));
+      }     
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::Grasp::exit (){
-
+  shared_data()._time = 0;
 }
 
 /********************************* END Grasp ******************************/
@@ -635,7 +668,7 @@ void myfsm::Pick::entry(const XBot::FSM::Message& msg){
       
       end_frame.pose.position.x = 0.5;
       end_frame.pose.position.y = -0.2;
-      end_frame.pose.position.z = 1.00;   
+      end_frame.pose.position.z = 1.10;   
       
       end_frame.pose.orientation.x = 0.225;
       end_frame.pose.orientation.y = -0.592;
@@ -657,7 +690,7 @@ void myfsm::Pick::entry(const XBot::FSM::Message& msg){
       
       end_frame.pose.position.x = 0.4;
       end_frame.pose.position.y = 0.0;
-      end_frame.pose.position.z = 1.00;   
+      end_frame.pose.position.z = 1.10;   
 
       end_frame.pose.orientation.x = -0.560986042210475;
       end_frame.pose.orientation.y = -0.560986042210475;
@@ -703,29 +736,37 @@ void myfsm::Pick::entry(const XBot::FSM::Message& msg){
 
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::Pick::run(double time, double period){
+  //Wait for the trajectory to be completed
+  if(!shared_data()._feedback){
+    // blocking reading: wait for a command
+    if(!shared_data().current_command->str().empty())
+    {
+      std::cout << "Command: " << shared_data().current_command->str() << std::endl;
 
-  // blocking reading: wait for a command
-  if(!shared_data().current_command->str().empty())
-  {
-    std::cout << "Command: " << shared_data().current_command->str() << std::endl;
-
-    // Pick failed
-    if (!shared_data().current_command->str().compare("fail"))
-      transit("Homing_Ree");
-    
-    // Pick Succeeded
-    if (!shared_data().current_command->str().compare("success"))
-      transit("MoveAway");
-    
-    // Pick second hand
-    if (!shared_data().current_command->str().compare("Handover"))
-      transit("PickSecondHand");
-  } 
+      // Pick failed
+      if (!shared_data().current_command->str().compare("fail"))
+        transit("Homing_Ree");
+      
+      // Pick Succeeded
+      if (!shared_data().current_command->str().compare("success"))
+        transit("MoveAway");
+      
+      // Pick second hand
+      if (!shared_data().current_command->str().compare("Handover"))
+        transit("PickSecondHand");
+    }else{
+      shared_data()._time+= period;
+      if(shared_data()._time > WAITING_TIME){
+        transit("MoveAway");
+    //     shared_data().current_command = std::shared_ptr<XBot::Command>(new XBot::Command("success"));
+      }     
+    }
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::Pick::exit (){
-
+  shared_data()._time = 0;
 }
 
 /********************************* END Pick *******************************/
@@ -1131,6 +1172,12 @@ void myfsm::MoveAway::entry(const XBot::FSM::Message& msg){
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::MoveAway::run(double time, double period){
   
+  //Wait for the trajectory to be completed
+  if(!shared_data()._feedback){
+    transit("PlaceDown");
+  }
+  
+  
   // blocking reading: wait for a command
   if(!shared_data().current_command->str().empty())
   {
@@ -1231,7 +1278,7 @@ void myfsm::PlaceDown::entry(const XBot::FSM::Message& msg){
     geometry_msgs::PoseStamped end_frame;
     end_frame = start_frame;
     
-    end_frame.pose.position.z-= 0.08;
+    end_frame.pose.position.z-= 0.01; //0.08 - if you change this, also change traj duration to TRAJ_DURATION
     
     
     trajectory_utils::Cartesian end;
@@ -1246,7 +1293,7 @@ void myfsm::PlaceDown::entry(const XBot::FSM::Message& msg){
     // define the first segment
     trajectory_utils::segment s1;
     s1.type.data = 0;        // min jerk traj
-    s1.T.data = TRAJ_DURATION;         // traj duration 5 second      
+    s1.T.data = 2;         // traj duration 5 second     //3 -> TRAJ_DURATION 
     s1.start = start;        // start pose
     s1.end = end;            // end pose 
     
@@ -1273,122 +1320,51 @@ void myfsm::PlaceDown::entry(const XBot::FSM::Message& msg){
 
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::PlaceDown::run(double time, double period){
+  
+  //Wait for the trajectory to be completed
+  if(!shared_data()._feedback){
+    if(!shared_data().current_command->str().empty())
+    {
+      std::cout << "Command: " << shared_data().current_command->str() << std::endl;
 
-  // blocking reading: wait for a command
-  if(!shared_data().current_command->str().empty())
-  {
-    std::cout << "Command: " << shared_data().current_command->str() << std::endl;
-
-    // Reach failed
-    if (!shared_data().current_command->str().compare("fail"))
-      transit("PlaceDown");
+      // Reach failed
+      if (!shared_data().current_command->str().compare("fail"))
+        transit("PlaceDown");
+      
+      // Reach succeeded
+      if (!shared_data().current_command->str().compare("success"))
+        transit("Ungrasp");
+    }
     
-    // Reach succeeded
-    if (!shared_data().current_command->str().compare("success"))
+    // METHOD
+    Eigen::Affine3d poseRightHand;
+    geometry_msgs::Pose tmp;
+    tmp = shared_data()._last_pose_right_hand->pose;
+    tf::poseMsgToEigen(tmp,poseRightHand);
+    double f_x,f_y,f_z,w_Fz_ft;
+    Eigen::Vector6d aux_ft;
+    shared_data()._robot->getForceTorque().at("r_arm_ft")->getWrench(aux_ft);
+    f_x = aux_ft(0);
+    f_y = aux_ft(1);
+    f_z = aux_ft(2);
+    
+    Eigen::Vector3d ft_F_ft,w_F_ft;
+    ft_F_ft << f_x, f_y, f_z;
+    std::cout << "\n\nft_F_ft: " << ft_F_ft.transpose() << std::endl;
+    std::cout << "poseRightHand.linear():\n" << poseRightHand.linear() << std::endl;
+
+    w_F_ft = poseRightHand.linear() * ft_F_ft;
+    w_Fz_ft = w_F_ft(2);
+
+    std::cout << "w_Fz_ft: " << w_Fz_ft << std::endl;
+
+    if(w_Fz_ft <= 50)
+      transit("PlaceDown");
+    else
       transit("Ungrasp");
-  } 
+  }
 
 }
-
-///////////////////////////////////////////////////////////////////////////////
-
-    // void myfsm::PlaceDown::entry(const XBot::FSM::Message& msg){
-// 
-//     shared_data().plugin_status->setStatus("PLACEDDOWN");
-//     
-//     std::cout << "PlaceDown_entry" << std::endl;
-//         
-//     shared_data()._robot->sense(); 
-//     
-//     Eigen::Affine3d world_T_bl;
-//     std::string fb;  
-//     
-//     shared_data()._robot->model().getFloatingBaseLink(fb);
-//     tf.getTransformTf(fb, "world_odom", world_T_bl);
-//    
-//     shared_data()._robot->model().setFloatingBasePose(world_T_bl);
-//     shared_data()._robot->model().update();     
-//     
-//     // RIGHT HAND
-//     
-//     Eigen::Affine3d poseRightHand;
-//     geometry_msgs::Pose start_frame_pose;
-// 
-//     shared_data()._robot->model().getPose("RSoftHand", poseRightHand);
-//     tf::poseEigenToMsg (poseRightHand, start_frame_pose);
-// 
-//     geometry_msgs::PoseStamped poseHandStamped;
-//     poseHandStamped.pose = start_frame_pose;
-//     poseHandStamped.pose.position.z-=0.000001;
-//     
-//     //publish ros message
-//     shared_data()._SoftHandPose_pub.publish (poseHandStamped);
-// 
-// }
-// 
-// 
-// ///////////////////////////////////////////////////////////////////////////////
-// void myfsm::PlaceDown::run(double time, double period){
-//   
-//     shared_data()._robot->sense(); 
-//     
-//     Eigen::Affine3d world_T_bl;
-//     std::string fb;  
-//     
-//     shared_data()._robot->model().getFloatingBaseLink(fb);
-//     tf.getTransformTf(fb, "world_odom", world_T_bl);
-//    
-//     shared_data()._robot->model().setFloatingBasePose(world_T_bl);
-//     shared_data()._robot->model().update();     
-//     
-//     // RIGHT HAND
-//     
-//     Eigen::Affine3d poseRightHand;
-//     geometry_msgs::Pose start_frame_pose;
-// 
-//     shared_data()._robot->model().getPose("RSoftHand", poseRightHand);
-//     
-//     //Reading initial wrench from ros topic
-//     double f_x,f_y,f_z,w_Fz_ft;
-//     
-//     shared_data()._ft_r_arm = ros::topic::waitForMessage<geometry_msgs::WrenchStamped>("/xbotcore/bigman/ft/r_arm_ft");
-//     
-//     f_x = shared_data()._ft_r_arm->wrench.force.x;
-//     f_y = shared_data()._ft_r_arm->wrench.force.y;
-//     f_z = shared_data()._ft_r_arm->wrench.force.z;
-// 
-//     Eigen::Vector3d ft_F_ft,w_F_ft;
-//     ft_F_ft << f_x, f_y, f_z;
-//     w_F_ft = poseRightHand * ft_F_ft;
-//     w_Fz_ft = w_F_ft(2);
-//       
-// //     w_Fz_ft = shared_data()._RH_Rot_Z.dot(ft_F_ft);
-//       
-// //     double k;
-// //     k = 0.7;
-// 
-//     std::cout << "w_Fz_ft: " << w_Fz_ft << std::endl;
-// 
-//     if(w_Fz_ft <= 50) //k * shared_data()._w_F_ft_initial)
-//       transit("PlaceDown");
-//     else
-//       transit("Ungrasp");
-//     
-//       // blocking reading: wait for a command
-//   if(shared_data().command.read(shared_data().current_command))
-//   {
-//     std::cout << "Command: " << shared_data().current_command->str() << std::endl;
-// 
-//     // Ungrasp failed
-//     if (!shared_data().current_command->str().compare("placeddown_success"))
-//       transit("Ungrasp");
-//     
-//     // Ungrasp Succeeded
-//     if (!shared_data().current_command->str().compare("placeddown_failed"))
-//       transit("Homing");
-//   }
-//   
-// }
 
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::PlaceDown::exit (){
@@ -1428,6 +1404,12 @@ void myfsm::Ungrasp::entry(const XBot::FSM::Message& msg){
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::Ungrasp::run(double time, double period){
   
+  shared_data()._time+= period;
+  if(shared_data()._time > WAITING_TIME){
+    transit("Homing_Ree");
+//     shared_data().current_command = std::shared_ptr<XBot::Command>(new XBot::Command("success"));
+  }
+  
   // blocking reading: wait for a command
   if(!shared_data().current_command->str().empty())
   {
@@ -1445,7 +1427,7 @@ void myfsm::Ungrasp::run(double time, double period){
 
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::Ungrasp::exit (){
-
+  shared_data()._time = 0;
 }
 
 /****************************** END Ungrasp *******************************/
@@ -1540,34 +1522,51 @@ void myfsm::AdjustLaterally::entry(const XBot::FSM::Message& msg){
 
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::AdjustLaterally::run(double time, double period){
+  //Wait for the trajectory to be completed
+  if(!shared_data()._feedback){
+    
+    Eigen::Vector6d aux_ft;
+    bool contact = false;
+    shared_data()._robot->getForceTorque().at("r_arm_ft")->getWrench(aux_ft);
+    double force_y = aux_ft(1);
+    std::cout << "Force(y): " << force_y << std::endl;
+    if(force_y < -10)
+      contact = true;
+    
+    // blocking reading: wait for a command
+    if(!shared_data().current_command->str().empty() || contact)
+    {
+      std::cout << "Command: " << shared_data().current_command->str() << std::endl;
 
-  // blocking reading: wait for a command
-  if(!shared_data().current_command->str().empty())
-  {
-    std::cout << "Command: " << shared_data().current_command->str() << std::endl;
-
-    // AdjustLaterally
-    if (!shared_data().current_command->str().compare("AdjustLaterally"))
-      transit("AdjustLaterally");
-    
-    // AdjustForward
-    if (!shared_data().current_command->str().compare("AdjustForward"))
-      transit("AdjustForward");
-    
-    // AdjustLaterally Succeeded
-    if (!shared_data().current_command->str().compare("success"))
-      transit("Grasp");
-    
-    // AdjustLaterally failed
-    if (!shared_data().current_command->str().compare("fail"))
-      transit("Homing_Ree");
-    
-  } 
+      // AdjustLaterally
+      if (!shared_data().current_command->str().compare("AdjustLaterally"))
+        transit("AdjustLaterally");
+      
+      // AdjustForward
+      if (!shared_data().current_command->str().compare("AdjustForward"))
+        transit("AdjustForward");
+      
+      // AdjustLaterally Succeeded
+      if (!shared_data().current_command->str().compare("success") || contact)
+        transit("Grasp");
+      
+      // AdjustLaterally failed
+      if (!shared_data().current_command->str().compare("fail"))
+        transit("Homing_Ree");
+      
+    }else{
+      shared_data()._time+= period;
+      if(shared_data()._time > WAITING_TIME/3){
+        transit("AdjustLaterally");
+    //     shared_data().current_command = std::shared_ptr<XBot::Command>(new XBot::Command("AdjustLaterally"));
+      }     
+    }
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::AdjustLaterally::exit (){
-
+  shared_data()._time = 0;
 }
 
 /********************************* END AdjustLaterally *******************************/
