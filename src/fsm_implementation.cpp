@@ -1532,8 +1532,9 @@ void myfsm::AdjustLaterally::entry(const XBot::FSM::Message& msg){
     std::cout << "\n\n" << 
               "\033[1m*********AdjustLaterally state**********\033[0m\n" <<
              "\033[92m      'success'    ---> Grasp \033[0m\n" <<
-             "\033[91m 'AdjustLaterally' ---> AdjustLaterally \033[0m\n" <<
-             "\033[91m  'AdjustForward'  ---> AdjustForward \033[0m\n" <<
+             "\033[91m        'fail'     ---> Homing_Ree \033[0m\n" <<
+             "\033[93m 'AdjustLaterally' ---> AdjustLaterally \033[0m\n" <<
+             "\033[93m  'AdjustForward'  ---> AdjustForward \033[0m\n" <<
               "\033[1m****************************************\033[0m\n" << std::endl;
 }
 
@@ -1556,6 +1557,10 @@ void myfsm::AdjustLaterally::run(double time, double period){
     // AdjustLaterally Succeeded
     if (!shared_data().current_command->str().compare("success"))
       transit("Grasp");
+    
+    // AdjustLaterally failed
+    if (!shared_data().current_command->str().compare("fail"))
+      transit("Homing_Ree");
     
   } 
 }
@@ -1641,8 +1646,9 @@ void myfsm::AdjustForward::entry(const XBot::FSM::Message& msg){
     std::cout << "\n\n" << 
               "\033[1m**********AdjustForward state***********\033[0m\n" <<
              "\033[92m      'success'    ---> Grasp \033[0m\n" <<
-             "\033[91m 'AdjustLaterally' ---> AdjustLaterally \033[0m\n" <<
-             "\033[91m  'AdjustForward'  ---> AdjustForward \033[0m\n" <<
+             "\033[91m        'fail'     ---> Homing_Ree \033[0m\n" <<
+             "\033[93m 'AdjustLaterally' ---> AdjustLaterally \033[0m\n" <<
+             "\033[93m  'AdjustForward'  ---> AdjustForward \033[0m\n" <<
               "\033[1m****************************************\033[0m\n" << std::endl;              
 }
 
@@ -1665,6 +1671,10 @@ void myfsm::AdjustForward::run(double time, double period){
     // AdjustForward Succeeded
     if (!shared_data().current_command->str().compare("success"))
       transit("Grasp");
+    
+    // AdjustForward failed
+    if (!shared_data().current_command->str().compare("fail"))
+      transit("Homing_Ree");    
     
   } 
 }
