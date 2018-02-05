@@ -7,6 +7,7 @@
 
 #define TRAJ_DURATION 10
 #define WAITING_TIME 5
+#define AUTONOMOUS 0
 
 
 /******************************** BEGIN Homing_init *******************************/
@@ -282,7 +283,7 @@ void myfsm::Homing_Lee::run(double time, double period){
       // Handover success
       if (!shared_data().current_command->str().compare("Handover_success"))
         transit("MoveAway");    
-    }else{
+    }else if(AUTONOMOUS){
       shared_data()._time+= period;
       if(shared_data()._time > WAITING_TIME && shared_data()._first){
         transit("HandSelection");
@@ -348,7 +349,7 @@ void myfsm::HandSelection::run(double time, double period){
       shared_data()._hand_selection =  boost::shared_ptr<std_msgs::String>(new std_msgs::String(message));;
       transit("Reach");
     }
-  }else{
+  }else if(AUTONOMOUS){
       shared_data()._time+= period;
       if(shared_data()._time > WAITING_TIME){
         std_msgs::String message;
@@ -515,7 +516,7 @@ void myfsm::Reach::run(double time, double period){
       // AdjustForward
       if (!shared_data().current_command->str().compare("AdjustForward"))
         transit("AdjustForward");    
-    }else{
+    }else if(AUTONOMOUS){
       shared_data()._time+= period;
       if(shared_data()._time > WAITING_TIME/3){
         transit("AdjustLaterally");
@@ -610,7 +611,7 @@ void myfsm::Grasp::run(double time, double period){
         
         transit("Homing_Lee");    
       }
-    }else{
+    }else if(AUTONOMOUS){
       shared_data()._time+= period;
       if(shared_data()._time > WAITING_TIME){
         transit("Pick");
@@ -678,15 +679,6 @@ void myfsm::Pick::entry(const XBot::FSM::Message& msg){
       shared_data()._last_pose_right_hand = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(end_frame));
       
     }else if(!selectedHand.compare("LSoftHand")){
-
-//       end_frame.pose.position.x = 0.5;
-//       end_frame.pose.position.y = 0.03;
-//       end_frame.pose.position.z = 1.00;   
-// 
-//       end_frame.pose.orientation.x = -0.225;
-//       end_frame.pose.orientation.y = -0.592;
-//       end_frame.pose.orientation.z = -0.432;
-//       end_frame.pose.orientation.w = 0.641;
       
       end_frame.pose.position.x = 0.4;
       end_frame.pose.position.y = 0.0;
@@ -754,7 +746,7 @@ void myfsm::Pick::run(double time, double period){
       // Pick second hand
       if (!shared_data().current_command->str().compare("Handover"))
         transit("PickSecondHand");
-    }else{
+    }else if(AUTONOMOUS){
       shared_data()._time+= period;
       if(shared_data()._time > WAITING_TIME){
         transit("MoveAway");
@@ -1173,7 +1165,7 @@ void myfsm::MoveAway::entry(const XBot::FSM::Message& msg){
 void myfsm::MoveAway::run(double time, double period){
   
   //Wait for the trajectory to be completed
-  if(!shared_data()._feedback){
+  if(!shared_data()._feedback && AUTONOMOUS){
     transit("PlaceDown");
   }
   
@@ -1337,31 +1329,30 @@ void myfsm::PlaceDown::run(double time, double period){
     }
     
     // METHOD
-    Eigen::Affine3d poseRightHand;
-    geometry_msgs::Pose tmp;
-    tmp = shared_data()._last_pose_right_hand->pose;
-    tf::poseMsgToEigen(tmp,poseRightHand);
-    double f_x,f_y,f_z,w_Fz_ft;
-    Eigen::Vector6d aux_ft;
-    shared_data()._robot->getForceTorque().at("r_arm_ft")->getWrench(aux_ft);
-    f_x = aux_ft(0);
-    f_y = aux_ft(1);
-    f_z = aux_ft(2);
-    
-    Eigen::Vector3d ft_F_ft,w_F_ft;
-    ft_F_ft << f_x, f_y, f_z;
-    std::cout << "\n\nft_F_ft: " << ft_F_ft.transpose() << std::endl;
-    std::cout << "poseRightHand.linear():\n" << poseRightHand.linear() << std::endl;
+    if(AUTONOMOUS){
+      Eigen::Affine3d poseRightHand;
+      geometry_msgs::Pose tmp;
+      tmp = shared_data()._last_pose_right_hand->pose;
+      tf::poseMsgToEigen(tmp,poseRightHand);
+      double f_x,f_y,f_z,w_Fz_ft;
+      Eigen::Vector6d aux_ft;
+      shared_data()._robot->getForceTorque().at("r_arm_ft")->getWrench(aux_ft);
+      f_x = aux_ft(0);
+      f_y = aux_ft(1);
+      f_z = aux_ft(2);
+      
+      Eigen::Vector3d ft_F_ft,w_F_ft;
+      ft_F_ft << f_x, f_y, f_z;
+      w_F_ft = poseRightHand.linear() * ft_F_ft;
+      w_Fz_ft = w_F_ft(2);
 
-    w_F_ft = poseRightHand.linear() * ft_F_ft;
-    w_Fz_ft = w_F_ft(2);
+      std::cout << "w_Fz_ft: " << w_Fz_ft << std::endl;
 
-    std::cout << "w_Fz_ft: " << w_Fz_ft << std::endl;
-
-    if(w_Fz_ft <= 50)
-      transit("PlaceDown");
-    else
-      transit("Ungrasp");
+      if(w_Fz_ft <= 50)
+        transit("PlaceDown");
+      else
+        transit("Ungrasp");
+    }
   }
 
 }
@@ -1405,7 +1396,7 @@ void myfsm::Ungrasp::entry(const XBot::FSM::Message& msg){
 void myfsm::Ungrasp::run(double time, double period){
   
   shared_data()._time+= period;
-  if(shared_data()._time > WAITING_TIME){
+  if(shared_data()._time > WAITING_TIME && AUTONOMOUS){
     transit("Homing_Ree");
 //     shared_data().current_command = std::shared_ptr<XBot::Command>(new XBot::Command("success"));
   }
@@ -1554,7 +1545,7 @@ void myfsm::AdjustLaterally::run(double time, double period){
       if (!shared_data().current_command->str().compare("fail"))
         transit("Homing_Ree");
       
-    }else{
+    }else if(AUTONOMOUS){
       shared_data()._time+= period;
       if(shared_data()._time > WAITING_TIME/3){
         transit("AdjustLaterally");
