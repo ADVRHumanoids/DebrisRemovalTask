@@ -680,8 +680,10 @@ void myfsm::Pick::entry(const XBot::FSM::Message& msg){
       
     }else if(!selectedHand.compare("LSoftHand")){
       
-      end_frame.pose.position.x = 0.4;
-      end_frame.pose.position.y = 0.0;
+//       end_frame.pose.position.x = 0.4; was
+//       end_frame.pose.position.y = 0.0; was
+      end_frame.pose.position.x = 0.43;
+      end_frame.pose.position.y = -0.01;
       end_frame.pose.position.z = 1.10;   
 
       end_frame.pose.orientation.x = -0.560986042210475;
@@ -910,8 +912,10 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
     
     poseHoldingHand_KDL_2.M.DoRotX(M_PI);
     poseHoldingHand_KDL_2.p.x(0.25);
-    poseHoldingHand_KDL_2.p.y(0.0);
-    poseHoldingHand_KDL_2.p.z(-0.10);
+//     poseHoldingHand_KDL_2.p.y(0.0); ///real robot
+//     poseHoldingHand_KDL_2.p.z(-0.10); ///real robot
+    poseHoldingHand_KDL_2.p.y(-0.03);
+    poseHoldingHand_KDL_2.p.z(-0.17);
     
     tf::transformKDLToEigen(poseHoldingHand_KDL_2,poseSecondHand_Affine);
     
@@ -1064,7 +1068,8 @@ void myfsm::MoveAway::entry(const XBot::FSM::Message& msg){
     else if(!selectedHand.compare("LSoftHand"))
       intermediate_frame.pose.position.y = 0.393;
     
-    intermediate_frame.pose.position.z = 1.09;
+//     intermediate_frame.pose.position.z = 1.09;
+    intermediate_frame.pose.position.z = 1.2;
     if(shared_data()._hand_over_phase)
       intermediate_frame.pose.position.z+= 0.15;
     
@@ -1097,7 +1102,7 @@ void myfsm::MoveAway::entry(const XBot::FSM::Message& msg){
       end_frame.pose.position.z = 1.05;
       
       if(shared_data()._hand_over_phase){
-        end_frame.pose.position.z+= 0.15;
+        end_frame.pose.position.z+= 0.22;
         shared_data()._hand_over_phase = false;
       }
     
@@ -1270,8 +1275,10 @@ void myfsm::PlaceDown::entry(const XBot::FSM::Message& msg){
     geometry_msgs::PoseStamped end_frame;
     end_frame = start_frame;
     
-    end_frame.pose.position.z-= 0.01; //0.08 - if you change this, also change traj duration to TRAJ_DURATION
-    
+    if(AUTONOMOUS)
+      end_frame.pose.position.z-= 0.01; //0.08 - if you change this, also change traj duration to TRAJ_DURATION
+    else
+      end_frame.pose.position.z-= 0.02; // was 0.08
     
     trajectory_utils::Cartesian end;
     end.distal_frame = selectedHand;
@@ -1285,7 +1292,11 @@ void myfsm::PlaceDown::entry(const XBot::FSM::Message& msg){
     // define the first segment
     trajectory_utils::segment s1;
     s1.type.data = 0;        // min jerk traj
-    s1.T.data = 2;         // traj duration 5 second     //3 -> TRAJ_DURATION 
+    if(AUTONOMOUS)
+      s1.T.data = 2;
+    else
+      s1.T.data = TRAJ_DURATION;
+    
     s1.start = start;        // start pose
     s1.end = end;            // end pose 
     
@@ -1516,13 +1527,15 @@ void myfsm::AdjustLaterally::run(double time, double period){
   //Wait for the trajectory to be completed
   if(!shared_data()._feedback){
     
-    Eigen::Vector6d aux_ft;
     bool contact = false;
-    shared_data()._robot->getForceTorque().at("r_arm_ft")->getWrench(aux_ft);
-    double force_y = aux_ft(1);
-    std::cout << "Force(y): " << force_y << std::endl;
-    if(force_y < -10)
-      contact = true;
+    if(AUTONOMOUS){
+      Eigen::Vector6d aux_ft;
+      shared_data()._robot->getForceTorque().at("r_arm_ft")->getWrench(aux_ft);
+      double force_y = aux_ft(1);
+      std::cout << "Force(y): " << force_y << std::endl;
+      if(force_y < -10)
+        contact = true;
+    }
     
     // blocking reading: wait for a command
     if(!shared_data().current_command->str().empty() || contact)
