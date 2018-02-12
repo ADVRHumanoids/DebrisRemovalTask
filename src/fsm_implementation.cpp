@@ -23,21 +23,13 @@ void myfsm::Homing_init::entry(const XBot::FSM::Message& msg){
     shared_data().plugin_status->setStatus("HOMING");
     std::cout << "Homing_init_entry" << std::endl;
     shared_data()._robot->sense(); 
-    
-    Eigen::Affine3d world_T_bl;
-    std::string fb;  
-    shared_data()._robot->model().getFloatingBaseLink(fb);
-    tf.getTransformTf(fb, "world_odom", world_T_bl);
-    shared_data()._robot->model().setFloatingBasePose(world_T_bl);
-    shared_data()._robot->model().update();  
-    
-    
+
     // SAVE INITIAL END EFFECTOR POSES
     Eigen::Affine3d poseLeftHand,poseRightHand;
     geometry_msgs::Pose left_hand_pose,right_hand_pose;
-
-    shared_data()._robot->model().getPose("LSoftHand", poseLeftHand);
-    shared_data()._robot->model().getPose("RSoftHand", poseRightHand);
+    
+    shared_data()._robot->model().getPose("arm1_7", "torso_2", poseLeftHand);
+    shared_data()._robot->model().getPose("arm2_7", "torso_2", poseRightHand);
     
     tf::poseEigenToMsg (poseLeftHand, left_hand_pose);
     tf::poseEigenToMsg (poseRightHand, right_hand_pose);
@@ -88,23 +80,24 @@ void myfsm::Homing_Ree::entry(const XBot::FSM::Message& msg){
     start_frame = *shared_data()._last_pose_right_hand;
     
     trajectory_utils::Cartesian start;
-    start.distal_frame = "RSoftHand";
+    start.distal_frame = "arm2_7";
     start.frame = start_frame;
     
     // define the end frame
     geometry_msgs::PoseStamped end_frame;
 //     end_frame = *shared_data()._initial_pose_right_hand;
-    end_frame.pose.position.x = 0.1; //0.248;
-    end_frame.pose.position.y = -0.471;
-    end_frame.pose.position.z = 1.15; //0.969;     
     
-    end_frame.pose.orientation.x = -0.091;
-    end_frame.pose.orientation.y = -0.456;
-    end_frame.pose.orientation.z = 0.19;
-    end_frame.pose.orientation.w = 0.864;
+    end_frame.pose.position.x = 0.514;
+    end_frame.pose.position.y = -0.506;
+    end_frame.pose.position.z = -0.1;
+    
+    end_frame.pose.orientation.x = 0.178;
+    end_frame.pose.orientation.y = 0.871;
+    end_frame.pose.orientation.z = -0.026;
+    end_frame.pose.orientation.w = -0.456;  
     
     trajectory_utils::Cartesian end;
-    end.distal_frame = "RSoftHand";
+    end.distal_frame = "arm2_7";
     end.frame = end_frame;
     
     //save the RIGHT HAND pose
@@ -123,7 +116,7 @@ void myfsm::Homing_Ree::entry(const XBot::FSM::Message& msg){
     
     // prepare the advr_segment_control
     ADVR_ROS::advr_segment_control srv;
-    srv.request.segment_trj.header.frame_id = "world_odom";
+    srv.request.segment_trj.header.frame_id = "torso_2";
     srv.request.segment_trj.header.stamp = ros::Time::now();
     srv.request.segment_trj.segments = segments;
     
@@ -192,7 +185,7 @@ void myfsm::Homing_Lee::entry(const XBot::FSM::Message& msg){
     start_frame = *shared_data()._last_pose_left_hand;
     
     trajectory_utils::Cartesian start;
-    start.distal_frame = "LSoftHand";
+    start.distal_frame = "arm1_7";
     start.frame = start_frame;
     
     // define the potential intermediate frame
@@ -203,24 +196,24 @@ void myfsm::Homing_Lee::entry(const XBot::FSM::Message& msg){
       intermediate_frame.pose.position.x+= 0.08;
       intermediate_frame.pose.position.y+= 0.08;
       
-      intermediate.distal_frame = "LSoftHand";
+      intermediate.distal_frame = "arm1_7";
       intermediate.frame = intermediate_frame;
     }
     
     // define the end frame
     geometry_msgs::PoseStamped end_frame;
 //     end_frame = *shared_data()._initial_pose_left_hand;
-    end_frame.pose.position.x = 0.1; //0.248;
-    end_frame.pose.position.y = 0.471;
-    end_frame.pose.position.z = 1.15; //0.969;     
+    end_frame.pose.position.x = 0.514; 
+    end_frame.pose.position.y = 0.506;
+    end_frame.pose.position.z = -0.1;
     
-    end_frame.pose.orientation.x = 0.091;
-    end_frame.pose.orientation.y = -0.456;
-    end_frame.pose.orientation.z = -0.19;
-    end_frame.pose.orientation.w = 0.864;     
+    end_frame.pose.orientation.x = -0.178;
+    end_frame.pose.orientation.y = 0.871;
+    end_frame.pose.orientation.z = 0.026;
+    end_frame.pose.orientation.w = -0.456;     
     
     trajectory_utils::Cartesian end;
-    end.distal_frame = "LSoftHand";
+    end.distal_frame = "arm1_7";
     end.frame = end_frame;
     
     //save the LEFT HAND pose
@@ -247,7 +240,7 @@ void myfsm::Homing_Lee::entry(const XBot::FSM::Message& msg){
     
     // prepare the advr_segment_control
     ADVR_ROS::advr_segment_control srv;
-    srv.request.segment_trj.header.frame_id = "world_odom";
+    srv.request.segment_trj.header.frame_id = "torso_2";
     srv.request.segment_trj.header.stamp = ros::Time::now();
     srv.request.segment_trj.segments = segments;
     
@@ -319,8 +312,8 @@ void myfsm::HandSelection::entry(const XBot::FSM::Message& msg){
     std::cout << "\n\n" << 
                  "\033[1m**********HandSelection state***********\033[0m\n" <<
                  "\033[1mSelect the End Effector you want to use.\033[0m\n" <<
-                 "\033[1m   'RSoftHand'  ---> Right Hand\033[0m\n" <<
-                 "\033[1m   'LSoftHand'  ---> Left Hand\033[0m\n" <<
+                 "\033[1m   -> Right Hand\033[0m\n" <<
+                 "\033[1m   ->  Left Hand\033[0m\n" <<
                  "\033[1m****************************************\033[0m\n" << std::endl;
     
 
@@ -335,15 +328,15 @@ void myfsm::HandSelection::run(double time, double period){
   {
     std::cout << "Command: " << shared_data().current_command->str() << std::endl;
 
-    // LSoftHand selected
-    if (!shared_data().current_command->str().compare("LSoftHand")){
+    // arm1_7 selected
+    if (!shared_data().current_command->str().compare("arm1_7")){
       std_msgs::String message;
       message.data = shared_data().current_command->str();
       shared_data()._hand_selection =  boost::shared_ptr<std_msgs::String>(new std_msgs::String(message));;
       transit("Reach");
     }
-    // RSoftHand selected
-    if (!shared_data().current_command->str().compare("RSoftHand")){
+    // arm2_7 selected
+    if (!shared_data().current_command->str().compare("arm2_7")){
       std_msgs::String message;
       message.data = shared_data().current_command->str();
       shared_data()._hand_selection =  boost::shared_ptr<std_msgs::String>(new std_msgs::String(message));;
@@ -353,10 +346,10 @@ void myfsm::HandSelection::run(double time, double period){
       shared_data()._time+= period;
       if(shared_data()._time > WAITING_TIME){
         std_msgs::String message;
-        message.data = "RSoftHand";
+        message.data = "arm2_7";
         shared_data()._hand_selection =  boost::shared_ptr<std_msgs::String>(new std_msgs::String(message));;
         transit("Reach");
-    //     shared_data().current_command = std::shared_ptr<XBot::Command>(new XBot::Command("RSoftHand"));
+    //     shared_data().current_command = std::shared_ptr<XBot::Command>(new XBot::Command("arm2_7"));
       }     
   }
 
@@ -394,7 +387,7 @@ void myfsm::Reach::entry(const XBot::FSM::Message& msg){
     
     std::cout << "SelectedHand: " << message.data << std::endl;
     
-    if(selectedHand.compare("RSoftHand") || selectedHand.compare("LSoftHand")){
+    if(selectedHand.compare("arm2_7") || selectedHand.compare("arm1_7")){
         std::cout << "\n\n" << 
               "\033[1m**************Reach state***************\033[0m\n" <<
               "\033[1mSelect the pose where the debris is. \033[0m" << std::endl;
@@ -412,9 +405,9 @@ void myfsm::Reach::entry(const XBot::FSM::Message& msg){
 
     // define the start frame 
     geometry_msgs::PoseStamped start_frame;
-    if(!selectedHand.compare("RSoftHand"))
+    if(!selectedHand.compare("arm2_7"))
       start_frame = *shared_data()._last_pose_right_hand;
-    else if(!selectedHand.compare("LSoftHand"))
+    else if(!selectedHand.compare("arm1_7"))
       start_frame = *shared_data()._last_pose_left_hand;
 
     trajectory_utils::Cartesian start;
@@ -427,10 +420,10 @@ void myfsm::Reach::entry(const XBot::FSM::Message& msg){
     
     intermediate_frame = *shared_data()._debris_pose;
 
-    if(!selectedHand.compare("RSoftHand")){
+    if(!selectedHand.compare("arm2_7")){
       intermediate_frame.pose.position.x-= 0.2;
 //       intermediate_frame.pose.position.y-= 0.2;
-    }else if(!selectedHand.compare("LSoftHand")){
+    }else if(!selectedHand.compare("arm1_7")){
       intermediate_frame.pose.position.x-= 0.2;
 //       intermediate_frame.pose.position.y+= 0.2;
     }
@@ -458,9 +451,9 @@ void myfsm::Reach::entry(const XBot::FSM::Message& msg){
     end.distal_frame = selectedHand;
     end.frame = end_frame;
 
-    if(!selectedHand.compare("RSoftHand"))
+    if(!selectedHand.compare("arm2_7"))
       shared_data()._last_pose_right_hand = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(end_frame));
-    else if(!selectedHand.compare("LSoftHand"))
+    else if(!selectedHand.compare("arm1_7"))
       shared_data()._last_pose_left_hand = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(end_frame));
     
     
@@ -475,7 +468,7 @@ void myfsm::Reach::entry(const XBot::FSM::Message& msg){
     
     // prepare the advr_segment_control
     ADVR_ROS::advr_segment_control srv;
-    srv.request.segment_trj.header.frame_id = "world_odom";
+    srv.request.segment_trj.header.frame_id = "torso_2";
     srv.request.segment_trj.header.stamp = ros::Time::now();
     srv.request.segment_trj.segments = segments;
     
@@ -557,17 +550,17 @@ void myfsm::Grasp::entry(const XBot::FSM::Message& msg){
     
     ADVR_ROS::advr_grasp_control_srv srv;
   
-    if(!selectedHand.compare("RSoftHand")){
+    if(!selectedHand.compare("arm2_7")){
       if(!shared_data()._hand_over_phase){
           srv.request.right_grasp = 1.0;
           srv.request.left_grasp = 0.0;
       }else{
           srv.request.right_grasp = 1.0;
-          srv.request.left_grasp = 1.2;
+          srv.request.left_grasp = 1.0;
       }
-    }else if(!selectedHand.compare("LSoftHand")){
+    }else if(!selectedHand.compare("arm1_7")){
           srv.request.right_grasp = 0.0;
-          srv.request.left_grasp = 1.2;
+          srv.request.left_grasp = 1.0;
     }
     
     // call the service
@@ -653,9 +646,9 @@ void myfsm::Pick::entry(const XBot::FSM::Message& msg){
 
     // define the start frame 
     geometry_msgs::PoseStamped start_frame;
-    if(!selectedHand.compare("RSoftHand"))
+    if(!selectedHand.compare("arm2_7"))
       start_frame = *shared_data()._last_pose_right_hand;
-    else if(!selectedHand.compare("LSoftHand"))
+    else if(!selectedHand.compare("arm1_7"))
       start_frame = *shared_data()._last_pose_left_hand;
     
     trajectory_utils::Cartesian start;
@@ -665,11 +658,11 @@ void myfsm::Pick::entry(const XBot::FSM::Message& msg){
     // define the end frame
     geometry_msgs::PoseStamped end_frame;
     
-    if(!selectedHand.compare("RSoftHand")){
+    if(!selectedHand.compare("arm2_7")){
       
-      end_frame.pose.position.x = 0.5;
-      end_frame.pose.position.y = -0.2;
-      end_frame.pose.position.z = 1.10;   
+      end_frame.pose.position.x = 0.52;
+      end_frame.pose.position.y = -0.17;
+      end_frame.pose.position.z = -0.15;   
       
       end_frame.pose.orientation.x = 0.225;
       end_frame.pose.orientation.y = -0.592;
@@ -678,13 +671,11 @@ void myfsm::Pick::entry(const XBot::FSM::Message& msg){
       
       shared_data()._last_pose_right_hand = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(end_frame));
       
-    }else if(!selectedHand.compare("LSoftHand")){
+    }else if(!selectedHand.compare("arm1_7")){
       
-//       end_frame.pose.position.x = 0.4; was
-//       end_frame.pose.position.y = 0.0; was
-      end_frame.pose.position.x = 0.43;
+      end_frame.pose.position.x = 0.45;
       end_frame.pose.position.y = -0.01;
-      end_frame.pose.position.z = 1.10;   
+      end_frame.pose.position.z = -1.15;   
 
       end_frame.pose.orientation.x = -0.560986042210475;
       end_frame.pose.orientation.y = -0.560986042210475;
@@ -713,7 +704,7 @@ void myfsm::Pick::entry(const XBot::FSM::Message& msg){
     
     // prepare the advr_segment_control
     ADVR_ROS::advr_segment_control srv;
-    srv.request.segment_trj.header.frame_id = "world_odom";
+    srv.request.segment_trj.header.frame_id = "torso_2";
     srv.request.segment_trj.header.stamp = ros::Time::now();
     srv.request.segment_trj.segments = segments;
     
@@ -789,10 +780,10 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
     
     std::string secondHand;
 
-    if(!holdingHand.compare("RSoftHand"))
-      secondHand = "LSoftHand";
-    else if(!holdingHand.compare("LSoftHand"))
-      secondHand = "RSoftHand";
+    if(!holdingHand.compare("arm2_7"))
+      secondHand = "arm1_7";
+    else if(!holdingHand.compare("arm1_7"))
+      secondHand = "arm2_7";
     
 //     std::cout << "holdingHand: " << holdingHand << std::endl;
 //     std::cout << "secondHand: " << secondHand << std::endl;
@@ -803,9 +794,9 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
 
     // define the start frame 
     geometry_msgs::PoseStamped start_frame;
-    if(!holdingHand.compare("RSoftHand"))
+    if(!holdingHand.compare("arm2_7"))
       start_frame = *shared_data()._last_pose_left_hand;
-    else if(!holdingHand.compare("LSoftHand"))
+    else if(!holdingHand.compare("arm1_7"))
       start_frame = *shared_data()._last_pose_right_hand;    
     
     trajectory_utils::Cartesian start;
@@ -866,7 +857,7 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
     poseHoldingHand_KDL.M.GetQuaternion(qx,qy,qz,qw);
     
 
-    if(!secondHand.compare("RSoftHand")){
+    if(!secondHand.compare("arm2_7")){
       
       intermediate_frame.pose.position.x = start_frame_pose_holding_hand.position.x;
       intermediate_frame.pose.position.y = start_frame_pose_holding_hand.position.y;
@@ -877,7 +868,7 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
       intermediate_frame.pose.orientation.z = qz;
       intermediate_frame.pose.orientation.w = qw;        
       
-    }else if(!secondHand.compare("LSoftHand")){
+    }else if(!secondHand.compare("arm1_7")){
       
       //TO BE IMPLEMENTED, IF NEEDED
       
@@ -926,7 +917,7 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
     poseHoldingHand_KDL_2.M.GetQuaternion(qx,qy,qz,qw);
     
 
-    if(!secondHand.compare("RSoftHand")){
+    if(!secondHand.compare("arm2_7")){
       
       end_frame.pose.position.x = start_frame_pose_second_hand.position.x;
       end_frame.pose.position.y = start_frame_pose_second_hand.position.y;
@@ -937,7 +928,7 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
       end_frame.pose.orientation.z = qz;
       end_frame.pose.orientation.w = qw;        
       
-    }else if(!secondHand.compare("LSoftHand")){
+    }else if(!secondHand.compare("arm1_7")){
       
       //TO BE IMPLEMENTED, IF NEEDED
       
@@ -948,9 +939,9 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
     end.frame = end_frame;
 
    
-    if(!secondHand.compare("RSoftHand"))
+    if(!secondHand.compare("arm2_7"))
       shared_data()._last_pose_right_hand = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(end_frame));
-    else if(!secondHand.compare("LSoftHand"))
+    else if(!secondHand.compare("arm1_7"))
       shared_data()._last_pose_left_hand = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(end_frame));    
     
     // define the second segment
@@ -964,7 +955,7 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
     
     // prepare the advr_segment_control
     ADVR_ROS::advr_segment_control srv;
-    srv.request.segment_trj.header.frame_id = "world_odom";
+    srv.request.segment_trj.header.frame_id = "torso_2";
     srv.request.segment_trj.header.stamp = ros::Time::now();
     srv.request.segment_trj.segments = segments;
     
@@ -999,12 +990,12 @@ void myfsm::PickSecondHand::run(double time, double period){
       selectedHand = shared_data()._hand_selection->data;
       
       std_msgs::String rightHand,leftHand;
-      rightHand.data = "RSoftHand";   
-      leftHand.data = "LSoftHand";       
+      rightHand.data = "arm2_7";   
+      leftHand.data = "arm1_7";       
       
-      if(!selectedHand.compare("RSoftHand"))
+      if(!selectedHand.compare("arm2_7"))
         shared_data()._hand_selection = boost::shared_ptr<std_msgs::String>(new std_msgs::String(leftHand));
-      else if(!selectedHand.compare("LSoftHand"))
+      else if(!selectedHand.compare("arm1_7"))
         shared_data()._hand_selection = boost::shared_ptr<std_msgs::String>(new std_msgs::String(rightHand));
 
       //Activate Handover phase      
@@ -1048,9 +1039,9 @@ void myfsm::MoveAway::entry(const XBot::FSM::Message& msg){
 
     // define the start frame 
     geometry_msgs::PoseStamped start_frame;
-    if(!selectedHand.compare("RSoftHand"))
+    if(!selectedHand.compare("arm2_7"))
       start_frame = *shared_data()._last_pose_right_hand;
-    else if(!selectedHand.compare("LSoftHand"))
+    else if(!selectedHand.compare("arm1_7"))
       start_frame = *shared_data()._last_pose_left_hand;
     
     trajectory_utils::Cartesian start;
@@ -1061,15 +1052,14 @@ void myfsm::MoveAway::entry(const XBot::FSM::Message& msg){
     // define the intermediate frame 
     geometry_msgs::PoseStamped intermediate_frame;
 
-    intermediate_frame.pose.position.x = 0.50;
+    intermediate_frame.pose.position.x = 0.52;
     
-    if(!selectedHand.compare("RSoftHand"))
-      intermediate_frame.pose.position.y = -0.393;
-    else if(!selectedHand.compare("LSoftHand"))
-      intermediate_frame.pose.position.y = 0.393;
+    if(!selectedHand.compare("arm2_7"))
+      intermediate_frame.pose.position.y = -0.36;
+    else if(!selectedHand.compare("arm1_7"))
+      intermediate_frame.pose.position.y = 0.36;
     
-//     intermediate_frame.pose.position.z = 1.09;
-    intermediate_frame.pose.position.z = 1.2;
+    intermediate_frame.pose.position.z = -0.05;
     if(shared_data()._hand_over_phase)
       intermediate_frame.pose.position.z+= 0.15;
     
@@ -1095,11 +1085,11 @@ void myfsm::MoveAway::entry(const XBot::FSM::Message& msg){
     // define the end frame
     geometry_msgs::PoseStamped end_frame;
     
-    if(!selectedHand.compare("RSoftHand")){
+    if(!selectedHand.compare("arm2_7")){
       
-      end_frame.pose.position.x = 0.3; //0.4
-      end_frame.pose.position.y = -0.75; //-0.68
-      end_frame.pose.position.z = 1.05;
+      end_frame.pose.position.x = 0.32; //0.4
+      end_frame.pose.position.y = -0.72; //-0.68
+      end_frame.pose.position.z = -0.2;
       
       if(shared_data()._hand_over_phase){
         end_frame.pose.position.z+= 0.22;
@@ -1112,11 +1102,11 @@ void myfsm::MoveAway::entry(const XBot::FSM::Message& msg){
       end_frame.pose.orientation.w = 0.678;
       
     }
-    else if(!selectedHand.compare("LSoftHand")){
+    else if(!selectedHand.compare("arm1_7")){
       
-      end_frame.pose.position.x = 0.3;
-      end_frame.pose.position.y = 0.75;
-      end_frame.pose.position.z = 1.05;
+      end_frame.pose.position.x = 0.32;
+      end_frame.pose.position.y = 0.78;
+      end_frame.pose.position.z = -0.2;
       
       if(shared_data()._hand_over_phase){
         end_frame.pose.position.z+= 0.15;
@@ -1131,9 +1121,9 @@ void myfsm::MoveAway::entry(const XBot::FSM::Message& msg){
     }
  
     
-    if(!selectedHand.compare("RSoftHand"))
+    if(!selectedHand.compare("arm2_7"))
       shared_data()._last_pose_right_hand = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(end_frame));
-    else if(!selectedHand.compare("LSoftHand"))
+    else if(!selectedHand.compare("arm1_7"))
       shared_data()._last_pose_left_hand = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(end_frame));    
 
     trajectory_utils::Cartesian end;
@@ -1151,7 +1141,7 @@ void myfsm::MoveAway::entry(const XBot::FSM::Message& msg){
     
     // prepare the advr_segment_control
     ADVR_ROS::advr_segment_control srv;
-    srv.request.segment_trj.header.frame_id = "world_odom";
+    srv.request.segment_trj.header.frame_id = "torso_2";
     srv.request.segment_trj.header.stamp = ros::Time::now();
     srv.request.segment_trj.segments = segments;
     
@@ -1186,44 +1176,8 @@ void myfsm::MoveAway::run(double time, double period){
     
     // MoveAway Succeeded
     if (!shared_data().current_command->str().compare("success")){
-      
       //TEMPORARY
       transit("PlaceDown");
-      
-//       std::cout << "PROVAAAAAAAAAAAAAAAAAA" << std::endl;
-//       
-//       //Hand Pose to get the initial wrench for the PlaceDown state
-//       shared_data()._robot->sense(); 
-//     
-//       Eigen::Affine3d world_T_bl;
-//       std::string fb;  
-//       
-//       shared_data()._robot->model().getFloatingBaseLink(fb);
-//       tf.getTransformTf(fb, "world_odom", world_T_bl);
-//     
-//       shared_data()._robot->model().setFloatingBasePose(world_T_bl);
-//       shared_data()._robot->model().update();     
-//       
-//       // RIGHT HAND
-//       
-//       Eigen::Affine3d poseRightHand;
-//       shared_data()._robot->model().getPose("RSoftHand", poseRightHand);
-//       
-//       //Reading initial wrench from ros topic
-//       double f_x,f_y,f_z,w_Fz_ft;
-//       
-//       shared_data()._ft_r_arm = ros::topic::waitForMessage<geometry_msgs::WrenchStamped>("/xbotcore/bigman/ft/r_arm_ft");
-//       
-//       f_x = shared_data()._ft_r_arm->wrench.force.x;
-//       f_y = shared_data()._ft_r_arm->wrench.force.y;
-//       f_z = shared_data()._ft_r_arm->wrench.force.z;
-//   
-//       Eigen::Vector3d ft_F_ft, w_F_ft;
-//       ft_F_ft << f_x, f_y, f_z;
-//       w_F_ft = poseRightHand * ft_F_ft;
-//       shared_data()._w_F_ft_initial = w_F_ft(2);
-//       
-//       transit("PlaceDown");
     }
   } 
 }
@@ -1262,9 +1216,9 @@ void myfsm::PlaceDown::entry(const XBot::FSM::Message& msg){
 
     // define the start frame 
     geometry_msgs::PoseStamped start_frame;
-    if(!selectedHand.compare("RSoftHand"))
+    if(!selectedHand.compare("arm2_7"))
       start_frame = *shared_data()._last_pose_right_hand;
-    else if(!selectedHand.compare("LSoftHand"))
+    else if(!selectedHand.compare("arm1_7"))
       start_frame = *shared_data()._last_pose_left_hand;
     
     trajectory_utils::Cartesian start;
@@ -1284,9 +1238,9 @@ void myfsm::PlaceDown::entry(const XBot::FSM::Message& msg){
     end.distal_frame = selectedHand;
     end.frame = end_frame;
 
-    if(!selectedHand.compare("RSoftHand"))
+    if(!selectedHand.compare("arm2_7"))
       shared_data()._last_pose_right_hand = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(end_frame));
-    else if(!selectedHand.compare("LSoftHand"))
+    else if(!selectedHand.compare("arm1_7"))
       shared_data()._last_pose_left_hand = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(end_frame));    
 
     // define the first segment
@@ -1306,7 +1260,7 @@ void myfsm::PlaceDown::entry(const XBot::FSM::Message& msg){
     
     // prepare the advr_segment_control
     ADVR_ROS::advr_segment_control srv;
-    srv.request.segment_trj.header.frame_id = "world_odom";
+    srv.request.segment_trj.header.frame_id = "torso_2";
     srv.request.segment_trj.header.stamp = ros::Time::now();
     srv.request.segment_trj.segments = segments;
     
@@ -1460,9 +1414,9 @@ void myfsm::AdjustLaterally::entry(const XBot::FSM::Message& msg){
 
     // define the start frame 
     geometry_msgs::PoseStamped start_frame;
-    if(!selectedHand.compare("RSoftHand"))
+    if(!selectedHand.compare("arm2_7"))
       start_frame = *shared_data()._last_pose_right_hand;
-    else if(!selectedHand.compare("LSoftHand"))
+    else if(!selectedHand.compare("arm1_7"))
       start_frame = *shared_data()._last_pose_left_hand;
     
     trajectory_utils::Cartesian start;
@@ -1474,13 +1428,13 @@ void myfsm::AdjustLaterally::entry(const XBot::FSM::Message& msg){
     
     end_frame = start_frame;
     
-    if(!selectedHand.compare("RSoftHand")){
+    if(!selectedHand.compare("arm2_7")){
       
       end_frame.pose.position.y+=0.01;
       
       shared_data()._last_pose_right_hand = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(end_frame));
       
-    }else if(!selectedHand.compare("LSoftHand")){
+    }else if(!selectedHand.compare("arm1_7")){
 
       end_frame.pose.position.y-= 0.01;
       
@@ -1506,7 +1460,7 @@ void myfsm::AdjustLaterally::entry(const XBot::FSM::Message& msg){
     
     // prepare the advr_segment_control
     ADVR_ROS::advr_segment_control srv;
-    srv.request.segment_trj.header.frame_id = "world_odom";
+    srv.request.segment_trj.header.frame_id = "torso_2";
     srv.request.segment_trj.header.stamp = ros::Time::now();
     srv.request.segment_trj.segments = segments;
     
@@ -1601,9 +1555,9 @@ void myfsm::AdjustForward::entry(const XBot::FSM::Message& msg){
 
     // define the start frame 
     geometry_msgs::PoseStamped start_frame;
-    if(!selectedHand.compare("RSoftHand"))
+    if(!selectedHand.compare("arm2_7"))
       start_frame = *shared_data()._last_pose_right_hand;
-    else if(!selectedHand.compare("LSoftHand"))
+    else if(!selectedHand.compare("arm1_7"))
       start_frame = *shared_data()._last_pose_left_hand;
     
     trajectory_utils::Cartesian start;
@@ -1616,9 +1570,9 @@ void myfsm::AdjustForward::entry(const XBot::FSM::Message& msg){
     end_frame = start_frame;
     end_frame.pose.position.x+=0.01;
     
-    if(!selectedHand.compare("RSoftHand"))
+    if(!selectedHand.compare("arm2_7"))
       shared_data()._last_pose_right_hand = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(end_frame));
-    else if(!selectedHand.compare("LSoftHand"))
+    else if(!selectedHand.compare("arm1_7"))
       shared_data()._last_pose_left_hand = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(end_frame));
        
 
@@ -1639,7 +1593,7 @@ void myfsm::AdjustForward::entry(const XBot::FSM::Message& msg){
     
     // prepare the advr_segment_control
     ADVR_ROS::advr_segment_control srv;
-    srv.request.segment_trj.header.frame_id = "world_odom";
+    srv.request.segment_trj.header.frame_id = "torso_2";
     srv.request.segment_trj.header.stamp = ros::Time::now();
     srv.request.segment_trj.segments = segments;
     
