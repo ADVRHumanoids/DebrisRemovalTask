@@ -24,7 +24,8 @@ rosrun robot_state_publisher robot_state_publisher
 ```
 
 ```cpp
-rosrun tf tf_echo /world_odom /RSoftHand
+rosrun tf tf_echo /torso_2 /arm1_8
+rosrun tf tf_echo /torso_2 /arm2_8
 ```
 
 To send a pose to be reached by the locomotion

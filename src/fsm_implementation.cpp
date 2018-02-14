@@ -28,12 +28,20 @@ void myfsm::Homing_init::entry(const XBot::FSM::Message& msg){
     Eigen::Affine3d poseLeftHand,poseRightHand;
     geometry_msgs::Pose left_hand_pose,right_hand_pose;
     
-    shared_data()._robot->model().getPose("arm1_7", "torso_2", poseLeftHand);
-    shared_data()._robot->model().getPose("arm2_7", "torso_2", poseRightHand);
+//     shared_data()._robot->model().getPose("arm2_8", "torso_2", poseRightHand);
+//     
+//     tf::poseEigenToMsg (poseRightHand, right_hand_pose);
+
+//     std::cout << "Pose right arm2_8:\n" << right_hand_pose.orientation << "\n\n" << right_hand_pose.position << std::endl;
+    
+    shared_data()._robot->model().getPose("arm1_8", "torso_2", poseLeftHand);
+    shared_data()._robot->model().getPose("arm2_8", "torso_2", poseRightHand);
     
     tf::poseEigenToMsg (poseLeftHand, left_hand_pose);
     tf::poseEigenToMsg (poseRightHand, right_hand_pose);
 
+    std::cout << "Pose right arm2_8:\n" << right_hand_pose.orientation << "\n\n" << right_hand_pose.position << std::endl;
+    
     geometry_msgs::PoseStamped leftHandFrame,rightHandFrame;
     leftHandFrame.pose = left_hand_pose;
     rightHandFrame.pose = right_hand_pose;
@@ -80,24 +88,24 @@ void myfsm::Homing_Ree::entry(const XBot::FSM::Message& msg){
     start_frame = *shared_data()._last_pose_right_hand;
     
     trajectory_utils::Cartesian start;
-    start.distal_frame = "arm2_7";
+    start.distal_frame = "arm2_8";
     start.frame = start_frame;
     
     // define the end frame
     geometry_msgs::PoseStamped end_frame;
 //     end_frame = *shared_data()._initial_pose_right_hand;
     
-    end_frame.pose.position.x = 0.514;
-    end_frame.pose.position.y = -0.506;
-    end_frame.pose.position.z = -0.1;
+    end_frame.pose.position.x = 0.546;
+    end_frame.pose.position.y = -0.51;
+    end_frame.pose.position.z = -0.08;
     
-    end_frame.pose.orientation.x = 0.178;
-    end_frame.pose.orientation.y = 0.871;
-    end_frame.pose.orientation.z = -0.026;
-    end_frame.pose.orientation.w = -0.456;  
+    end_frame.pose.orientation.x = 0.306;
+    end_frame.pose.orientation.y = 0.343;
+    end_frame.pose.orientation.z = 0.490;
+    end_frame.pose.orientation.w = 0.741;  
     
     trajectory_utils::Cartesian end;
-    end.distal_frame = "arm2_7";
+    end.distal_frame = "arm2_8";
     end.frame = end_frame;
     
     //save the RIGHT HAND pose
@@ -134,8 +142,8 @@ void myfsm::Homing_Ree::entry(const XBot::FSM::Message& msg){
 void myfsm::Homing_Ree::run(double time, double period){
   
   //Wait for the trajectory to be completed
-  if(!shared_data()._feedback)
-    transit("Homing_Lee");
+//   if(!shared_data()._feedback)
+//     transit("Homing_Lee");
 //   std::cout << "feedback: " << shared_data()._feedback << std::endl; //test on real robot
   
   // blocking reading: wait for a command
@@ -185,7 +193,7 @@ void myfsm::Homing_Lee::entry(const XBot::FSM::Message& msg){
     start_frame = *shared_data()._last_pose_left_hand;
     
     trajectory_utils::Cartesian start;
-    start.distal_frame = "arm1_7";
+    start.distal_frame = "arm1_8";
     start.frame = start_frame;
     
     // define the potential intermediate frame
@@ -196,24 +204,25 @@ void myfsm::Homing_Lee::entry(const XBot::FSM::Message& msg){
       intermediate_frame.pose.position.x+= 0.08;
       intermediate_frame.pose.position.y+= 0.08;
       
-      intermediate.distal_frame = "arm1_7";
+      intermediate.distal_frame = "arm1_8";
       intermediate.frame = intermediate_frame;
     }
     
     // define the end frame
     geometry_msgs::PoseStamped end_frame;
 //     end_frame = *shared_data()._initial_pose_left_hand;
-    end_frame.pose.position.x = 0.514; 
-    end_frame.pose.position.y = 0.506;
-    end_frame.pose.position.z = -0.1;
     
-    end_frame.pose.orientation.x = -0.178;
-    end_frame.pose.orientation.y = 0.871;
-    end_frame.pose.orientation.z = 0.026;
-    end_frame.pose.orientation.w = -0.456;     
+    end_frame.pose.position.x = 0.546;
+    end_frame.pose.position.y = 0.51;
+    end_frame.pose.position.z = -0.08;
+    
+    end_frame.pose.orientation.x = 0.343;
+    end_frame.pose.orientation.y = 0.306;
+    end_frame.pose.orientation.z = 0.741;
+    end_frame.pose.orientation.w = 0.490;    
     
     trajectory_utils::Cartesian end;
-    end.distal_frame = "arm1_7";
+    end.distal_frame = "arm1_8";
     end.frame = end_frame;
     
     //save the LEFT HAND pose
@@ -328,15 +337,15 @@ void myfsm::HandSelection::run(double time, double period){
   {
     std::cout << "Command: " << shared_data().current_command->str() << std::endl;
 
-    // arm1_7 selected
-    if (!shared_data().current_command->str().compare("arm1_7")){
+    // arm1_8 selected
+    if (!shared_data().current_command->str().compare("arm1_8")){
       std_msgs::String message;
       message.data = shared_data().current_command->str();
       shared_data()._hand_selection =  boost::shared_ptr<std_msgs::String>(new std_msgs::String(message));;
       transit("Reach");
     }
-    // arm2_7 selected
-    if (!shared_data().current_command->str().compare("arm2_7")){
+    // arm2_8 selected
+    if (!shared_data().current_command->str().compare("arm2_8")){
       std_msgs::String message;
       message.data = shared_data().current_command->str();
       shared_data()._hand_selection =  boost::shared_ptr<std_msgs::String>(new std_msgs::String(message));;
@@ -346,10 +355,10 @@ void myfsm::HandSelection::run(double time, double period){
       shared_data()._time+= period;
       if(shared_data()._time > WAITING_TIME){
         std_msgs::String message;
-        message.data = "arm2_7";
+        message.data = "arm2_8";
         shared_data()._hand_selection =  boost::shared_ptr<std_msgs::String>(new std_msgs::String(message));;
         transit("Reach");
-    //     shared_data().current_command = std::shared_ptr<XBot::Command>(new XBot::Command("arm2_7"));
+    //     shared_data().current_command = std::shared_ptr<XBot::Command>(new XBot::Command("arm2_8"));
       }     
   }
 
@@ -387,7 +396,7 @@ void myfsm::Reach::entry(const XBot::FSM::Message& msg){
     
     std::cout << "SelectedHand: " << message.data << std::endl;
     
-    if(selectedHand.compare("arm2_7") || selectedHand.compare("arm1_7")){
+    if(selectedHand.compare("arm2_8") || selectedHand.compare("arm1_8")){
         std::cout << "\n\n" << 
               "\033[1m**************Reach state***************\033[0m\n" <<
               "\033[1mSelect the pose where the debris is. \033[0m" << std::endl;
@@ -405,9 +414,9 @@ void myfsm::Reach::entry(const XBot::FSM::Message& msg){
 
     // define the start frame 
     geometry_msgs::PoseStamped start_frame;
-    if(!selectedHand.compare("arm2_7"))
+    if(!selectedHand.compare("arm2_8"))
       start_frame = *shared_data()._last_pose_right_hand;
-    else if(!selectedHand.compare("arm1_7"))
+    else if(!selectedHand.compare("arm1_8"))
       start_frame = *shared_data()._last_pose_left_hand;
 
     trajectory_utils::Cartesian start;
@@ -420,10 +429,10 @@ void myfsm::Reach::entry(const XBot::FSM::Message& msg){
     
     intermediate_frame = *shared_data()._debris_pose;
 
-    if(!selectedHand.compare("arm2_7")){
+    if(!selectedHand.compare("arm2_8")){
       intermediate_frame.pose.position.x-= 0.2;
 //       intermediate_frame.pose.position.y-= 0.2;
-    }else if(!selectedHand.compare("arm1_7")){
+    }else if(!selectedHand.compare("arm1_8")){
       intermediate_frame.pose.position.x-= 0.2;
 //       intermediate_frame.pose.position.y+= 0.2;
     }
@@ -451,9 +460,9 @@ void myfsm::Reach::entry(const XBot::FSM::Message& msg){
     end.distal_frame = selectedHand;
     end.frame = end_frame;
 
-    if(!selectedHand.compare("arm2_7"))
+    if(!selectedHand.compare("arm2_8"))
       shared_data()._last_pose_right_hand = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(end_frame));
-    else if(!selectedHand.compare("arm1_7"))
+    else if(!selectedHand.compare("arm1_8"))
       shared_data()._last_pose_left_hand = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(end_frame));
     
     
@@ -550,7 +559,7 @@ void myfsm::Grasp::entry(const XBot::FSM::Message& msg){
     
     ADVR_ROS::advr_grasp_control_srv srv;
   
-    if(!selectedHand.compare("arm2_7")){
+    if(!selectedHand.compare("arm2_8")){
       if(!shared_data()._hand_over_phase){
           srv.request.right_grasp = 1.0;
           srv.request.left_grasp = 0.0;
@@ -558,7 +567,7 @@ void myfsm::Grasp::entry(const XBot::FSM::Message& msg){
           srv.request.right_grasp = 1.0;
           srv.request.left_grasp = 1.0;
       }
-    }else if(!selectedHand.compare("arm1_7")){
+    }else if(!selectedHand.compare("arm1_8")){
           srv.request.right_grasp = 0.0;
           srv.request.left_grasp = 1.0;
     }
@@ -646,9 +655,9 @@ void myfsm::Pick::entry(const XBot::FSM::Message& msg){
 
     // define the start frame 
     geometry_msgs::PoseStamped start_frame;
-    if(!selectedHand.compare("arm2_7"))
+    if(!selectedHand.compare("arm2_8"))
       start_frame = *shared_data()._last_pose_right_hand;
-    else if(!selectedHand.compare("arm1_7"))
+    else if(!selectedHand.compare("arm1_8"))
       start_frame = *shared_data()._last_pose_left_hand;
     
     trajectory_utils::Cartesian start;
@@ -658,29 +667,29 @@ void myfsm::Pick::entry(const XBot::FSM::Message& msg){
     // define the end frame
     geometry_msgs::PoseStamped end_frame;
     
-    if(!selectedHand.compare("arm2_7")){
+    if(!selectedHand.compare("arm2_8")){
       
-      end_frame.pose.position.x = 0.52;
-      end_frame.pose.position.y = -0.17;
-      end_frame.pose.position.z = -0.15;   
+      end_frame.pose.position.x = 0.54;
+      end_frame.pose.position.y = -0.14;
+      end_frame.pose.position.z = -0.16;   
       
-      end_frame.pose.orientation.x = 0.225;
-      end_frame.pose.orientation.y = -0.592;
-      end_frame.pose.orientation.z = 0.432;
-      end_frame.pose.orientation.w = 0.641; 
+      end_frame.pose.orientation.x = 0.149;
+      end_frame.pose.orientation.y = 0.761;
+      end_frame.pose.orientation.z = 0.577;
+      end_frame.pose.orientation.w = 0.259; 
       
       shared_data()._last_pose_right_hand = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(end_frame));
       
-    }else if(!selectedHand.compare("arm1_7")){
+    }else if(!selectedHand.compare("arm1_8")){
       
-      end_frame.pose.position.x = 0.45;
-      end_frame.pose.position.y = -0.01;
-      end_frame.pose.position.z = -1.15;   
-
-      end_frame.pose.orientation.x = -0.560986042210475;
-      end_frame.pose.orientation.y = -0.560986042210475;
-      end_frame.pose.orientation.z = -0.4304593800557022;
-      end_frame.pose.orientation.w = 0.4304593800557022;
+      end_frame.pose.position.x = 0.54;
+      end_frame.pose.position.y = 0.14;
+      end_frame.pose.position.z = -0.16;   
+      
+      end_frame.pose.orientation.x = 0.149;
+      end_frame.pose.orientation.y = 0.761;
+      end_frame.pose.orientation.z = 0.577;
+      end_frame.pose.orientation.w = 0.259; 
       
       shared_data()._last_pose_left_hand = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(end_frame));
       
@@ -780,10 +789,10 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
     
     std::string secondHand;
 
-    if(!holdingHand.compare("arm2_7"))
-      secondHand = "arm1_7";
-    else if(!holdingHand.compare("arm1_7"))
-      secondHand = "arm2_7";
+    if(!holdingHand.compare("arm2_8"))
+      secondHand = "arm1_8";
+    else if(!holdingHand.compare("arm1_8"))
+      secondHand = "arm2_8";
     
 //     std::cout << "holdingHand: " << holdingHand << std::endl;
 //     std::cout << "secondHand: " << secondHand << std::endl;
@@ -794,9 +803,9 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
 
     // define the start frame 
     geometry_msgs::PoseStamped start_frame;
-    if(!holdingHand.compare("arm2_7"))
+    if(!holdingHand.compare("arm2_8"))
       start_frame = *shared_data()._last_pose_left_hand;
-    else if(!holdingHand.compare("arm1_7"))
+    else if(!holdingHand.compare("arm1_8"))
       start_frame = *shared_data()._last_pose_right_hand;    
     
     trajectory_utils::Cartesian start;
@@ -857,7 +866,7 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
     poseHoldingHand_KDL.M.GetQuaternion(qx,qy,qz,qw);
     
 
-    if(!secondHand.compare("arm2_7")){
+    if(!secondHand.compare("arm2_8")){
       
       intermediate_frame.pose.position.x = start_frame_pose_holding_hand.position.x;
       intermediate_frame.pose.position.y = start_frame_pose_holding_hand.position.y;
@@ -868,7 +877,7 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
       intermediate_frame.pose.orientation.z = qz;
       intermediate_frame.pose.orientation.w = qw;        
       
-    }else if(!secondHand.compare("arm1_7")){
+    }else if(!secondHand.compare("arm1_8")){
       
       //TO BE IMPLEMENTED, IF NEEDED
       
@@ -917,7 +926,7 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
     poseHoldingHand_KDL_2.M.GetQuaternion(qx,qy,qz,qw);
     
 
-    if(!secondHand.compare("arm2_7")){
+    if(!secondHand.compare("arm2_8")){
       
       end_frame.pose.position.x = start_frame_pose_second_hand.position.x;
       end_frame.pose.position.y = start_frame_pose_second_hand.position.y;
@@ -928,7 +937,7 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
       end_frame.pose.orientation.z = qz;
       end_frame.pose.orientation.w = qw;        
       
-    }else if(!secondHand.compare("arm1_7")){
+    }else if(!secondHand.compare("arm1_8")){
       
       //TO BE IMPLEMENTED, IF NEEDED
       
@@ -939,9 +948,9 @@ void myfsm::PickSecondHand::entry(const XBot::FSM::Message& msg){
     end.frame = end_frame;
 
    
-    if(!secondHand.compare("arm2_7"))
+    if(!secondHand.compare("arm2_8"))
       shared_data()._last_pose_right_hand = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(end_frame));
-    else if(!secondHand.compare("arm1_7"))
+    else if(!secondHand.compare("arm1_8"))
       shared_data()._last_pose_left_hand = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(end_frame));    
     
     // define the second segment
@@ -990,12 +999,12 @@ void myfsm::PickSecondHand::run(double time, double period){
       selectedHand = shared_data()._hand_selection->data;
       
       std_msgs::String rightHand,leftHand;
-      rightHand.data = "arm2_7";   
-      leftHand.data = "arm1_7";       
+      rightHand.data = "arm2_8";   
+      leftHand.data = "arm1_8";       
       
-      if(!selectedHand.compare("arm2_7"))
+      if(!selectedHand.compare("arm2_8"))
         shared_data()._hand_selection = boost::shared_ptr<std_msgs::String>(new std_msgs::String(leftHand));
-      else if(!selectedHand.compare("arm1_7"))
+      else if(!selectedHand.compare("arm1_8"))
         shared_data()._hand_selection = boost::shared_ptr<std_msgs::String>(new std_msgs::String(rightHand));
 
       //Activate Handover phase      
@@ -1039,9 +1048,9 @@ void myfsm::MoveAway::entry(const XBot::FSM::Message& msg){
 
     // define the start frame 
     geometry_msgs::PoseStamped start_frame;
-    if(!selectedHand.compare("arm2_7"))
+    if(!selectedHand.compare("arm2_8"))
       start_frame = *shared_data()._last_pose_right_hand;
-    else if(!selectedHand.compare("arm1_7"))
+    else if(!selectedHand.compare("arm1_8"))
       start_frame = *shared_data()._last_pose_left_hand;
     
     trajectory_utils::Cartesian start;
@@ -1052,21 +1061,21 @@ void myfsm::MoveAway::entry(const XBot::FSM::Message& msg){
     // define the intermediate frame 
     geometry_msgs::PoseStamped intermediate_frame;
 
-    intermediate_frame.pose.position.x = 0.52;
+    intermediate_frame.pose.position.x = 0.56;
     
-    if(!selectedHand.compare("arm2_7"))
+    if(!selectedHand.compare("arm2_8"))
       intermediate_frame.pose.position.y = -0.36;
-    else if(!selectedHand.compare("arm1_7"))
+    else if(!selectedHand.compare("arm1_8"))
       intermediate_frame.pose.position.y = 0.36;
     
     intermediate_frame.pose.position.z = -0.05;
     if(shared_data()._hand_over_phase)
       intermediate_frame.pose.position.z+= 0.15;
     
-    intermediate_frame.pose.orientation.x = 0.0;
-    intermediate_frame.pose.orientation.y = -0.7071070192004544;
-    intermediate_frame.pose.orientation.z = 0.0;
-    intermediate_frame.pose.orientation.w = 0.7071070192004544;     
+    intermediate_frame.pose.orientation.x = 0.504;
+    intermediate_frame.pose.orientation.y = 0.499;
+    intermediate_frame.pose.orientation.z = 0.497;
+    intermediate_frame.pose.orientation.w = 0.499;
     
     trajectory_utils::Cartesian intermediate;
     intermediate.distal_frame = selectedHand;
@@ -1085,34 +1094,40 @@ void myfsm::MoveAway::entry(const XBot::FSM::Message& msg){
     // define the end frame
     geometry_msgs::PoseStamped end_frame;
     
-    if(!selectedHand.compare("arm2_7")){
+    if(!selectedHand.compare("arm2_8")){
       
-      end_frame.pose.position.x = 0.32; //0.4
-      end_frame.pose.position.y = -0.72; //-0.68
-      end_frame.pose.position.z = -0.2;
+      end_frame.pose.position.x = 0.33;
+      end_frame.pose.position.y = -0.76;
+      end_frame.pose.position.z = -0.22;
       
       if(shared_data()._hand_over_phase){
         end_frame.pose.position.z+= 0.22;
         shared_data()._hand_over_phase = false;
       }
     
-      end_frame.pose.orientation.x = -0.386;
-      end_frame.pose.orientation.y = -0.429;
-      end_frame.pose.orientation.z = -0.452;
-      end_frame.pose.orientation.w = 0.678;
+      end_frame.pose.orientation.x = 0.802;
+      end_frame.pose.orientation.y = 0.161;
+      end_frame.pose.orientation.z = 0.031;
+      end_frame.pose.orientation.w = 0.575;
       
     }
-    else if(!selectedHand.compare("arm1_7")){
+    else if(!selectedHand.compare("arm1_8")){
       
-      end_frame.pose.position.x = 0.32;
-      end_frame.pose.position.y = 0.78;
-      end_frame.pose.position.z = -0.2;
+      //TBD if needed
+      end_frame.pose.position.x = 0.33;
+      end_frame.pose.position.y = 0.76;
+      end_frame.pose.position.z = -0.22;
       
       if(shared_data()._hand_over_phase){
         end_frame.pose.position.z+= 0.15;
         shared_data()._hand_over_phase = false;
       }
-    
+//       //before was:
+// -      end_frame.pose.orientation.x = -0.386;
+// -      end_frame.pose.orientation.y = -0.429;
+// -      end_frame.pose.orientation.z = -0.452;
+// -      end_frame.pose.orientation.w = 0.678;
+//       
       end_frame.pose.orientation.x = 0.386;
       end_frame.pose.orientation.y = -0.429;
       end_frame.pose.orientation.z = 0.452;
@@ -1121,9 +1136,9 @@ void myfsm::MoveAway::entry(const XBot::FSM::Message& msg){
     }
  
     
-    if(!selectedHand.compare("arm2_7"))
+    if(!selectedHand.compare("arm2_8"))
       shared_data()._last_pose_right_hand = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(end_frame));
-    else if(!selectedHand.compare("arm1_7"))
+    else if(!selectedHand.compare("arm1_8"))
       shared_data()._last_pose_left_hand = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(end_frame));    
 
     trajectory_utils::Cartesian end;
@@ -1216,9 +1231,9 @@ void myfsm::PlaceDown::entry(const XBot::FSM::Message& msg){
 
     // define the start frame 
     geometry_msgs::PoseStamped start_frame;
-    if(!selectedHand.compare("arm2_7"))
+    if(!selectedHand.compare("arm2_8"))
       start_frame = *shared_data()._last_pose_right_hand;
-    else if(!selectedHand.compare("arm1_7"))
+    else if(!selectedHand.compare("arm1_8"))
       start_frame = *shared_data()._last_pose_left_hand;
     
     trajectory_utils::Cartesian start;
@@ -1238,9 +1253,9 @@ void myfsm::PlaceDown::entry(const XBot::FSM::Message& msg){
     end.distal_frame = selectedHand;
     end.frame = end_frame;
 
-    if(!selectedHand.compare("arm2_7"))
+    if(!selectedHand.compare("arm2_8"))
       shared_data()._last_pose_right_hand = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(end_frame));
-    else if(!selectedHand.compare("arm1_7"))
+    else if(!selectedHand.compare("arm1_8"))
       shared_data()._last_pose_left_hand = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(end_frame));    
 
     // define the first segment
@@ -1414,9 +1429,9 @@ void myfsm::AdjustLaterally::entry(const XBot::FSM::Message& msg){
 
     // define the start frame 
     geometry_msgs::PoseStamped start_frame;
-    if(!selectedHand.compare("arm2_7"))
+    if(!selectedHand.compare("arm2_8"))
       start_frame = *shared_data()._last_pose_right_hand;
-    else if(!selectedHand.compare("arm1_7"))
+    else if(!selectedHand.compare("arm1_8"))
       start_frame = *shared_data()._last_pose_left_hand;
     
     trajectory_utils::Cartesian start;
@@ -1428,13 +1443,13 @@ void myfsm::AdjustLaterally::entry(const XBot::FSM::Message& msg){
     
     end_frame = start_frame;
     
-    if(!selectedHand.compare("arm2_7")){
+    if(!selectedHand.compare("arm2_8")){
       
       end_frame.pose.position.y+=0.01;
       
       shared_data()._last_pose_right_hand = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(end_frame));
       
-    }else if(!selectedHand.compare("arm1_7")){
+    }else if(!selectedHand.compare("arm1_8")){
 
       end_frame.pose.position.y-= 0.01;
       
@@ -1555,9 +1570,9 @@ void myfsm::AdjustForward::entry(const XBot::FSM::Message& msg){
 
     // define the start frame 
     geometry_msgs::PoseStamped start_frame;
-    if(!selectedHand.compare("arm2_7"))
+    if(!selectedHand.compare("arm2_8"))
       start_frame = *shared_data()._last_pose_right_hand;
-    else if(!selectedHand.compare("arm1_7"))
+    else if(!selectedHand.compare("arm1_8"))
       start_frame = *shared_data()._last_pose_left_hand;
     
     trajectory_utils::Cartesian start;
@@ -1570,9 +1585,9 @@ void myfsm::AdjustForward::entry(const XBot::FSM::Message& msg){
     end_frame = start_frame;
     end_frame.pose.position.x+=0.01;
     
-    if(!selectedHand.compare("arm2_7"))
+    if(!selectedHand.compare("arm2_8"))
       shared_data()._last_pose_right_hand = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(end_frame));
-    else if(!selectedHand.compare("arm1_7"))
+    else if(!selectedHand.compare("arm1_8"))
       shared_data()._last_pose_left_hand = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(end_frame));
        
 
