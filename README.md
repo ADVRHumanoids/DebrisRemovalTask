@@ -1,4 +1,4 @@
-First make sure you set:
+First make sure you add to walkman_example.yaml the DebrisRemovalTask module and to set it:
 
 ```cpp
 set_xbot_config $ROBOTOLOGY_ROOT/configs/ADVR_shared/user_example/walkman_example.yaml
