@@ -682,14 +682,15 @@ void myfsm::Pick::entry(const XBot::FSM::Message& msg){
       
     }else if(!selectedHand.compare("arm1_8")){
       
+      //NOT OPTIMIZED FOR HANDOVER
       end_frame.pose.position.x = 0.54;
       end_frame.pose.position.y = 0.14;
       end_frame.pose.position.z = -0.16;   
       
-      end_frame.pose.orientation.x = 0.149;
-      end_frame.pose.orientation.y = 0.761;
-      end_frame.pose.orientation.z = 0.577;
-      end_frame.pose.orientation.w = 0.259; 
+      end_frame.pose.orientation.x = 0.761;
+      end_frame.pose.orientation.y = 0.149;
+      end_frame.pose.orientation.z = 0.259;
+      end_frame.pose.orientation.w = 0.577; 
       
       shared_data()._last_pose_left_hand = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(end_frame));
       
@@ -1113,25 +1114,14 @@ void myfsm::MoveAway::entry(const XBot::FSM::Message& msg){
     }
     else if(!selectedHand.compare("arm1_8")){
       
-      //TBD if needed
       end_frame.pose.position.x = 0.33;
       end_frame.pose.position.y = 0.76;
       end_frame.pose.position.z = -0.22;
       
-      if(shared_data()._hand_over_phase){
-        end_frame.pose.position.z+= 0.15;
-        shared_data()._hand_over_phase = false;
-      }
-//       //before was:
-// -      end_frame.pose.orientation.x = -0.386;
-// -      end_frame.pose.orientation.y = -0.429;
-// -      end_frame.pose.orientation.z = -0.452;
-// -      end_frame.pose.orientation.w = 0.678;
-//       
-      end_frame.pose.orientation.x = 0.386;
-      end_frame.pose.orientation.y = -0.429;
-      end_frame.pose.orientation.z = 0.452;
-      end_frame.pose.orientation.w = 0.678;
+      end_frame.pose.orientation.x = 0.161;
+      end_frame.pose.orientation.y = 0.802;
+      end_frame.pose.orientation.z = 0.575;
+      end_frame.pose.orientation.w = 0.031;
       
     }
  
