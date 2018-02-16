@@ -8,6 +8,7 @@
 #define TRAJ_DURATION 10
 #define WAITING_TIME 5
 #define AUTONOMOUS 0
+#define COMPLIANCE 0
 
 
 /******************************** BEGIN Homing_init *******************************/
@@ -23,24 +24,34 @@ void myfsm::Homing_init::entry(const XBot::FSM::Message& msg){
     shared_data().plugin_status->setStatus("HOMING");
     std::cout << "Homing_init_entry" << std::endl;
     shared_data()._robot->sense(); 
-
+    
+    
+    /************************************************************************************/
+    //SETTING STIFFNESS TO BE COMPLIANT
+    if(COMPLIANCE){
+      std::cout << "Compliant mode." << std::endl;
+      Eigen::VectorXd K;
+      shared_data()._robot->sense();
+      shared_data()._robot->chain("right_arm").getStiffness(K);
+      //std::cout << "Stiffness before: " << K.transpose() << std::endl;
+      for(int i = 0; i < shared_data()._robot->chain("right_arm").getJointNum() ; i++)
+        K(i) = 100;
+      shared_data()._robot->chain("right_arm").setStiffness(K);
+      shared_data()._robot->chain("right_arm").getStiffness(K);
+      std::cout << "Right arm stiffness set to:\n" << K.transpose() << std::endl;
+    }
+    /************************************************************************************/
+    
+    
     // SAVE INITIAL END EFFECTOR POSES
     Eigen::Affine3d poseLeftHand,poseRightHand;
     geometry_msgs::Pose left_hand_pose,right_hand_pose;
-    
-//     shared_data()._robot->model().getPose("arm2_8", "torso_2", poseRightHand);
-//     
-//     tf::poseEigenToMsg (poseRightHand, right_hand_pose);
-
-//     std::cout << "Pose right arm2_8:\n" << right_hand_pose.orientation << "\n\n" << right_hand_pose.position << std::endl;
     
     shared_data()._robot->model().getPose("arm1_8", "torso_2", poseLeftHand);
     shared_data()._robot->model().getPose("arm2_8", "torso_2", poseRightHand);
     
     tf::poseEigenToMsg (poseLeftHand, left_hand_pose);
     tf::poseEigenToMsg (poseRightHand, right_hand_pose);
-
-    std::cout << "Pose right arm2_8:\n" << right_hand_pose.orientation << "\n\n" << right_hand_pose.position << std::endl;
     
     geometry_msgs::PoseStamped leftHandFrame,rightHandFrame;
     leftHandFrame.pose = left_hand_pose;
@@ -1398,6 +1409,22 @@ void myfsm::Ungrasp::exit (){
 
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::AdjustLaterally::react(const XBot::FSM::Event& e) {
+    /************************************************************************************/
+    //SETTING STIFFNESS TO BE COMPLIANT
+    if(COMPLIANCE){
+      std::cout << "Compliant mode." << std::endl;
+      Eigen::VectorXd K;
+      shared_data()._robot->sense();
+      shared_data()._robot->chain("right_arm").getStiffness(K);
+      //std::cout << "Stiffness before: " << K.transpose() << std::endl;
+      for(int i = 0; i < shared_data()._robot->chain("right_arm").getJointNum() ; i++)
+        K(i) = 500;
+      shared_data()._robot->chain("right_arm").setStiffness(K);
+      shared_data()._robot->chain("right_arm").getStiffness(K);
+      std::cout << "Right arm stiffness set to:\n" << K.transpose() << std::endl;
+    }
+    /************************************************************************************/
+
 
 }
 
