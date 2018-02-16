@@ -1,7 +1,7 @@
 First make sure you set:
 
 ```cpp
-set_xbot_config $ROBOTOLOGY_ROOT/configs/ADVR_shared/user_example/centauro_debris.yaml
+set_xbot_config $ROBOTOLOGY_ROOT/configs/ADVR_shared/user_example/centauro_manipulation.yaml
 ```
 
 Then to launch the module in simulation execute in different terminals:
