@@ -8,7 +8,9 @@
 #define TRAJ_DURATION 10
 #define WAITING_TIME 5
 #define AUTONOMOUS 0
-#define COMPLIANCE 0
+#define COMPLIANCE 1
+#define K_COMPLIANT 100
+#define K_STIFF 700
 
 
 /******************************** BEGIN Homing_init *******************************/
@@ -23,25 +25,7 @@ void myfsm::Homing_init::entry(const XBot::FSM::Message& msg){
 
     shared_data().plugin_status->setStatus("HOMING");
     std::cout << "Homing_init_entry" << std::endl;
-    shared_data()._robot->sense(); 
-    
-    
-    /************************************************************************************/
-    //SETTING STIFFNESS TO BE COMPLIANT
-    if(COMPLIANCE){
-      std::cout << "Compliant mode." << std::endl;
-      Eigen::VectorXd K;
-      shared_data()._robot->sense();
-      shared_data()._robot->chain("right_arm").getStiffness(K);
-      //std::cout << "Stiffness before: " << K.transpose() << std::endl;
-      for(int i = 0; i < shared_data()._robot->chain("right_arm").getJointNum() ; i++)
-        K(i) = 100;
-      shared_data()._robot->chain("right_arm").setStiffness(K);
-      shared_data()._robot->chain("right_arm").getStiffness(K);
-      std::cout << "Right arm stiffness set to:\n" << K.transpose() << std::endl;
-    }
-    /************************************************************************************/
-    
+    shared_data()._robot->sense();
     
     // SAVE INITIAL END EFFECTOR POSES
     Eigen::Affine3d poseLeftHand,poseRightHand;
@@ -66,14 +50,36 @@ void myfsm::Homing_init::entry(const XBot::FSM::Message& msg){
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::Homing_init::run(double time, double period){
   
-  transit("Homing_Ree");
+
+    /************************************************************************************/
+    //SETTING STIFFNESS TO BE COMPLIANT
+    if(COMPLIANCE){
+      Eigen::VectorXd K;
+      shared_data()._robot->sense();
+      shared_data()._robot->chain("right_arm").getStiffness(K);
+      for(int i = 0; i < shared_data()._robot->chain("right_arm").getJointNum() ; i++)
+        K(i) = K_COMPLIANT;
+      shared_data()._robot->chain("right_arm").setStiffness(K);
+      shared_data()._robot->move();
+      if(shared_data()._time == 0){
+        std::cout << "Compliant mode." << std::endl;
+        std::cout << "Right arm stiffness set to:\n" << K.transpose() << std::endl;
+      }
+    }
+    /************************************************************************************/
+    
+
+    shared_data()._time+= period;
+    if(shared_data()._time > 1){
+      transit("Homing_Ree");
+    }     
 
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::Homing_init::exit (){
-
+  shared_data()._time = 0;
 }
 
 /********************************* END Homing_init ********************************/
@@ -193,7 +199,7 @@ void myfsm::Homing_Lee::react(const XBot::FSM::Event& e) {
 
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::Homing_Lee::entry(const XBot::FSM::Message& msg){
-
+    
     shared_data().plugin_status->setStatus("HOMING_LEE");
   
     //CALL SERVICE TO MOVE - LEFT HAND
@@ -377,7 +383,7 @@ void myfsm::HandSelection::run(double time, double period){
 
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::HandSelection::exit (){
-
+  shared_data()._time = 0;
 }
 
 /******************************** END HandSelection ********************************/
@@ -652,7 +658,7 @@ void myfsm::Pick::react(const XBot::FSM::Event& e) {
 void myfsm::Pick::entry(const XBot::FSM::Message& msg){
 
     shared_data().plugin_status->setStatus("PICK");
-  
+    
     //CALL SERVICE TO MOVE
 
     //HAND
@@ -742,6 +748,25 @@ void myfsm::Pick::entry(const XBot::FSM::Message& msg){
 
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::Pick::run(double time, double period){
+  
+    /************************************************************************************/
+    //SETTING STIFFNESS TO BE COMPLIANT
+    if(COMPLIANCE){
+      Eigen::VectorXd K;
+      shared_data()._robot->sense();
+      shared_data()._robot->chain("right_arm").getStiffness(K);
+      for(int i = 0; i < shared_data()._robot->chain("right_arm").getJointNum() ; i++)
+        K(i) = K_COMPLIANT;
+      shared_data()._robot->chain("right_arm").setStiffness(K);
+      shared_data()._robot->move();
+      if(shared_data()._time == 0){
+        std::cout << "Compliant mode." << std::endl;
+        std::cout << "Right arm stiffness set to:\n" << K.transpose() << std::endl;
+        shared_data()._time+= 0.0001;
+      }
+    }
+    /************************************************************************************/
+    
   //Wait for the trajectory to be completed
   if(!shared_data()._feedback){
     // blocking reading: wait for a command
@@ -1219,7 +1244,6 @@ void myfsm::PlaceDown::entry(const XBot::FSM::Message& msg){
 
     shared_data().plugin_status->setStatus("PLACEDOWN");
       
-    
     //CALL SERVICE TO MOVE
     
     //Hand selection
@@ -1294,6 +1318,25 @@ void myfsm::PlaceDown::entry(const XBot::FSM::Message& msg){
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::PlaceDown::run(double time, double period){
   
+    /************************************************************************************/
+    //SETTING STIFFNESS TO BE STIFF
+    if(COMPLIANCE){
+      Eigen::VectorXd K;
+      shared_data()._robot->sense();
+      shared_data()._robot->chain("right_arm").getStiffness(K);
+      for(int i = 0; i < shared_data()._robot->chain("right_arm").getJointNum() ; i++)
+        K(i) = K_STIFF;
+      shared_data()._robot->chain("right_arm").setStiffness(K);
+      shared_data()._robot->move();
+      if(shared_data()._time == 0){
+        std::cout << "Compliant mode." << std::endl;
+        std::cout << "Right arm stiffness set to:\n" << K.transpose() << std::endl;
+        shared_data()._time+= 0.0001;
+      }
+    }
+    /************************************************************************************/
+    
+    
   //Wait for the trajectory to be completed
   if(!shared_data()._feedback){
     if(!shared_data().current_command->str().empty())
@@ -1340,7 +1383,7 @@ void myfsm::PlaceDown::run(double time, double period){
 
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::PlaceDown::exit (){
-
+  shared_data()._time = 0;
 }
 
 /****************************** END PlaceDown ******************************/
@@ -1376,6 +1419,23 @@ void myfsm::Ungrasp::entry(const XBot::FSM::Message& msg){
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::Ungrasp::run(double time, double period){
   
+    /************************************************************************************/
+    //SETTING STIFFNESS TO BE COMPLIANT
+    if(COMPLIANCE){
+      Eigen::VectorXd K;
+      shared_data()._robot->sense();
+      shared_data()._robot->chain("right_arm").getStiffness(K);
+      for(int i = 0; i < shared_data()._robot->chain("right_arm").getJointNum() ; i++)
+        K(i) = K_COMPLIANT;
+      shared_data()._robot->chain("right_arm").setStiffness(K);
+      shared_data()._robot->move();
+      if(shared_data()._time == 0){
+        std::cout << "Compliant mode." << std::endl;
+        std::cout << "Right arm stiffness set to:\n" << K.transpose() << std::endl;
+      }
+    }
+    /************************************************************************************/
+    
   shared_data()._time+= period;
   if(shared_data()._time > WAITING_TIME && AUTONOMOUS){
     transit("Homing_Ree");
@@ -1409,22 +1469,6 @@ void myfsm::Ungrasp::exit (){
 
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::AdjustLaterally::react(const XBot::FSM::Event& e) {
-    /************************************************************************************/
-    //SETTING STIFFNESS TO BE COMPLIANT
-    if(COMPLIANCE){
-      std::cout << "Compliant mode." << std::endl;
-      Eigen::VectorXd K;
-      shared_data()._robot->sense();
-      shared_data()._robot->chain("right_arm").getStiffness(K);
-      //std::cout << "Stiffness before: " << K.transpose() << std::endl;
-      for(int i = 0; i < shared_data()._robot->chain("right_arm").getJointNum() ; i++)
-        K(i) = 500;
-      shared_data()._robot->chain("right_arm").setStiffness(K);
-      shared_data()._robot->chain("right_arm").getStiffness(K);
-      std::cout << "Right arm stiffness set to:\n" << K.transpose() << std::endl;
-    }
-    /************************************************************************************/
-
 
 }
 
@@ -1432,6 +1476,7 @@ void myfsm::AdjustLaterally::react(const XBot::FSM::Event& e) {
 void myfsm::AdjustLaterally::entry(const XBot::FSM::Message& msg){
 
     shared_data().plugin_status->setStatus("ADJUSTLATERALLY");
+    
     
     //CALL SERVICE TO MOVE
 
@@ -1510,6 +1555,34 @@ void myfsm::AdjustLaterally::entry(const XBot::FSM::Message& msg){
 
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::AdjustLaterally::run(double time, double period){
+  
+  shared_data()._time+= period;
+  
+    /************************************************************************************/
+    //SETTING STIFFNESS TO BE STIFF
+    if(COMPLIANCE){
+      Eigen::VectorXd K;
+      shared_data()._robot->sense();
+      shared_data()._robot->chain("right_arm").getStiffness(K);
+      for(int i = 0; i < shared_data()._robot->chain("right_arm").getJointNum() ; i++){
+        if(K(i) < K_STIFF)
+          K(i)+= 0.6; //K_STIFF;
+        else
+          std::cout << "Done";
+      }
+      shared_data()._robot->chain("right_arm").setStiffness(K);
+      shared_data()._robot->move();
+//       if(shared_data()._time == 0){
+//         std::cout << "Compliant mode." << std::endl;
+//         std::cout << "Right arm stiffness set to:\n" << K.transpose() << std::endl;
+//         shared_data()._time+= 0.0001;
+//       }
+      
+      std::cout << shared_data()._time  << "   " << K.transpose() << std::endl;
+    }
+    /************************************************************************************/
+    
+    
   //Wait for the trajectory to be completed
   if(!shared_data()._feedback){
     
