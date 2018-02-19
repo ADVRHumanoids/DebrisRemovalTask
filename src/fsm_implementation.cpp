@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <string>
+#include <cmath>
 
 #include <eigen_conversions/eigen_msg.h>
 
@@ -9,8 +10,8 @@
 #define WAITING_TIME 5
 #define AUTONOMOUS 0
 #define COMPLIANCE 1
-#define K_COMPLIANT 100
-#define K_STIFF 700
+#define K_COMPLIANT 250
+#define K_STIFF 850
 
 
 /******************************** BEGIN Homing_init *******************************/
@@ -513,6 +514,49 @@ void myfsm::Reach::entry(const XBot::FSM::Message& msg){
 
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::Reach::run(double time, double period){
+  
+    shared_data()._robot->sense();
+    Eigen::Affine3d poseRightHand;
+    geometry_msgs::Pose right_hand_pose;
+    shared_data()._robot->model().getPose("arm2_8", "torso_2", poseRightHand);
+    tf::poseEigenToMsg (poseRightHand, right_hand_pose);
+    geometry_msgs::PoseStamped debris_frame;
+    debris_frame = *shared_data()._debris_pose;
+    
+    double x,y,z;
+    x = debris_frame.pose.position.x - right_hand_pose.position.x;
+    y = debris_frame.pose.position.y - right_hand_pose.position.y;
+    z = 0; //debris_frame.pose.position.z - right_hand_pose.position.z;
+    
+    double distance = std::sqrt(std::pow(x,2) + std::pow(y,2) + std::pow(z,2));
+    
+    Eigen::VectorXd q_meas,q_ref;
+    shared_data()._robot->chain("right_arm").getMotorPosition(q_meas);
+    shared_data()._robot->chain("right_arm").getPositionReference(q_ref);
+    
+    std::cout << "Distance: " << distance << std::endl;
+    
+    if(distance < 0.2 && COMPLIANCE){
+
+      /************************************************************************************/
+      //SETTING STIFFNESS TO BE STIFF
+      Eigen::VectorXd K;
+      shared_data()._robot->chain("right_arm").getStiffness(K);
+      for(int i = 0; i < shared_data()._robot->chain("right_arm").getJointNum() ; i++){
+        if(K(i) < K_STIFF)
+//           K(i)+= 0.25 * 1/distance;
+          K(i)+= 2.5 * std::pow(q_ref(i) - q_meas(i),2);
+          K(i)+= 0.1 * std::pow(q_ref(i) - q_meas(i),2) / distance;
+      }
+      shared_data()._robot->chain("right_arm").setStiffness(K);
+      shared_data()._robot->move();
+      std::cout << K.transpose() << std::endl;
+      
+      /************************************************************************************/
+    
+    }
+  
+  
   //Wait for the trajectory to be completed
   if(!shared_data()._feedback){
     // blocking reading: wait for a command
@@ -1556,33 +1600,6 @@ void myfsm::AdjustLaterally::entry(const XBot::FSM::Message& msg){
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::AdjustLaterally::run(double time, double period){
   
-  shared_data()._time+= period;
-  
-    /************************************************************************************/
-    //SETTING STIFFNESS TO BE STIFF
-    if(COMPLIANCE){
-      Eigen::VectorXd K;
-      shared_data()._robot->sense();
-      shared_data()._robot->chain("right_arm").getStiffness(K);
-      for(int i = 0; i < shared_data()._robot->chain("right_arm").getJointNum() ; i++){
-        if(K(i) < K_STIFF)
-          K(i)+= 0.6; //K_STIFF;
-        else
-          std::cout << "Done";
-      }
-      shared_data()._robot->chain("right_arm").setStiffness(K);
-      shared_data()._robot->move();
-//       if(shared_data()._time == 0){
-//         std::cout << "Compliant mode." << std::endl;
-//         std::cout << "Right arm stiffness set to:\n" << K.transpose() << std::endl;
-//         shared_data()._time+= 0.0001;
-//       }
-      
-      std::cout << shared_data()._time  << "   " << K.transpose() << std::endl;
-    }
-    /************************************************************************************/
-    
-    
   //Wait for the trajectory to be completed
   if(!shared_data()._feedback){
     
