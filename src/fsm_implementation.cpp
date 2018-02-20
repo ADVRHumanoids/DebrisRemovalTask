@@ -514,7 +514,7 @@ void myfsm::Reach::entry(const XBot::FSM::Message& msg){
 
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::Reach::run(double time, double period){
-  
+ 
     shared_data()._robot->sense();
     Eigen::Affine3d poseRightHand;
     geometry_msgs::Pose right_hand_pose;
@@ -546,7 +546,7 @@ void myfsm::Reach::run(double time, double period){
         if(K(i) < K_STIFF)
 //           K(i)+= 0.25 * 1/distance;
           K(i)+= 2.5 * std::pow(q_ref(i) - q_meas(i),2);
-          K(i)+= 0.1 * std::pow(q_ref(i) - q_meas(i),2) / distance;
+//           K(i)+= 0.1 * std::pow(q_ref(i) - q_meas(i),2) / distance;
       }
       shared_data()._robot->chain("right_arm").setStiffness(K);
       shared_data()._robot->move();
@@ -1243,7 +1243,62 @@ void myfsm::MoveAway::entry(const XBot::FSM::Message& msg){
 
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::MoveAway::run(double time, double period){
-  
+
+    //Hand selection
+    std_msgs::String message;
+    message = *shared_data()._hand_selection;    
+    std::string selectedHand;
+    selectedHand = message.data;
+    
+    shared_data()._robot->sense();
+    Eigen::Affine3d poseRightHand;
+    geometry_msgs::Pose right_hand_pose;
+    shared_data()._robot->model().getPose("arm2_8", "torso_2", poseRightHand);
+    tf::poseEigenToMsg (poseRightHand, right_hand_pose);
+    geometry_msgs::PoseStamped debris_frame;
+    debris_frame = *shared_data()._debris_pose;
+    
+    double x,y,z,x_ma,y_ma;
+    x_ma = 0.33;
+    if(!selectedHand.compare("arm2_8"))
+      y_ma = -0.76;
+    else if(!selectedHand.compare("arm1_8"))
+      y_ma = 0.76;    
+
+    
+    x = x_ma - right_hand_pose.position.x;
+    y = y_ma - right_hand_pose.position.y;
+    z = 0; //z_ma - right_hand_pose.position.z;
+    
+    double distance = std::sqrt(std::pow(x,2) + std::pow(y,2) + std::pow(z,2));
+    
+    Eigen::VectorXd q_meas,q_ref;
+    shared_data()._robot->chain("right_arm").getMotorPosition(q_meas);
+    shared_data()._robot->chain("right_arm").getPositionReference(q_ref);
+    
+    std::cout << "Distance: " << distance << std::endl;
+    
+    if(distance < 0.2 && COMPLIANCE){
+
+      /************************************************************************************/
+      //SETTING STIFFNESS TO BE STIFF
+      Eigen::VectorXd K;
+      shared_data()._robot->chain("right_arm").getStiffness(K);
+      for(int i = 0; i < shared_data()._robot->chain("right_arm").getJointNum() ; i++){
+        if(K(i) < K_STIFF)
+//           K(i)+= 0.25 * 1/distance;
+          K(i)+= 2.5 * std::pow(q_ref(i) - q_meas(i),2);
+//           K(i)+= 0.1 * std::pow(q_ref(i) - q_meas(i),2) / distance;
+      }
+      shared_data()._robot->chain("right_arm").setStiffness(K);
+      shared_data()._robot->move();
+      std::cout << K.transpose() << std::endl;
+      
+      /************************************************************************************/
+    
+    }
+    
+    
   //Wait for the trajectory to be completed
   if(!shared_data()._feedback && AUTONOMOUS){
     transit("PlaceDown");
@@ -1362,25 +1417,6 @@ void myfsm::PlaceDown::entry(const XBot::FSM::Message& msg){
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::PlaceDown::run(double time, double period){
   
-    /************************************************************************************/
-    //SETTING STIFFNESS TO BE STIFF
-    if(COMPLIANCE){
-      Eigen::VectorXd K;
-      shared_data()._robot->sense();
-      shared_data()._robot->chain("right_arm").getStiffness(K);
-      for(int i = 0; i < shared_data()._robot->chain("right_arm").getJointNum() ; i++)
-        K(i) = K_STIFF;
-      shared_data()._robot->chain("right_arm").setStiffness(K);
-      shared_data()._robot->move();
-      if(shared_data()._time == 0){
-        std::cout << "Compliant mode." << std::endl;
-        std::cout << "Right arm stiffness set to:\n" << K.transpose() << std::endl;
-        shared_data()._time+= 0.0001;
-      }
-    }
-    /************************************************************************************/
-    
-    
   //Wait for the trajectory to be completed
   if(!shared_data()._feedback){
     if(!shared_data().current_command->str().empty())
