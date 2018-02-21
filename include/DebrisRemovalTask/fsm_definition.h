@@ -125,7 +125,7 @@ namespace myfsm{
       double _time = 0;
       bool _first = true;
 
-     
+      ros::Publisher _stiffnessVector;     
     };
     
     class MacroState : public  XBot::FSM::State< MacroState , SharedData > {

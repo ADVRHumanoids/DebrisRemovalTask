@@ -5,6 +5,7 @@
 #include <cmath>
 
 #include <eigen_conversions/eigen_msg.h>
+#include <std_msgs/Float64.h>
 
 #define TRAJ_DURATION 10
 #define WAITING_TIME 5
@@ -97,6 +98,10 @@ void myfsm::Homing_Ree::react(const XBot::FSM::Event& e) {
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::Homing_Ree::entry(const XBot::FSM::Message& msg){
 
+    geometry_msgs::Vector3 tmp;
+    tmp.z = 100.0;
+    shared_data()._stiffnessVector.publish(tmp);    
+    
     shared_data().plugin_status->setStatus("HOMING_REE");
     
     //CALL SERVICE TO MOVE - RIGHT HAND
@@ -118,10 +123,14 @@ void myfsm::Homing_Ree::entry(const XBot::FSM::Message& msg){
     end_frame.pose.position.y = -0.51;
     end_frame.pose.position.z = -0.08;
     
-    end_frame.pose.orientation.x = 0.306;
-    end_frame.pose.orientation.y = 0.343;
-    end_frame.pose.orientation.z = 0.490;
-    end_frame.pose.orientation.w = 0.741;  
+//     end_frame.pose.orientation.x = 0.306;
+//     end_frame.pose.orientation.y = 0.343;
+//     end_frame.pose.orientation.z = 0.490;
+//     end_frame.pose.orientation.w = 0.741;
+    end_frame.pose.orientation.x = 0.5;
+    end_frame.pose.orientation.y = 0.5;
+    end_frame.pose.orientation.z = 0.5;
+    end_frame.pose.orientation.w = 0.5;
     
     trajectory_utils::Cartesian end;
     end.distal_frame = "arm2_8";
@@ -535,27 +544,27 @@ void myfsm::Reach::run(double time, double period){
     shared_data()._robot->chain("right_arm").getMotorPosition(q_meas);
     shared_data()._robot->chain("right_arm").getPositionReference(q_ref);
     
-//     std::cout << "Distance: " << distance << std::endl;
-    
-    if(distance < 0.2 && COMPLIANCE){
-
-      /************************************************************************************/
-      //SETTING STIFFNESS TO BE STIFF
-      Eigen::VectorXd K;
-      shared_data()._robot->chain("right_arm").getStiffness(K);
-      for(int i = 0; i < shared_data()._robot->chain("right_arm").getJointNum() ; i++){
-        if(K(i) < K_STIFF)
-//           K(i)+= 0.25 * 1/distance;
-          K(i)+= 2.5 * std::pow(q_ref(i) - q_meas(i),2);
-//           K(i)+= 0.1 * std::pow(q_ref(i) - q_meas(i),2) / distance;
-      }
-      shared_data()._robot->chain("right_arm").setStiffness(K);
-      shared_data()._robot->move();
-      std::cout << K.transpose() << std::endl;
-      
-      /************************************************************************************/
-    
-    }
+// //     std::cout << "Distance: " << distance << std::endl;
+//     
+//     if(distance < 0.2 && COMPLIANCE){
+// 
+//       /************************************************************************************/
+//       //SETTING STIFFNESS TO BE STIFF
+//       Eigen::VectorXd K;
+//       shared_data()._robot->chain("right_arm").getStiffness(K);
+//       for(int i = 0; i < shared_data()._robot->chain("right_arm").getJointNum() ; i++){
+//         if(K(i) < K_STIFF)
+// //           K(i)+= 0.25 * 1/distance;
+//           K(i)+= 2.5 * std::pow(q_ref(i) - q_meas(i),2);
+// //           K(i)+= 0.1 * std::pow(q_ref(i) - q_meas(i),2) / distance;
+//       }
+//       shared_data()._robot->chain("right_arm").setStiffness(K);
+//       shared_data()._robot->move();
+//       std::cout << K.transpose() << std::endl;
+//       
+//       /************************************************************************************/
+//     
+//     }
   
   
   //Wait for the trajectory to be completed
@@ -609,6 +618,11 @@ void myfsm::Grasp::react(const XBot::FSM::Event& e) {
 void myfsm::Grasp::entry(const XBot::FSM::Message& msg){
 
     shared_data().plugin_status->setStatus("GRASP");
+   
+    //STIFFNESS
+    geometry_msgs::Vector3 tmp;
+    tmp.z = 1500.0;
+    shared_data()._stiffnessVector.publish(tmp);    
     
     //HAND
     //Hand selection
@@ -1342,6 +1356,8 @@ void myfsm::PlaceDown::react(const XBot::FSM::Event& e) {
 
 void myfsm::PlaceDown::entry(const XBot::FSM::Message& msg){
 
+    shared_data()._stiffnessVector.publish(tmp);    
+    
     shared_data().plugin_status->setStatus("PLACEDOWN");
       
     //CALL SERVICE TO MOVE

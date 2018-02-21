@@ -18,7 +18,7 @@
 */
 
 #include <DebrisRemovalTask_rt_plugin.h>
-
+#include <std_msgs/Float64.h>
 
 /* Specify that the class XBotPlugin::DebrisRemovalTask is a XBot RT plugin with name "DebrisRemovalTask" */
 REGISTER_XBOT_PLUGIN(DebrisRemovalTask, XBotPlugin::DebrisRemovalTask)
@@ -57,6 +57,8 @@ bool DebrisRemovalTask::init_control_plugin(XBot::Handle::Ptr handle)
     manipulation_status = true;
     fsm.shared_data()._SoftHandPose_pub = fsm.shared_data()._nh->advertise<geometry_msgs::PoseStamped>("/w_T_right_ee",1);
     fsm.shared_data()._grasp_client = fsm.shared_data()._nh->serviceClient<ADVR_ROS::advr_grasp_control_srv>("grasp_control");
+    
+    fsm.shared_data()._stiffnessVector = fsm.shared_data()._nh->advertise<geometry_msgs::Vector3>("/stiffness_vector",1);
     
     fsm.shared_data()._hand_over_phase = false;
     
