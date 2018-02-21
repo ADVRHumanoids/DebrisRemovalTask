@@ -1356,8 +1356,7 @@ void myfsm::PlaceDown::react(const XBot::FSM::Event& e) {
 
 void myfsm::PlaceDown::entry(const XBot::FSM::Message& msg){
 
-    shared_data()._stiffnessVector.publish(tmp);    
-    
+
     shared_data().plugin_status->setStatus("PLACEDOWN");
       
     //CALL SERVICE TO MOVE
