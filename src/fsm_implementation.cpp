@@ -9,7 +9,7 @@
 #define TRAJ_DURATION 10
 #define WAITING_TIME 5
 #define AUTONOMOUS 0
-#define COMPLIANCE 1
+#define COMPLIANCE 0
 #define K_COMPLIANT 250
 #define K_STIFF 850
 
@@ -69,6 +69,7 @@ void myfsm::Homing_init::run(double time, double period){
     }
     /************************************************************************************/
     
+
 
     shared_data()._time+= period;
     if(shared_data()._time > 1){
@@ -534,7 +535,7 @@ void myfsm::Reach::run(double time, double period){
     shared_data()._robot->chain("right_arm").getMotorPosition(q_meas);
     shared_data()._robot->chain("right_arm").getPositionReference(q_ref);
     
-    std::cout << "Distance: " << distance << std::endl;
+//     std::cout << "Distance: " << distance << std::endl;
     
     if(distance < 0.2 && COMPLIANCE){
 
@@ -1276,7 +1277,7 @@ void myfsm::MoveAway::run(double time, double period){
     shared_data()._robot->chain("right_arm").getMotorPosition(q_meas);
     shared_data()._robot->chain("right_arm").getPositionReference(q_ref);
     
-    std::cout << "Distance: " << distance << std::endl;
+//     std::cout << "Distance: " << distance << std::endl;
     
     if(distance < 0.2 && COMPLIANCE){
 
