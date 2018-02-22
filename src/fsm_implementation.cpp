@@ -98,9 +98,9 @@ void myfsm::Homing_Ree::react(const XBot::FSM::Event& e) {
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::Homing_Ree::entry(const XBot::FSM::Message& msg){
 
-    geometry_msgs::Vector3 tmp;
-    tmp.z = 100.0;
-    shared_data()._stiffnessVector.publish(tmp);    
+//     geometry_msgs::Vector3 tmp;
+//     tmp.z = 100.0;
+//     shared_data()._stiffnessVector.publish(tmp);
     
     shared_data().plugin_status->setStatus("HOMING_REE");
     
@@ -620,9 +620,9 @@ void myfsm::Grasp::entry(const XBot::FSM::Message& msg){
     shared_data().plugin_status->setStatus("GRASP");
    
     //STIFFNESS
-    geometry_msgs::Vector3 tmp;
-    tmp.z = 1500.0;
-    shared_data()._stiffnessVector.publish(tmp);    
+//     geometry_msgs::Vector3 tmp;
+//     tmp.z = 1500.0;
+//     shared_data()._stiffnessVector.publish(tmp);    
     
     //HAND
     //Hand selection
