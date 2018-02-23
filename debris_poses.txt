@@ -1,3 +1,20 @@
+rostopic pub /w_T_right_ee_ref geometry_msgs/PoseStamped "header:
+  seq: 0
+  stamp:
+    secs: 0
+    nsecs: 0
+  frame_id: ''
+pose:
+  position:
+    x: 0.73
+    y: 0.0
+    z: 0.46
+  orientation:
+    x: 0.037
+    y: 0.727
+    z: 0.023
+    w: 0.686" 
+
 DEBRIS 1 (RIGHT)
 rostopic pub --once /debris_pose ADVR_ROS/im_pose_msg "name: ''
 pose_stamped:
