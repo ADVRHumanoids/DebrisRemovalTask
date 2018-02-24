@@ -105,7 +105,7 @@ namespace myfsm{
       
       XBot::RobotInterface::Ptr _robot;
       std::shared_ptr<ros::NodeHandle> _nh;
-      geometry_msgs::PoseStamped::ConstPtr _debris_pose;
+      geometry_msgs::PoseStamped _debris_pose;
       std_msgs::String::ConstPtr _debris_number;
       std_msgs::String::ConstPtr _hand_selection;
       ros::ServiceClient _client;
@@ -127,6 +127,7 @@ namespace myfsm{
 
       ros::Publisher _stiffnessVector_pub,_pose_pub;
       std::string _end_effector;
+      geometry_msgs::PoseStamped _hand_pose;
     };
     
     class MacroState : public  XBot::FSM::State< MacroState , SharedData > {
@@ -140,60 +141,9 @@ namespace myfsm{
     };  
 
  
-    class Homing_init : public MacroState {
+    class Homing : public MacroState {
 
-      virtual std::string get_name() const { return "Homing_init"; }
-
-      virtual void run(double time, double period);
-
-      virtual void entry(const XBot::FSM::Message& msg);
-
-      virtual void react(const XBot::FSM::Event& e);
-
-      virtual void exit ();
-
-      private:
-
-
-     };
-
-    class Homing_Ree : public MacroState {
-
-      virtual std::string get_name() const { return "Homing_Ree"; }
-
-      virtual void run(double time, double period);
-
-      virtual void entry(const XBot::FSM::Message& msg);
-
-      virtual void react(const XBot::FSM::Event& e);
-
-      virtual void exit ();
-
-      private:
-
-
-     };  
-     
-    class Homing_Lee : public MacroState {
-
-      virtual std::string get_name() const { return "Homing_Lee"; }
-
-      virtual void run(double time, double period);
-
-      virtual void entry(const XBot::FSM::Message& msg);
-
-      virtual void react(const XBot::FSM::Event& e);
-
-      virtual void exit ();
-
-      private:
-
-
-     };       
-
-    class HandSelection : public MacroState {
-
-      virtual std::string get_name() const { return "HandSelection"; }
+      virtual std::string get_name() const { return "Homing"; }
 
       virtual void run(double time, double period);
 
@@ -207,6 +157,7 @@ namespace myfsm{
 
 
      };
+
     class Reach : public MacroState {
 
       virtual std::string get_name() const { return "Reach"; }
@@ -257,23 +208,6 @@ namespace myfsm{
 
 
      };
-
-    class PickSecondHand : public MacroState {
-
-      virtual std::string get_name() const { return "PickSecondHand"; }
-
-      virtual void run(double time, double period);
-
-      virtual void entry(const XBot::FSM::Message& msg);
-
-      virtual void react(const XBot::FSM::Event& e);
-
-      virtual void exit ();
-
-      private:
-
-
-     }; 
  
     class MoveAway : public MacroState {
 
@@ -325,39 +259,5 @@ namespace myfsm{
 
 
      };
-
-    class AdjustLaterally : public MacroState {
-
-      virtual std::string get_name() const { return "AdjustLaterally"; }
-
-      virtual void run(double time, double period);
-
-      virtual void entry(const XBot::FSM::Message& msg);
-
-      virtual void react(const XBot::FSM::Event& e);
-
-      virtual void exit ();
-
-      private:
-
-
-     };
-     
-    class AdjustForward : public MacroState {
-
-      virtual std::string get_name() const { return "AdjustForward"; }
-
-      virtual void run(double time, double period);
-
-      virtual void entry(const XBot::FSM::Message& msg);
-
-      virtual void react(const XBot::FSM::Event& e);
-
-      virtual void exit ();
-
-      private:
-
-
-     }; 
       
 }

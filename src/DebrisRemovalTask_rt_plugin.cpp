@@ -69,19 +69,13 @@ bool DebrisRemovalTask::init_control_plugin(XBot::Handle::Ptr handle)
     fsm.shared_data()._stiffnessVector_pub = fsm.shared_data()._nh->advertise<geometry_msgs::Vector3>("stiffness",1);
     
     /*Registers states*/
-    fsm.register_state(std::make_shared<myfsm::Homing_init>());
-    fsm.register_state(std::make_shared<myfsm::Homing_Ree>());
-    fsm.register_state(std::make_shared<myfsm::Homing_Lee>());
-    fsm.register_state(std::make_shared<myfsm::HandSelection>());
+    fsm.register_state(std::make_shared<myfsm::Homing>());
     fsm.register_state(std::make_shared<myfsm::Reach>());
     fsm.register_state(std::make_shared<myfsm::Grasp>());
     fsm.register_state(std::make_shared<myfsm::Pick>());
-    fsm.register_state(std::make_shared<myfsm::PickSecondHand>());
     fsm.register_state(std::make_shared<myfsm::MoveAway>());
     fsm.register_state(std::make_shared<myfsm::PlaceDown>());
     fsm.register_state(std::make_shared<myfsm::Ungrasp>());
-    fsm.register_state(std::make_shared<myfsm::AdjustLaterally>());
-    fsm.register_state(std::make_shared<myfsm::AdjustForward>());
 
     return true;
 }
@@ -109,7 +103,7 @@ void DebrisRemovalTask::on_start(double time)
     
         
     // Initialize the FSM with the initial state
-    fsm.init("Homing_init");
+    fsm.init("Homing");
 }
 
 void DebrisRemovalTask::on_stop(double time)
