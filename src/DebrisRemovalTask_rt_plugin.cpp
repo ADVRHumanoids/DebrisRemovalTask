@@ -58,12 +58,15 @@ bool DebrisRemovalTask::init_control_plugin(XBot::Handle::Ptr handle)
     fsm.shared_data()._SoftHandPose_pub = fsm.shared_data()._nh->advertise<geometry_msgs::PoseStamped>("/w_T_right_ee",1);
     fsm.shared_data()._grasp_client = fsm.shared_data()._nh->serviceClient<ADVR_ROS::advr_grasp_control_srv>("grasp_control");
     
-    fsm.shared_data()._stiffnessVector = fsm.shared_data()._nh->advertise<geometry_msgs::Vector3>("/stiffness_vector",1);
+//     fsm.shared_data()._stiffnessVector = fsm.shared_data()._nh->advertise<geometry_msgs::Vector3>("/stiffness_vector",1);
     
     fsm.shared_data()._hand_over_phase = false;
     
     /*Saves robot as shared variable between states*/
     fsm.shared_data()._robot = handle->getRobotInterface();
+    
+    fsm.shared_data()._pose_pub = fsm.shared_data()._nh->advertise<geometry_msgs::PoseStamped>("w_T_right_ee",1);
+    fsm.shared_data()._stiffnessVector_pub = fsm.shared_data()._nh->advertise<geometry_msgs::Vector3>("stiffness",1);
     
     /*Registers states*/
     fsm.register_state(std::make_shared<myfsm::Homing_init>());

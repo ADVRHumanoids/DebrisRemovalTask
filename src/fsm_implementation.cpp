@@ -26,63 +26,66 @@ void myfsm::Homing_init::react(const XBot::FSM::Event& e) {
 void myfsm::Homing_init::entry(const XBot::FSM::Message& msg){
 
     shared_data().plugin_status->setStatus("HOMING");
-    std::cout << "Homing_init_entry" << std::endl;
-    shared_data()._robot->sense();
-    
-    // SAVE INITIAL END EFFECTOR POSES
-    Eigen::Affine3d poseLeftHand,poseRightHand;
-    geometry_msgs::Pose left_hand_pose,right_hand_pose;
-    
-    shared_data()._robot->model().getPose("arm1_8", "torso_2", poseLeftHand);
-    shared_data()._robot->model().getPose("arm2_8", "torso_2", poseRightHand);
-    
-    tf::poseEigenToMsg (poseLeftHand, left_hand_pose);
-    tf::poseEigenToMsg (poseRightHand, right_hand_pose);
-    
-    geometry_msgs::PoseStamped leftHandFrame,rightHandFrame;
-    leftHandFrame.pose = left_hand_pose;
-    rightHandFrame.pose = right_hand_pose;
-    shared_data()._initial_pose_left_hand = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(leftHandFrame));
-    shared_data()._initial_pose_right_hand = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(rightHandFrame));
-    shared_data()._last_pose_left_hand = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(leftHandFrame));
-    shared_data()._last_pose_right_hand = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(rightHandFrame));
+//     std::cout << "Homing_init_entry" << std::endl;
+//     shared_data()._robot->sense();
+//     
+//     // SAVE INITIAL END EFFECTOR POSES
+//     Eigen::Affine3d poseLeftHand,poseRightHand;
+//     geometry_msgs::Pose left_hand_pose,right_hand_pose;
+//     
+//     shared_data()._robot->model().getPose("arm1_8", "torso_2", poseLeftHand);
+//     shared_data()._robot->model().getPose("arm2_8", "torso_2", poseRightHand);
+//     
+//     tf::poseEigenToMsg (poseLeftHand, left_hand_pose);
+//     tf::poseEigenToMsg (poseRightHand, right_hand_pose);
+//     
+//     geometry_msgs::PoseStamped leftHandFrame,rightHandFrame;
+//     leftHandFrame.pose = left_hand_pose;
+//     rightHandFrame.pose = right_hand_pose;
+//     shared_data()._initial_pose_left_hand = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(leftHandFrame));
+//     shared_data()._initial_pose_right_hand = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(rightHandFrame));
+//     shared_data()._last_pose_left_hand = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(leftHandFrame));
+//     shared_data()._last_pose_right_hand = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(rightHandFrame));
 
+    
+    
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::Homing_init::run(double time, double period){
   
+      geometry_msgs::PoseStamped pose;
+      
+      pose.pose.position.x = 0.63;
+    pose.pose.position.y = 0.0;
+    pose.pose.position.z = 0.46;
 
-    /************************************************************************************/
-    //SETTING STIFFNESS TO BE COMPLIANT
-    if(COMPLIANCE){
-      Eigen::VectorXd K;
-      shared_data()._robot->sense();
-      shared_data()._robot->chain("right_arm").getStiffness(K);
-      for(int i = 0; i < shared_data()._robot->chain("right_arm").getJointNum() ; i++)
-        K(i) = K_COMPLIANT;
-      shared_data()._robot->chain("right_arm").setStiffness(K);
-      shared_data()._robot->move();
-      if(shared_data()._time == 0){
-        std::cout << "Compliant mode." << std::endl;
-        std::cout << "Right arm stiffness set to:\n" << K.transpose() << std::endl;
-      }
-    }
-    /************************************************************************************/
+      
+    pose.pose.orientation.x = 0.037;
+    pose.pose.orientation.y = 0.727;
+    pose.pose.orientation.z = 0.023;
+    pose.pose.orientation.w = 0.686;
     
+      shared_data()._pose_pub.publish(pose);  
+  
+    // blocking reading: wait for a command
+  if(!shared_data().current_command->str().empty())
+  {
+    std::cout << "Command: " << shared_data().current_command->str() << std::endl;
 
-
-    shared_data()._time+= period;
-    if(shared_data()._time > 1){
+    
+    // Homing_Ree succeeded
+    if (!shared_data().current_command->str().compare("success"))
       transit("Homing_Ree");
-    }     
+   
+  }
 
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::Homing_init::exit (){
-  shared_data()._time = 0;
+//   shared_data()._time = 0;
 }
 
 /********************************* END Homing_init ********************************/
@@ -104,65 +107,69 @@ void myfsm::Homing_Ree::entry(const XBot::FSM::Message& msg){
     
     shared_data().plugin_status->setStatus("HOMING_REE");
     
-    //CALL SERVICE TO MOVE - RIGHT HAND
-    // send a trajectory for the end effector as a segment
 
-    // define the start frame 
-    geometry_msgs::PoseStamped start_frame;
-    start_frame = *shared_data()._last_pose_right_hand;
     
-    trajectory_utils::Cartesian start;
-    start.distal_frame = "arm2_8";
-    start.frame = start_frame;
+//     _pose = shared_data()._nh->advertise<Eigen::Affine3d>("w_T_right_ee",1);
     
-    // define the end frame
-    geometry_msgs::PoseStamped end_frame;
-//     end_frame = *shared_data()._initial_pose_right_hand;
-    
-    end_frame.pose.position.x = 0.546;
-    end_frame.pose.position.y = -0.51;
-    end_frame.pose.position.z = -0.08;
-    
-//     end_frame.pose.orientation.x = 0.306;
-//     end_frame.pose.orientation.y = 0.343;
-//     end_frame.pose.orientation.z = 0.490;
-//     end_frame.pose.orientation.w = 0.741;
-    end_frame.pose.orientation.x = 0.5;
-    end_frame.pose.orientation.y = 0.5;
-    end_frame.pose.orientation.z = 0.5;
-    end_frame.pose.orientation.w = 0.5;
-    
-    trajectory_utils::Cartesian end;
-    end.distal_frame = "arm2_8";
-    end.frame = end_frame;
-    
-    //save the RIGHT HAND pose
-    shared_data()._last_pose_right_hand = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(end_frame));
-
-    // define the first segment
-    trajectory_utils::segment s1;
-    s1.type.data = 0;        // min jerk traj
-    s1.T.data = TRAJ_DURATION;         // traj duration 5 second      
-    s1.start = start;        // start pose
-    s1.end = end;            // end pose 
-    
-    // only one segment in this example
-    std::vector<trajectory_utils::segment> segments;
-    segments.push_back(s1);
-    
-    // prepare the advr_segment_control
-    ADVR_ROS::advr_segment_control srv;
-    srv.request.segment_trj.header.frame_id = "torso_2";
-    srv.request.segment_trj.header.stamp = ros::Time::now();
-    srv.request.segment_trj.segments = segments;
-    
-    // call the service
-    shared_data()._client.call(srv);
-    std::cout << "\n\n" << 
-                  "\033[1m*****Homing_Ree state******\033[0m\n" <<
-                 "\033[92m 'success' ---> Homing_Lee \033[0m\n" <<
-                 "\033[91m   'fail'  ---> Homing_Ree \033[0m\n" <<
-                  "\033[1m***************************\033[0m\n" << std::endl;
+//     //CALL SERVICE TO MOVE - RIGHT HAND
+//     // send a trajectory for the end effector as a segment
+// 
+//     // define the start frame 
+//     geometry_msgs::PoseStamped start_frame;
+//     start_frame = *shared_data()._last_pose_right_hand;
+//     
+//     trajectory_utils::Cartesian start;
+//     start.distal_frame = "arm2_8";
+//     start.frame = start_frame;
+//     
+//     // define the end frame
+//     geometry_msgs::PoseStamped end_frame;
+// //     end_frame = *shared_data()._initial_pose_right_hand;
+//     
+//     end_frame.pose.position.x = 0.546;
+//     end_frame.pose.position.y = -0.51;
+//     end_frame.pose.position.z = -0.08;
+//     
+// //     end_frame.pose.orientation.x = 0.306;
+// //     end_frame.pose.orientation.y = 0.343;
+// //     end_frame.pose.orientation.z = 0.490;
+// //     end_frame.pose.orientation.w = 0.741;
+//     end_frame.pose.orientation.x = 0.5;
+//     end_frame.pose.orientation.y = 0.5;
+//     end_frame.pose.orientation.z = 0.5;
+//     end_frame.pose.orientation.w = 0.5;
+//     
+//     trajectory_utils::Cartesian end;
+//     end.distal_frame = "arm2_8";
+//     end.frame = end_frame;
+//     
+//     //save the RIGHT HAND pose
+//     shared_data()._last_pose_right_hand = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(end_frame));
+// 
+//     // define the first segment
+//     trajectory_utils::segment s1;
+//     s1.type.data = 0;        // min jerk traj
+//     s1.T.data = TRAJ_DURATION;         // traj duration 5 second      
+//     s1.start = start;        // start pose
+//     s1.end = end;            // end pose 
+//     
+//     // only one segment in this example
+//     std::vector<trajectory_utils::segment> segments;
+//     segments.push_back(s1);
+//     
+//     // prepare the advr_segment_control
+//     ADVR_ROS::advr_segment_control srv;
+//     srv.request.segment_trj.header.frame_id = "torso_2";
+//     srv.request.segment_trj.header.stamp = ros::Time::now();
+//     srv.request.segment_trj.segments = segments;
+//     
+//     // call the service
+//     shared_data()._client.call(srv);
+//     std::cout << "\n\n" << 
+//                   "\033[1m*****Homing_Ree state******\033[0m\n" <<
+//                  "\033[92m 'success' ---> Homing_Lee \033[0m\n" <<
+//                  "\033[91m   'fail'  ---> Homing_Ree \033[0m\n" <<
+//                   "\033[1m***************************\033[0m\n" << std::endl;
 
 }
 
@@ -174,14 +181,19 @@ void myfsm::Homing_Ree::run(double time, double period){
 //     transit("Homing_Lee");
 //   std::cout << "feedback: " << shared_data()._feedback << std::endl; //test on real robot
   
+      geometry_msgs::Vector3 stiffV;
+      
+    stiffV.x = 100;
+    stiffV.y = 100;
+    stiffV.z = 800;
+      shared_data()._stiffnessVector_pub.publish(stiffV);
+  
   // blocking reading: wait for a command
   if(!shared_data().current_command->str().empty())
   {
     std::cout << "Command: " << shared_data().current_command->str() << std::endl;
 
-    // Homing_Ree failed
-    if (!shared_data().current_command->str().compare("fail"))
-      transit("Homing_Ree");
+
     
     // Homing_Ree succeeded
     if (!shared_data().current_command->str().compare("success"))
@@ -212,89 +224,112 @@ void myfsm::Homing_Lee::react(const XBot::FSM::Event& e) {
 void myfsm::Homing_Lee::entry(const XBot::FSM::Message& msg){
     
     shared_data().plugin_status->setStatus("HOMING_LEE");
+    
+    shared_data()._end_effector = shared_data()._robot->model().chain("arm1").getTipLinkName();
+    std::cout << "ee: " << shared_data()._end_effector << std::endl;
+    
+
   
-    //CALL SERVICE TO MOVE - LEFT HAND
-    // send a trajectory for the end effector as a segment
-
-    // define the start frame 
-    geometry_msgs::PoseStamped start_frame;
-    start_frame = *shared_data()._last_pose_left_hand;
-    
-    trajectory_utils::Cartesian start;
-    start.distal_frame = "arm1_8";
-    start.frame = start_frame;
-    
-    // define the potential intermediate frame
-    trajectory_utils::Cartesian intermediate;
-    if(shared_data()._hand_over_phase){
-      geometry_msgs::PoseStamped intermediate_frame;
-      intermediate_frame = *shared_data()._last_pose_left_hand;
-      intermediate_frame.pose.position.x+= 0.08;
-      intermediate_frame.pose.position.y+= 0.08;
-      
-      intermediate.distal_frame = "arm1_8";
-      intermediate.frame = intermediate_frame;
-    }
-    
-    // define the end frame
-    geometry_msgs::PoseStamped end_frame;
-//     end_frame = *shared_data()._initial_pose_left_hand;
-    
-    end_frame.pose.position.x = 0.546;
-    end_frame.pose.position.y = 0.51;
-    end_frame.pose.position.z = -0.08;
-    
-    end_frame.pose.orientation.x = 0.343;
-    end_frame.pose.orientation.y = 0.306;
-    end_frame.pose.orientation.z = 0.741;
-    end_frame.pose.orientation.w = 0.490;    
-    
-    trajectory_utils::Cartesian end;
-    end.distal_frame = "arm1_8";
-    end.frame = end_frame;
-    
-    //save the LEFT HAND pose
-    shared_data()._last_pose_left_hand = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(end_frame));
-
-    // define the first segment
-    trajectory_utils::segment s1,s2;
-    s1.type.data = 0;        // min jerk traj
-    s1.T.data = TRAJ_DURATION;         // traj duration 5 second      
-    s1.start = start;        // start pose
-    if(shared_data()._hand_over_phase){
-      s1.end = intermediate;
-      s2.type.data = 0;        // min jerk traj
-      s2.T.data = TRAJ_DURATION;         // traj duration 5 second      
-      s2.start = intermediate;        // start pose
-      s2.end = end;            // end pose 
-    }else
-      s1.end = end;            // end pose 
-    
-    std::vector<trajectory_utils::segment> segments;
-    segments.push_back(s1);
-    if(shared_data()._hand_over_phase)
-      segments.push_back(s2);
-    
-    // prepare the advr_segment_control
-    ADVR_ROS::advr_segment_control srv;
-    srv.request.segment_trj.header.frame_id = "torso_2";
-    srv.request.segment_trj.header.stamp = ros::Time::now();
-    srv.request.segment_trj.segments = segments;
-    
-    // call the service
-    shared_data()._client.call(srv);    
-    
-    std::cout << "\n\n" << 
-                  "\033[1m***********Homing_Lee state************\033[0m\n" <<
-                 "\033[92m    'success'       ---> HandSelection \033[0m\n" <<
-                 "\033[91m      'fail'        ---> Homing_Ree \033[0m\n" <<
-                 "\033[93m 'Handover_success' ---> MoveAway \033[0m\n" <<
-                  "\033[1m***************************************\033[0m\n" << std::endl;
+//     //CALL SERVICE TO MOVE - LEFT HAND
+//     // send a trajectory for the end effector as a segment
+// 
+//     // define the start frame 
+//     geometry_msgs::PoseStamped start_frame;
+//     start_frame = *shared_data()._last_pose_left_hand;
+//     
+//     trajectory_utils::Cartesian start;
+//     start.distal_frame = "arm1_8";
+//     start.frame = start_frame;
+//     
+//     // define the potential intermediate frame
+//     trajectory_utils::Cartesian intermediate;
+//     if(shared_data()._hand_over_phase){
+//       geometry_msgs::PoseStamped intermediate_frame;
+//       intermediate_frame = *shared_data()._last_pose_left_hand;
+//       intermediate_frame.pose.position.x+= 0.08;
+//       intermediate_frame.pose.position.y+= 0.08;
+//       
+//       intermediate.distal_frame = "arm1_8";
+//       intermediate.frame = intermediate_frame;
+//     }
+//     
+//     // define the end frame
+//     geometry_msgs::PoseStamped end_frame;
+// //     end_frame = *shared_data()._initial_pose_left_hand;
+//     
+//     end_frame.pose.position.x = 0.546;
+//     end_frame.pose.position.y = 0.51;
+//     end_frame.pose.position.z = -0.08;
+//     
+//     end_frame.pose.orientation.x = 0.343;
+//     end_frame.pose.orientation.y = 0.306;
+//     end_frame.pose.orientation.z = 0.741;
+//     end_frame.pose.orientation.w = 0.490;    
+//     
+//     trajectory_utils::Cartesian end;
+//     end.distal_frame = "arm1_8";
+//     end.frame = end_frame;
+//     
+//     //save the LEFT HAND pose
+//     shared_data()._last_pose_left_hand = boost::shared_ptr<geometry_msgs::PoseStamped>(new geometry_msgs::PoseStamped(end_frame));
+// 
+//     // define the first segment
+//     trajectory_utils::segment s1,s2;
+//     s1.type.data = 0;        // min jerk traj
+//     s1.T.data = TRAJ_DURATION;         // traj duration 5 second      
+//     s1.start = start;        // start pose
+//     if(shared_data()._hand_over_phase){
+//       s1.end = intermediate;
+//       s2.type.data = 0;        // min jerk traj
+//       s2.T.data = TRAJ_DURATION;         // traj duration 5 second      
+//       s2.start = intermediate;        // start pose
+//       s2.end = end;            // end pose 
+//     }else
+//       s1.end = end;            // end pose 
+//     
+//     std::vector<trajectory_utils::segment> segments;
+//     segments.push_back(s1);
+//     if(shared_data()._hand_over_phase)
+//       segments.push_back(s2);
+//     
+//     // prepare the advr_segment_control
+//     ADVR_ROS::advr_segment_control srv;
+//     srv.request.segment_trj.header.frame_id = "torso_2";
+//     srv.request.segment_trj.header.stamp = ros::Time::now();
+//     srv.request.segment_trj.segments = segments;
+//     
+//     // call the service
+//     shared_data()._client.call(srv);    
+//     
+//     std::cout << "\n\n" << 
+//                   "\033[1m***********Homing_Lee state************\033[0m\n" <<
+//                  "\033[92m    'success'       ---> HandSelection \033[0m\n" <<
+//                  "\033[91m      'fail'        ---> Homing_Ree \033[0m\n" <<
+//                  "\033[93m 'Handover_success' ---> MoveAway \033[0m\n" <<
+//                   "\033[1m***************************************\033[0m\n" << std::endl;
     
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::Homing_Lee::run(double time, double period){
+  
+  
+      Eigen::MatrixXd J,J_pinv;
+    
+    shared_data()._robot->model().getJacobian(shared_data()._end_effector,J);
+    
+    J_pinv = J.transpose() * (J*J.transpose()).inverse();
+      
+    //Reading external forces
+    Eigen::VectorXd extTor(7),extWrench(6);
+    
+    shared_data()._robot->model().getJointEffort(extTor);
+
+    extWrench = J_pinv.transpose() * extTor;
+    
+    std::cout << extWrench.transpose() << std::endl;
+    
+    
   //Wait for the trajectory to be completed
   if(!shared_data()._feedback){
     // blocking reading: wait for a command
