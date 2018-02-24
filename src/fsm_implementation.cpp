@@ -8,7 +8,7 @@
 #include <std_msgs/Float64.h>
 
 #define TRAJ_DURATION 10
-#define WAITING_TIME 5
+#define WAITING_TIME 20
 #define AUTONOMOUS 0
 #define COMPLIANCE 0
 #define K_COMPLIANT 250
@@ -39,6 +39,8 @@ void myfsm::Homing::entry(const XBot::FSM::Message& msg){
   
   shared_data()._hand_pose = pose;
   
+//   shared_data()._pose_pub.publish(shared_data()._hand_pose);  
+  
   std::cout << "\n\n" << 
                "\033[1m******Homing state******\033[0m\n" <<
               "\033[92m 'success' ---> Reach\033[0m\n" <<
@@ -66,13 +68,23 @@ void myfsm::Homing::run(double time, double period){
       transit("Homing");
    
   }
+  
+  
+  if(AUTONOMOUS){
+//     std::cout << "Time: " << time << "  period: " << period << std::endl;
+      shared_data()._time+= period;
+      if(shared_data()._time > WAITING_TIME && shared_data()._first){
+        transit("Reach");
+        shared_data()._first = false;
+      }
+  }     
 
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::Homing::exit (){
-  
+  shared_data()._time = 0;
 }
 
 /********************************* END Homing ********************************/
@@ -95,21 +107,28 @@ void myfsm::Reach::entry(const XBot::FSM::Message& msg){
                "\033[1mSelect the pose where the debris is. \033[0m" << std::endl;
   
   geometry_msgs::PoseStamped pose;
-  pose.pose.position.x = 0.83; //pseudo random values, orientation not changed
-  pose.pose.position.y = 0.0;
-  pose.pose.position.z = 0.26;
+//   pose.pose.position.x = 0.70; //pseudo random values, orientation not changed
+//   pose.pose.position.y = 0.0;
+//   pose.pose.position.z = 0.10;
+  pose.pose.position.x = 0.72;
+  pose.pose.position.y = 0.03;
+  pose.pose.position.z = 0.118;
   pose.pose.orientation.x = 0.037;
   pose.pose.orientation.y = 0.727;
   pose.pose.orientation.z = 0.023;
   pose.pose.orientation.w = 0.686;
-  shared_data()._debris_pose = pose;
+  shared_data()._hand_pose = pose;
   
+
+//   TBD when vision works
 //   ADVR_ROS::im_pose_msg::ConstPtr tmp;
 //   tmp = ros::topic::waitForMessage<ADVR_ROS::im_pose_msg>("debris_pose");
-//   shared_data()._debris_pose = tmp->pose_stamped;
+//   shared_data()._hand_pose = tmp->pose_stamped;
+  
+//   shared_data()._pose_pub.publish(shared_data()._hand_pose); 
   
   std::cout << "\033[1mPose selected.\033[0m\n" <<
-              "\033[92m 'success' ---> Grasp\033[0m\n" <<
+              "\033[92m 'success' ---> Adjust\033[0m\n" <<
               "\033[91m   'fail'  ---> Homing\033[0m\n" <<
                "\033[1m************************\033[0m\n" << std::endl;
 
@@ -118,7 +137,7 @@ void myfsm::Reach::entry(const XBot::FSM::Message& msg){
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::Reach::run(double time, double period){
 
-  shared_data()._pose_pub.publish(shared_data()._debris_pose);  
+  shared_data()._pose_pub.publish(shared_data()._hand_pose); 
   
   // blocking reading: wait for a command
   if(!shared_data().current_command->str().empty())
@@ -127,23 +146,110 @@ void myfsm::Reach::run(double time, double period){
     
     // Reach success
     if (!shared_data().current_command->str().compare("success"))
-      transit("Grasp");
+      transit("Adjust");
     
     // Reach fail
     if (!shared_data().current_command->str().compare("fail"))
       transit("Homing");
    
   }
+  
+//   if(AUTONOMOUS){
+//       shared_data()._time+= period;
+// //       std::cout << "time: " << shared_data()._time << std::endl;
+//       if(shared_data()._time > WAITING_TIME)
+//         transit("Reach");
+//   }  
 
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::Reach::exit (){
-  
+  shared_data()._time = 0;
 }
 
 /********************************* END Reach ********************************/
+
+
+/******************************** BEGIN Adjust *******************************/
+///////////////////////////////////////////////////////////////////////////////
+
+void myfsm::Adjust::react(const XBot::FSM::Event& e) {
+    
+}
+
+///////////////////////////////////////////////////////////////////////////////
+void myfsm::Adjust::entry(const XBot::FSM::Message& msg){
+
+  shared_data().plugin_status->setStatus("ADJUST");
+  
+  //Reading external forces
+  shared_data()._end_effector = shared_data()._robot->model().chain("arm1").getTipLinkName();
+  Eigen::MatrixXd J,J_pinv;
+  shared_data()._robot->model().getJacobian(shared_data()._end_effector,J);
+  J_pinv = J.transpose() * (J*J.transpose()).inverse();
+  Eigen::VectorXd extTor(7),extWrench(6);
+  shared_data()._robot->model().getJointEffort(extTor);
+  extWrench = J_pinv.transpose() * extTor;
+  std::cout << "Ext force on x: " << extWrench(0) << std::endl;
+  
+  if(extWrench(0) > -0.5){
+    std::cout << "Moving 1 cm forward" << std::endl;
+    geometry_msgs::PoseStamped pose;
+    pose = shared_data()._hand_pose;
+    pose.pose.position.x+= 0.01;
+    shared_data()._hand_pose = pose;
+    shared_data()._pose_pub.publish(shared_data()._hand_pose);
+    shared_data()._adjusting = true;
+  }else
+    shared_data()._adjusting = false;
+  
+  std::cout << "\n\n" << 
+               "\033[1m*******Adjust state*****\033[0m\n" <<
+              "\033[92m 'success' ---> Grasp\033[0m\n" <<
+              "\033[91m   'fail'  ---> Adjust\033[0m\n" <<
+               "\033[1m**************************\033[0m\n" << std::endl;
+
+}
+
+///////////////////////////////////////////////////////////////////////////////
+void myfsm::Adjust::run(double time, double period){
+
+  // blocking reading: wait for a command
+  if(!shared_data().current_command->str().empty())
+  {
+    std::cout << "Command: " << shared_data().current_command->str() << std::endl;
+    
+    // Adjust success
+    if (!shared_data().current_command->str().compare("success"))
+      transit("Grasp");
+    
+    // Adjust fail
+    if (!shared_data().current_command->str().compare("fail"))
+      transit("Adjust");
+   
+  }
+  
+  if(AUTONOMOUS){
+      shared_data()._time+= period;
+      if(shared_data()._time > WAITING_TIME){
+        if(shared_data()._adjusting)
+          transit("Adjusting");
+        else
+          transit("Grasp");
+      }
+  } 
+
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+void myfsm::Adjust::exit (){
+  shared_data()._time = 0;
+}
+
+/********************************* END Adjust ********************************/
 
 
 /******************************** BEGIN Grasp *******************************/
@@ -162,6 +268,11 @@ void myfsm::Grasp::entry(const XBot::FSM::Message& msg){
   
   std::cout << "\n\n" << 
                "\033[1m******Grasp state******\033[0m\n" <<
+               "\033[1m                       \033[0m\n" <<
+               "\033[1m          NOW          \033[0m\n" <<
+               "\033[1m          YOU          \033[0m\n" <<
+               "\033[1m         GRASP         \033[0m\n" <<
+               "\033[1m                       \033[0m\n" <<
               "\033[92m 'success' ---> Pick\033[0m\n" <<
               "\033[91m   'fail'  ---> Grasp\033[0m\n" <<
                "\033[1m************************\033[0m\n" << std::endl;
@@ -188,13 +299,18 @@ void myfsm::Grasp::run(double time, double period){
       transit("Grasp");
    
   }
-
+  
+  if(AUTONOMOUS){
+      shared_data()._time+= period;
+      if(shared_data()._time > WAITING_TIME)
+        transit("Pick");
+  } 
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::Grasp::exit (){
-  
+  shared_data()._time = 0;
 }
 
 /********************************* END Grasp ********************************/
@@ -224,6 +340,9 @@ void myfsm::Pick::entry(const XBot::FSM::Message& msg){
   
   shared_data()._hand_pose = pose;
   
+  shared_data()._pose_pub.publish(shared_data()._hand_pose);  
+
+  
   std::cout << "\n\n" << 
                "\033[1m*******Pick state********\033[0m\n" <<
               "\033[92m 'success' ---> MoveAway\033[0m\n" <<
@@ -235,7 +354,7 @@ void myfsm::Pick::entry(const XBot::FSM::Message& msg){
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::Pick::run(double time, double period){
 
-  shared_data()._pose_pub.publish(shared_data()._hand_pose);  
+//   shared_data()._pose_pub.publish(shared_data()._hand_pose);  
   
   // blocking reading: wait for a command
   if(!shared_data().current_command->str().empty())
@@ -251,13 +370,19 @@ void myfsm::Pick::run(double time, double period){
       transit("Homing");
    
   }
+  
+  if(AUTONOMOUS){
+      shared_data()._time+= period;
+      if(shared_data()._time > WAITING_TIME)
+        transit("MoveAway");
+  }
 
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::Pick::exit (){
-  
+  shared_data()._time = 0;
 }
 
 /********************************* END Pick ********************************/
@@ -277,8 +402,8 @@ void myfsm::MoveAway::entry(const XBot::FSM::Message& msg){
   
   geometry_msgs::PoseStamped pose;
       
-  pose.pose.position.x = 0.63; //pseudo random values, orientation not changed
-  pose.pose.position.y = -0.40;
+  pose.pose.position.x = 0.50; //pseudo random values, orientation not changed
+  pose.pose.position.y = -0.50;
   pose.pose.position.z = 0.46;
   pose.pose.orientation.x = 0.037;
   pose.pose.orientation.y = 0.727;
@@ -286,6 +411,9 @@ void myfsm::MoveAway::entry(const XBot::FSM::Message& msg){
   pose.pose.orientation.w = 0.686;
   
   shared_data()._hand_pose = pose;
+  
+  shared_data()._pose_pub.publish(shared_data()._hand_pose);  
+
   
   std::cout << "\n\n" << 
                "\033[1m*******MoveAway state*****\033[0m\n" <<
@@ -298,7 +426,7 @@ void myfsm::MoveAway::entry(const XBot::FSM::Message& msg){
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::MoveAway::run(double time, double period){
 
-  shared_data()._pose_pub.publish(shared_data()._hand_pose);  
+//   shared_data()._pose_pub.publish(shared_data()._hand_pose);  
   
   // blocking reading: wait for a command
   if(!shared_data().current_command->str().empty())
@@ -314,13 +442,19 @@ void myfsm::MoveAway::run(double time, double period){
       transit("Homing");
    
   }
+  
+  if(AUTONOMOUS){
+      shared_data()._time+= period;
+      if(shared_data()._time > WAITING_TIME)
+        transit("PlaceDown");
+  }
 
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::MoveAway::exit (){
-  
+  shared_data()._time = 0;
 }
 
 /********************************* END MoveAway ********************************/
@@ -341,10 +475,12 @@ void myfsm::PlaceDown::entry(const XBot::FSM::Message& msg){
   geometry_msgs::PoseStamped pose;
   
   pose = shared_data()._hand_pose;
-  pose.pose.position.z-= 0.01;
+  pose.pose.position.z-= 0.15;
   
   shared_data()._hand_pose = pose;
   
+  shared_data()._pose_pub.publish(shared_data()._hand_pose);  
+
   std::cout << "\n\n" << 
                "\033[1m*******PlaceDown state*****\033[0m\n" <<
               "\033[92m 'success' ---> Ungrasp\033[0m\n" <<
@@ -356,7 +492,7 @@ void myfsm::PlaceDown::entry(const XBot::FSM::Message& msg){
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::PlaceDown::run(double time, double period){
 
-  shared_data()._pose_pub.publish(shared_data()._hand_pose);  
+//   shared_data()._pose_pub.publish(shared_data()._hand_pose);  
   
   // blocking reading: wait for a command
   if(!shared_data().current_command->str().empty())
@@ -372,13 +508,19 @@ void myfsm::PlaceDown::run(double time, double period){
       transit("PlaceDown");
    
   }
+  
+  if(AUTONOMOUS){
+      shared_data()._time+= period;
+      if(shared_data()._time > WAITING_TIME)
+        transit("Ungrasp");
+  }
 
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::PlaceDown::exit (){
-  
+  shared_data()._time = 0;
 }
 
 /********************************* END PlaceDown ********************************/
@@ -400,6 +542,11 @@ void myfsm::Ungrasp::entry(const XBot::FSM::Message& msg){
   
   std::cout << "\n\n" << 
                "\033[1m******Ungrasp state******\033[0m\n" <<
+               "\033[1m                       \033[0m\n" <<
+               "\033[1m          NOW          \033[0m\n" <<
+               "\033[1m          YOU          \033[0m\n" <<
+               "\033[1m        UNGRASP        \033[0m\n" <<
+               "\033[1m                       \033[0m\n" <<
               "\033[92m 'success' ---> Homing\033[0m\n" <<
               "\033[91m   'fail'  ---> Ungrasp\033[0m\n" <<
                "\033[1m************************\033[0m\n" << std::endl;
@@ -426,13 +573,19 @@ void myfsm::Ungrasp::run(double time, double period){
       transit("Ungrasp");
    
   }
+  
+  if(AUTONOMOUS){
+      shared_data()._time+= period;
+      if(shared_data()._time > WAITING_TIME)
+        transit("Homing");
+  }
 
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////
 void myfsm::Ungrasp::exit (){
-  
+  shared_data()._time = 0;
 }
 
 /********************************* END Ungrasp ********************************/

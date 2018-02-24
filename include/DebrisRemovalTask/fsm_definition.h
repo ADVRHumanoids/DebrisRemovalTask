@@ -128,6 +128,7 @@ namespace myfsm{
       ros::Publisher _stiffnessVector_pub,_pose_pub;
       std::string _end_effector;
       geometry_msgs::PoseStamped _hand_pose;
+      bool _adjusting = false;
     };
     
     class MacroState : public  XBot::FSM::State< MacroState , SharedData > {
@@ -161,6 +162,23 @@ namespace myfsm{
     class Reach : public MacroState {
 
       virtual std::string get_name() const { return "Reach"; }
+
+      virtual void run(double time, double period);
+
+      virtual void entry(const XBot::FSM::Message& msg);
+
+      virtual void react(const XBot::FSM::Event& e);
+
+      virtual void exit ();
+
+      private:
+
+
+     };
+     
+    class Adjust : public MacroState {
+
+      virtual std::string get_name() const { return "Adjust"; }
 
       virtual void run(double time, double period);
 

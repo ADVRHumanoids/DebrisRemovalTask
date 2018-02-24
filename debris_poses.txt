@@ -1,4 +1,4 @@
-rostopic pub /w_T_right_ee_ref geometry_msgs/PoseStamped "header:
+rostopic pub /w_T_right_ee geometry_msgs/PoseStamped "header:
   seq: 0
   stamp:
     secs: 0

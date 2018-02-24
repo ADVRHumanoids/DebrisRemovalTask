@@ -71,6 +71,7 @@ bool DebrisRemovalTask::init_control_plugin(XBot::Handle::Ptr handle)
     /*Registers states*/
     fsm.register_state(std::make_shared<myfsm::Homing>());
     fsm.register_state(std::make_shared<myfsm::Reach>());
+    fsm.register_state(std::make_shared<myfsm::Adjust>());
     fsm.register_state(std::make_shared<myfsm::Grasp>());
     fsm.register_state(std::make_shared<myfsm::Pick>());
     fsm.register_state(std::make_shared<myfsm::MoveAway>());
