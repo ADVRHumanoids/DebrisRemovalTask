@@ -29,7 +29,7 @@ void myfsm::Homing::entry(const XBot::FSM::Message& msg){
   
   geometry_msgs::PoseStamped pose;
       
-  pose.pose.position.x = 0.63;
+  pose.pose.position.x = 0.53;
   pose.pose.position.y = 0.0;
   pose.pose.position.z = 0.46;
   pose.pose.orientation.x = 0.037;
@@ -110,13 +110,17 @@ void myfsm::Reach::entry(const XBot::FSM::Message& msg){
 //   pose.pose.position.x = 0.70; //pseudo random values, orientation not changed
 //   pose.pose.position.y = 0.0;
 //   pose.pose.position.z = 0.10;
-  pose.pose.position.x = 0.72;
-  pose.pose.position.y = 0.03;
+  pose.pose.position.x = 0.7;
+  pose.pose.position.y = 0.0;
   pose.pose.position.z = 0.118;
-  pose.pose.orientation.x = 0.037;
-  pose.pose.orientation.y = 0.727;
-  pose.pose.orientation.z = 0.023;
-  pose.pose.orientation.w = 0.686;
+//   pose.pose.orientation.x = 0.037;
+//   pose.pose.orientation.y = 0.727;
+//   pose.pose.orientation.z = 0.023;
+//   pose.pose.orientation.w = 0.686;
+  pose.pose.orientation.x = 0.0;
+  pose.pose.orientation.y = 0.8433916769071211;
+  pose.pose.orientation.z = 0.0;
+  pose.pose.orientation.w = 0.5372992456013634;
   shared_data()._hand_pose = pose;
   
 
@@ -202,9 +206,10 @@ void myfsm::Adjust::entry(const XBot::FSM::Message& msg){
     shared_data()._hand_pose = pose;
     shared_data()._pose_pub.publish(shared_data()._hand_pose);
     shared_data()._adjusting = true;
-  }else
+  }else{
+    std::cout << "Contact estabilished" << std::endl;
     shared_data()._adjusting = false;
-  
+  }
   std::cout << "\n\n" << 
                "\033[1m*******Adjust state*****\033[0m\n" <<
               "\033[92m 'success' ---> Grasp\033[0m\n" <<
@@ -330,7 +335,7 @@ void myfsm::Pick::entry(const XBot::FSM::Message& msg){
   
   geometry_msgs::PoseStamped pose;
       
-  pose.pose.position.x = 0.63; //same as Homing for now
+  pose.pose.position.x = 0.53; //same as Homing for now
   pose.pose.position.y = 0.0;
   pose.pose.position.z = 0.46;
   pose.pose.orientation.x = 0.037;
@@ -403,12 +408,16 @@ void myfsm::MoveAway::entry(const XBot::FSM::Message& msg){
   geometry_msgs::PoseStamped pose;
       
   pose.pose.position.x = 0.50; //pseudo random values, orientation not changed
-  pose.pose.position.y = -0.50;
-  pose.pose.position.z = 0.46;
-  pose.pose.orientation.x = 0.037;
-  pose.pose.orientation.y = 0.727;
-  pose.pose.orientation.z = 0.023;
-  pose.pose.orientation.w = 0.686;
+  pose.pose.position.y = -0.60;
+  pose.pose.position.z = 0.20;
+//   pose.pose.orientation.x = 0.037;
+//   pose.pose.orientation.y = 0.727;
+//   pose.pose.orientation.z = 0.023;
+//   pose.pose.orientation.w = 0.686;
+  pose.pose.orientation.x = 0.183;
+  pose.pose.orientation.y = 0.683;
+  pose.pose.orientation.z = -0.183;
+  pose.pose.orientation.w = 0.683;
   
   shared_data()._hand_pose = pose;
   
@@ -475,7 +484,7 @@ void myfsm::PlaceDown::entry(const XBot::FSM::Message& msg){
   geometry_msgs::PoseStamped pose;
   
   pose = shared_data()._hand_pose;
-  pose.pose.position.z-= 0.15;
+  pose.pose.position.z-= 0.05;
   
   shared_data()._hand_pose = pose;
   
