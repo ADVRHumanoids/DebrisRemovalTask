@@ -196,7 +196,7 @@ void myfsm::Adjust::entry(const XBot::FSM::Message& msg){
   Eigen::VectorXd extTor(7),extWrench(6);
   shared_data()._robot->model().getJointEffort(extTor);
   extWrench = J_pinv.transpose() * extTor;
-  std::cout << "Ext force on x: " << extWrench(0) << std::endl;
+  std::cout << "Ext forces on x: " << extWrench(0) << std::endl;
   
   if(extWrench(0) > -0.5){
     std::cout << "Moving 1 cm forward" << std::endl;
@@ -409,7 +409,7 @@ void myfsm::MoveAway::entry(const XBot::FSM::Message& msg){
       
   pose.pose.position.x = 0.50; //pseudo random values, orientation not changed
   pose.pose.position.y = -0.60;
-  pose.pose.position.z = 0.20;
+  pose.pose.position.z = 0.24;
 //   pose.pose.orientation.x = 0.037;
 //   pose.pose.orientation.y = 0.727;
 //   pose.pose.orientation.z = 0.023;
@@ -484,7 +484,7 @@ void myfsm::PlaceDown::entry(const XBot::FSM::Message& msg){
   geometry_msgs::PoseStamped pose;
   
   pose = shared_data()._hand_pose;
-  pose.pose.position.z-= 0.05;
+  pose.pose.position.z-= 0.20;
   
   shared_data()._hand_pose = pose;
   
