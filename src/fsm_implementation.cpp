@@ -151,6 +151,7 @@ void myfsm::Reach::run(double time, double period){
     // Reach success
     if (!shared_data().current_command->str().compare("success"))
       transit("Adjust");
+//       transit("Pick");
     
     // Reach fail
     if (!shared_data().current_command->str().compare("fail"))
@@ -228,7 +229,8 @@ void myfsm::Adjust::run(double time, double period){
     
     // Adjust success
     if (!shared_data().current_command->str().compare("success"))
-      transit("Grasp");
+//       transit("Grasp");
+      transit("Pick");
     
     // Adjust fail
     if (!shared_data().current_command->str().compare("fail"))
@@ -510,7 +512,8 @@ void myfsm::PlaceDown::run(double time, double period){
     
     // PlaceDown success
     if (!shared_data().current_command->str().compare("success"))
-      transit("Ungrasp");
+//       transit("Ungrasp");
+      transit("Homing");
     
     // PlaceDown fail
     if (!shared_data().current_command->str().compare("fail"))
